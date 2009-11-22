@@ -79,6 +79,7 @@ public class FCPClientHello implements FCPQuery, Observer {
 
 		if(!queryManager.writeMessage(message)) {
 			Logger.warning(this, "Unable to say hello ... ;(");
+			queryManager.deleteObserver(this);
 			return false;
 		}
 
@@ -93,6 +94,9 @@ public class FCPClientHello implements FCPQuery, Observer {
 			}
 			count++;
 		}
+
+		/* Cover our bases in case a timeout occurred...  Usually redundant. */
+		queryManager.deleteObserver(this);
 
 		if(nodeName != null) {
 			Logger.info(this, "Hello "+nodeName+", I'm Thaw :)");
@@ -128,7 +132,7 @@ public class FCPClientHello implements FCPQuery, Observer {
 				nodeVersion = answer.getValue("Version");
 				nodeName = answer.getValue("Node");
 				testnet = Boolean.valueOf(answer.getValue("Testnet")).booleanValue();
-				nmbCompressionCodecs = Integer.parseInt(answer.getValue("CompressionCodecs"));
+				nmbCompressionCodecs = nmbCodecsFromString(answer.getValue("CompressionCodecs"));
 
 				queryManager.deleteObserver(this);
 
@@ -169,6 +173,20 @@ public class FCPClientHello implements FCPQuery, Observer {
 
 	public String getConnectionId() {
 		return connectionId;
+	}
+
+
+	protected int nmbCodecsFromString(String compressionCodecs){
+		String[] codec_words = compressionCodecs.split(" ");
+
+		try{
+			/* The first "word" should be the number of codecs */
+			return(Integer.parseInt(codec_words[0]));
+		}
+		catch(final java.lang.NumberFormatException e){
+			Logger.warning(this, "Unrecognized CompressionCodecs format.");
+			return(0);
+		}
 	}
 }
 
