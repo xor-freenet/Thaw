@@ -34,7 +34,7 @@ public class MDNSDiscovery {
 		try {
 			// Spawn the mdns listener
 			Logger.info(this, "Starting JMDNS ...");
-			this.jmdns = new JmDNS();
+			this.jmdns = javax.jmdns.JmDNS.create();
 
 			// Start listening for new nodes
 			jmdns.addServiceListener(MDNSDiscoveryPanel.FCP_SERVICE_TYPE, new FCPMDNSListener());
