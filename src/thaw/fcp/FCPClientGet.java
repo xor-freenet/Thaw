@@ -551,6 +551,10 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	}
 
 
+	/**
+	 * Handles the allData node message and attempts to write
+	 * the contents to the target file.
+	 */
 	protected void allData(FCPQueryManager queryManager, FCPMessage message) {
 		Logger.debug(this, "AllData ! : " + getIdentifier());
 
@@ -757,37 +761,112 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	}
 
 
-	private boolean fetchDirectly(final FCPConnection connection, long size, final boolean reallyWrite) {
-		final String file = getPath();
-		File newFile = null;
-		OutputStream outputStream = null;
+	protected File getDirectFile(){
+		String filePath;
+		File file = null;
 
-		if (file != null) {
-			newFile = new File(file);
-		} else {
-			try {
-				Logger.info(this, "Using temporary file");
-				newFile = File.createTempFile("thaw_", ".tmp");
-				finalPath = newFile.getPath();
-				newFile.deleteOnExit();
-			} catch(final java.io.IOException e) {
-				Logger.error(this, "Error while creating temporary file: "+e.toString());
+		filePath = getPath();
+		if (filePath != null) {
+			file = new File(filePath);
+
+			try{
+				if(file.exists() || file.createNewFile())
+				{
+					return file;
+				}
+			}
+			catch(final java.io.IOException e)
+			{
+				 Logger.notice(this, "First attempted filename failed");
 			}
 		}
 
-		if(reallyWrite) {
-			Logger.info(this, "Getting file from node ... ");
+		/* First try at creating the filePath failed.  Now try again removing
+		   the characters that some filePath systems have troubles with.
+		 */
+
+		filePath = getSafePath();
+
+		if(filePath != null){
+			file = new File(filePath);
 
 			try {
-				outputStream = new FileOutputStream(newFile);
-			} catch(final java.io.IOException e) {
-				Logger.error(this, "Unable to write file on disk ... disk space / perms ? : "+e.toString());
-				status = "Write error";
-				return false;
-			}
+				Logger.notice(this, "Trying a simpler filename...");
 
+				if(file.exists() || file.createNewFile())
+				{
+					return file;
+				}
+			} catch(final java.io.IOException e){
+				Logger.notice(this, "Simpler filePath name failed: "+e.toString());
+				Logger.notice(this, "filePath: "+filePath);
+			}
+		}
+		else{
+			/* Filename is null, so create a temporary filePath instead. */
+			try {
+				Logger.info(this, "Using temporary filePath");
+				file = File.createTempFile("thaw_", ".tmp");
+				finalPath = file.getPath();
+				file.deleteOnExit();
+				return file;
+			} catch(final java.io.IOException e) {
+				Logger.error(this, "Error while creating temporary filePath: "+e.toString());
+			}
+		}
+
+		return null;
+	}
+
+
+	/**
+	 * Reads the remaining data bytes from the socket as defined by size.
+	 * @param connection Connection to read the data from.
+	 * @param size The number of bytes to read from the connection.
+	 */
+	protected void dummyDataGet(FCPConnection connection, long size){
+		final int packet = FCPClientGet.PACKET_SIZE;
+		byte[] read = new byte[packet];
+		int amount;
+
+		while(size > 0){
+			amount = connection.read(0/*Not used*/, read);
+
+			if(amount >= 0){
+				size -= amount;
+			}
+			else{
+				/* Either EOF, or socket error */
+				return;
+			}
+		}
+	}
+
+
+	private boolean fetchDirectly(final FCPConnection connection, long size, final boolean reallyWrite) {
+		File newFile;
+		OutputStream outputStream;
+		boolean disableWrite = false;
+
+		newFile = getDirectFile();
+		if (reallyWrite || !newFile.exists() || (newFile.length() > 0)) {
+			Logger.info(this, "Getting file from node ... ");
 		} else {
 			Logger.info(this, "File is supposed already written. Not rewriting.");
+			status = "File already exists";
+			setStatus(false, true, false);
+			
+			/* Clear the data from the socket to prevent socket problems */
+			dummyDataGet(connection, size);
+			return false;
+		}
+
+		try {
+			outputStream = new FileOutputStream(newFile);
+		} catch(final java.io.FileNotFoundException e) {
+			Logger.error(this, "Unable to write file on disk ... disk space / perms / filename ? : "+e.toString());
+			status = "Write error";
+			return false;
 		}
 
 		/* size == bytes remaining on socket */
@@ -798,18 +877,41 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		while(size > 0) {
 
-			int packet = FCPClientGet.PACKET_SIZE;
+			final int packet = FCPClientGet.PACKET_SIZE;
 			byte[] read;
 			int amount;
 
-			if(size < (long)packet)
-				packet = (int)size;
-
 			read = new byte[packet];
-
 			amount = connection.read(packet, read);
+			size = size - amount;
 
-			if(amount <= -1) {
+			if (amount >= 0) {
+				try {
+					outputStream.write(read, 0, amount);
+					if( System.currentTimeMillis() >= (startTime+3000)) {
+						status = "Writing to disk";
+						fromTheNodeProgress = (int) (((origSize-size) * 100) / origSize);
+
+						if (fromTheNodeProgress <= 0) /* display issue */
+							fromTheNodeProgress = 1;
+
+						notifyChange();
+
+						startTime = System.currentTimeMillis();
+					}
+				} catch(final java.io.IOException e) {
+					/* Unable to continue writing to the file.  Disable writing, but
+					 * keep reading data from the socket so that the socket doesn't
+					 * get messed up.
+					 */
+					Logger.error(this, "Unable to write file on disk ... out of space ? : "+e.toString());
+					status = "Unable to fetch / disk probably full !";
+					writingSuccessful = false;
+					setStatus(false, true, false);
+					dummyDataGet(connection, size);
+					return false;
+				}
+			} else {
 				Logger.error(this, "Socket closed, damn !");
 				status = "Unable to read data from the node";
 				writingSuccessful = false;
@@ -823,40 +925,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				newFile.delete();
 				return false;
 			}
-
-			if(reallyWrite) {
-				try {
-					outputStream.write(read, 0, amount);
-				} catch(final java.io.IOException e) {
-					Logger.error(this, "Unable to write file on disk ... out of space ? : "+e.toString());
-					status = "Unable to fetch / disk probably full !";
-					writingSuccessful = false;
-					setStatus(false, true, false);
-					try {
-						outputStream.close();
-					} catch(java.io.IOException ex) {
-						Logger.error(this, "Unable to close the file cleanly : "+ex.toString());
-						Logger.error(this, "Things seem to go wrong !");
-					}
-					newFile.delete();
-					return false;
-				}
-			}
-
-			size = size - amount;
-
-			if( System.currentTimeMillis() >= (startTime+3000)) {
-				status = "Writing to disk";
-				fromTheNodeProgress = (int) (((origSize-size) * 100) / origSize);
-				
-				if (fromTheNodeProgress <= 0) /* display issue */
-					fromTheNodeProgress = 1;
-
-				notifyChange();
-
-				startTime = System.currentTimeMillis();
-			}
-
 		}
 
 		fromTheNodeProgress = 100;
@@ -1029,6 +1097,27 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		return path;
 	}
+
+	/**
+	 * Returns the path, replacing characters that are often not
+	 * allowed in file systems.  Used as a fallback in case the
+	 * result of getPath() fails.
+	 *
+	 * @return Path with "non-standard" characters replaced with underscores.
+	 */
+	public String getSafePath() {
+		String sanitizedFilename = "";
+		String path = null;
+
+		if (finalPath != null)
+			path = finalPath;
+		else if(destinationDir != null)
+			sanitizedFilename = filename.replaceAll("[\\\\/:\"*?<>|\\r\\n]", "_");
+			path = destinationDir + File.separator + sanitizedFilename;
+
+		return path;
+	}
+	
 
 	public String getFilename() {
 		if (filename != null)
