@@ -42,13 +42,13 @@ public class FCPGetNode extends Observable implements FCPQuery, Observer {
 
 	private Hashtable allParameters;
 
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 
-	public FCPGetNode(boolean withPrivate, boolean withVolatile, FCPQueueManager queueManager) {
+	public FCPGetNode(boolean withPrivate, boolean withVolatile, FCPQueryManager queryManager) {
 		this.withPrivate = withPrivate;
 		this.withVolatile = withVolatile;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 	public boolean start() {
@@ -58,13 +58,13 @@ public class FCPGetNode extends Observable implements FCPQuery, Observer {
 		msg.setValue("WithPrivate", Boolean.toString(withPrivate));
 		msg.setValue("WithVolatile", Boolean.toString(withVolatile));
 
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 
-		return queueManager.getQueryManager().writeMessage(msg);
+		return queryManager.writeMessage(msg);
 	}
 
 	public boolean stop() {
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 		return true;
 	}
 

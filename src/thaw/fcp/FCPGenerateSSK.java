@@ -11,16 +11,18 @@ public class FCPGenerateSSK extends Observable implements FCPQuery, Observer {
 	private String publicKey = null;
 
 	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 
 	public FCPGenerateSSK(FCPQueueManager queueManager) {
 
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 	}
 
 
 	public boolean start() {
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 
 		identifier = queueManager.getAnID();
 
@@ -28,7 +30,7 @@ public class FCPGenerateSSK extends Observable implements FCPQuery, Observer {
 		msg.setMessageName("GenerateSSK");
 		msg.setValue("Identifier", identifier);
 
-		queueManager.getQueryManager().writeMessage(msg);
+		queryManager.writeMessage(msg);
 
 		return true;
 	}
@@ -63,7 +65,7 @@ public class FCPGenerateSSK extends Observable implements FCPQuery, Observer {
 
 
 	public boolean stop() {
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 
 		return true;
 	}

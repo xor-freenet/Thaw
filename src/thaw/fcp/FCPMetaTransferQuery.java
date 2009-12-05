@@ -17,20 +17,20 @@ import thaw.core.Logger;
  */
 public class FCPMetaTransferQuery extends Observable implements Observer {
 
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 	private final Hashtable idToQuery;
 	private final String idField;
 	
-	public FCPMetaTransferQuery(FCPQueueManager queueManager) {
-		this(queueManager, "Identifier");
+	public FCPMetaTransferQuery(FCPQueryManager queryManager) {
+		this(queryManager, "Identifier");
 	}
 	
-	private FCPMetaTransferQuery(FCPQueueManager queueManager, String idField) {
-		this.queueManager = queueManager;
+	private FCPMetaTransferQuery(FCPQueryManager queryManager, String idField) {
+		this.queryManager = queryManager;
 		this.idToQuery = new Hashtable();
 		this.idField = idField;
 		
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 	}
 	
 	private void add(String id, FCPTransferQuery query) {
@@ -79,7 +79,7 @@ public class FCPMetaTransferQuery extends Observable implements Observer {
 			/* Ugly hack to replace the query manager by the metaTransferQuery */
 			add(query.getIdentifier(), query);
 			query.addObserver(this);
-			queueManager.getQueryManager().deleteObserver((Observer)query);
+			queryManager.deleteObserver((Observer)query);
 		}
 		
 		return r;

@@ -2,12 +2,12 @@ package thaw.fcp;
 
 public class FCPWatchGlobal implements FCPQuery {
 	private boolean watch;
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 
-	public FCPWatchGlobal(final boolean v, FCPQueueManager queueManager) {
+	public FCPWatchGlobal(final boolean v, FCPQueryManager queryManager) {
 		watch = v;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 	public boolean start() {
@@ -22,7 +22,7 @@ public class FCPWatchGlobal implements FCPQuery {
 
 		message.setValue("VerbosityMask", "1");
 
-		queueManager.getQueryManager().writeMessage(message);
+		queryManager.writeMessage(message);
 
 		return true;
 	}

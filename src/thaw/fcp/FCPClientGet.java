@@ -20,6 +20,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private final FCPQueueManager queueManager;
 	private FCPQueryManager duplicatedQueryManager;           /* TODO: Necessary? */
 
+	private final FCPQueryManager queryManager;
+
 	private String key = null;
 	private String filename = null; /* Extract from the key */
 	private int priority = DEFAULT_PRIORITY;
@@ -60,15 +62,17 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		super((String)parameters.get("Identifier"), false);
 		
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
+
 		setParameters(parameters);
 
 		fromTheNodeProgress = 0;
 
 		/* If isPersistent(), then start() won't be called, so must relisten the
 		   queryManager by ourself */
-		if(isPersistent() && (getIdentifier() != null) && !getIdentifier().equals("")) {
-			this.queueManager.getQueryManager().deleteObserver(this);
-			this.queueManager.getQueryManager().addObserver(this);
+		if(isPersistent() && (getIdentifier() != null)) {
+			queryManager.deleteObserver(this);
+			queryManager.addObserver(this);
 		}
 
 	}
@@ -93,7 +97,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		if(status == null) {
 			Logger.warning(this, "status == null ?!");
-			status = "(null)";
+			this.status = "(null)";
 		}
 
 		setIdentifier(id);
@@ -156,6 +160,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		this.globalQueue = globalQueue;
 		this.destinationDir = destinationDir;
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 
 		fileSize = 0;
 		attempt  = 0;
@@ -214,9 +219,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		setStatus(true, false, false);
 
 		/* TODO : seems to be true sometimes => find why */ 
-		if (queueManager == null
-				|| queueManager.getQueryManager() == null
-				|| queueManager.getQueryManager().getConnection() == null)
+		if (queueManager == null /* TODO: Needed anymore?*/
+				|| queryManager == null
+				|| queryManager.getConnection() == null)
 			return false;
 
 		return sendClientGet();
@@ -235,7 +240,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		status = "Requesting";
 
-		if((getIdentifier() == null) || "".equals( getIdentifier() ))
+		if(getIdentifier() == null)
 			setIdentifier(queueManager.getAnID() + "-"+filename);
 
 		Logger.debug(this, "Requesting key : "+getFileKey());
@@ -262,7 +267,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		else
 			queryMessage.setValue("Global", "false");
 
-		if (!queueManager.getQueryManager().getConnection().isLocalSocket() || noDDA)
+		if (!queryManager.getConnection().isLocalSocket() || noDDA)
 			queryMessage.setValue("ReturnType", "direct");
 		else {
 			queryMessage.setValue("ReturnType", "disk");
@@ -273,10 +278,10 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			}
 		}
 
-		queueManager.getQueryManager().deleteObserver(this);
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.deleteObserver(this);
+		queryManager.addObserver(this);
 
-		return queueManager.getQueryManager().writeMessage(queryMessage);
+		return queryManager.writeMessage(queryMessage);
 	}
 
 
@@ -298,7 +303,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		if (o instanceof FCPQueryManager)
 			queryManager = (FCPQueryManager)o;
 		else
-			queryManager = queueManager.getQueryManager(); /* default one */
+			queryManager = this.queryManager; /* default one */
 
 		switch (message.getMessageType()) {
 			case DataFound:
@@ -366,7 +371,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 					if(destinationDir != null) {
 						if (!fileExists()
 								&& !(ddaAllowed())
-								&& queueManager.getQueryManager().getConnection().getAutoDownload()) {
+								&& queryManager.getConnection().getAutoDownload()) {
 							status = "Requesting file from the node";
 
 							writingSuccessful = false;
@@ -415,7 +420,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			if (destinationDir == null)
 				destinationDir = new File(finalPath).getAbsoluteFile().getParent();
 
-			testDDA = new FCPTestDDA(destinationDir, false, true, queueManager);
+			testDDA = new FCPTestDDA(destinationDir, false, true, queryManager);
 			testDDA.addObserver(this);
 			testDDA.start();
 		}
@@ -452,7 +457,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 			notifyChange();
 
-			queueManager.getQueryManager().deleteObserver(this);
+			queryManager.deleteObserver(this);
 		}
 	}
 
@@ -466,7 +471,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		}
 
 		Logger.info(this, "PersistentRequestRemoved >> Removing from the queue");
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 		queueManager.remove(this);
 
 		notifyChange();
@@ -482,7 +487,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			status = "Redirected ...";
 			if (queueManager.isOur(message.getValue("Identifier"))) {
 				restartIfFailed = true;
-				stop(queueManager, false);
+				stop(queryManager, false);
 			} else {
 				Logger.debug(this, "Not our transfer ; we don't touch");
 			}
@@ -587,8 +592,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		queryManager.deleteObserver(this);
 
-		if (queryManager != queueManager.getQueryManager()) {
-			queueManager.getQueryManager().deleteObserver(this);
+		if (queryManager != this.queryManager) {
+			this.queryManager.deleteObserver(this);
 			queryManager.getConnection().disconnect();
 			duplicatedQueryManager = null;
 		}
@@ -605,7 +610,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 
 	protected boolean ddaAllowed() {
-		return queueManager.getQueryManager().getConnection().isLocalSocket() && !noDDA;
+		return queryManager.getConnection().isLocalSocket() && !noDDA;
 	}
 
 	protected int getPriority() {
@@ -704,10 +709,10 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		Logger.info(this, "Duplicating socket ...");
 
 		if (globalQueue) {
-			duplicatedQueryManager = queueManager.getQueryManager().duplicate(getIdentifier());
+			duplicatedQueryManager = queryManager.duplicate(getIdentifier());
 			duplicatedQueryManager.addObserver(this);
 		} else { /* won't duplicate ; else it will use another id */
-			duplicatedQueryManager = queueManager.getQueryManager();
+			duplicatedQueryManager = queryManager;
 		}
 
 		Logger.info(this, "Waiting for socket  ...");
@@ -770,7 +775,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	protected File getDirectFile(){
 		String filePath;
-		File file = null;
+		File file;
 
 		filePath = getPath();
 		if (filePath != null) {
@@ -853,7 +858,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private boolean fetchDirectly(final FCPConnection connection, long size, final boolean reallyWrite) {
 		File newFile;
 		OutputStream outputStream;
-		boolean disableWrite = false;
 
 		newFile = getDirectFile();
 		if (reallyWrite || !newFile.exists() || (newFile.length() > 0)) {
@@ -979,7 +983,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		stopMessage.setValue("Identifier", getIdentifier());
 
-		queueManager.getQueryManager().writeMessage(stopMessage);
+		queryManager.writeMessage(stopMessage);
 
 		setStatus(false, isFinished(), isSuccessful());
 
@@ -1005,16 +1009,16 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	}
 	
 	public boolean stop() {
-		return stop(queueManager, true);
+		return stop(queryManager, true);
 	}
 
-	public boolean stop(final FCPQueueManager queueManager, boolean notify) {
+	public boolean stop(final FCPQueryManager queryManager, boolean notify) {
 		Logger.info(this, "Stop fetching of the key : "+getFileKey());
 		
 		if(isPersistent() && !removeRequest())
 			return false;
 		
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 
 		boolean wasFinished = isFinished();
 		
@@ -1045,7 +1049,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		if(clientToken && (destinationDir != null))
 			msg.setValue("ClientToken", destinationDir);
 
-		queueManager.getQueryManager().writeMessage(msg);
+		queryManager.writeMessage(msg);
 
 	}
 
@@ -1114,7 +1118,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	 */
 	public String getSafePath() {
 		String sanitizedFilename = "";
-		String path = null;
+		String path;
 
 		if (finalPath != null)
 			path = finalPath;

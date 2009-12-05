@@ -34,7 +34,7 @@ import thaw.plugins.ToolbarModifier;
 
 import thaw.core.Config;
 import thaw.core.I18n;
-import thaw.fcp.FCPQueueManager;
+import thaw.fcp.FCPQueryManager;
 
 import thaw.gui.IconBox;
 import thaw.gui.GUIHelper;
@@ -105,7 +105,7 @@ public class PeerMonitorPanel extends Observable implements ActionListener, Mous
 	private final static String nodeStatsStr = I18n.getMessage("thaw.plugin.peerMonitor.nodeStats");
 
 	public PeerMonitorPanel(PeerMonitor peerMonitor,
-				FCPQueueManager queueManager,
+				FCPQueryManager queryManager,
 				Config config,
 				thaw.core.MainWindow mainWindow) {
 		buttonActions = new Vector();
@@ -162,12 +162,12 @@ public class PeerMonitorPanel extends Observable implements ActionListener, Mous
 
 		littleButton = new JButton(IconBox.minAdd);
 		littleButton.setToolTipText(I18n.getMessage("thaw.plugin.peerMonitor.addPeer"));
-		buttonActions.add(new PeerHelper.PeerAdder(queueManager, mainWindow, littleButton));
+		buttonActions.add(new PeerHelper.PeerAdder(queryManager, mainWindow, littleButton));
 		littleButtonPanel.add(littleButton);
 
 		littleButton = new JButton(IconBox.minDelete);
 		littleButton.setToolTipText(I18n.getMessage("thaw.plugin.peerMonitor.removePeer"));
-		buttonActions.add(new PeerHelper.PeerRemover(queueManager, littleButton));
+		buttonActions.add(new PeerHelper.PeerRemover(queryManager, littleButton));
 		littleButtonPanel.add(littleButton);
 
 		southSouth.add(littleButtonPanel, BorderLayout.WEST);
@@ -223,13 +223,13 @@ public class PeerMonitorPanel extends Observable implements ActionListener, Mous
 
 		item = new JMenuItem(I18n.getMessage("thaw.plugin.peerMonitor.addPeer"),
 						     IconBox.minAdd);
-		buttonActions.add(new PeerHelper.PeerAdder(queueManager, mainWindow, item));
+		buttonActions.add(new PeerHelper.PeerAdder(queryManager, mainWindow, item));
 		rightClickMenu.add(item);
 
 
 		item = new JMenuItem(I18n.getMessage("thaw.plugin.peerMonitor.removePeer"),
 						     IconBox.minDelete);
-		buttonActions.add(new PeerHelper.PeerRemover(queueManager, item));
+		buttonActions.add(new PeerHelper.PeerRemover(queryManager, item));
 		rightClickMenu.add(item);
 
 		peerList.addMouseListener(this);
@@ -239,12 +239,12 @@ public class PeerMonitorPanel extends Observable implements ActionListener, Mous
 
 		toolbarButton = new JButton(IconBox.add);
 		toolbarButton.setToolTipText(I18n.getMessage("thaw.plugin.peerMonitor.addPeer"));
-		buttonActions.add(new PeerHelper.PeerAdder(queueManager, mainWindow, toolbarButton));
+		buttonActions.add(new PeerHelper.PeerAdder(queryManager, mainWindow, toolbarButton));
 		toolbarModifier.addButtonToTheToolbar(toolbarButton);
 
 		toolbarButton = new JButton(IconBox.delete);
 		toolbarButton.setToolTipText(I18n.getMessage("thaw.plugin.peerMonitor.removePeer"));
-		buttonActions.add(new PeerHelper.PeerRemover(queueManager, toolbarButton));
+		buttonActions.add(new PeerHelper.PeerRemover(queryManager, toolbarButton));
 		toolbarModifier.addButtonToTheToolbar(toolbarButton);
 	}
 

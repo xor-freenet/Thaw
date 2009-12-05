@@ -27,13 +27,13 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 	private boolean nodeCanRead;
 	private boolean nodeCanWrite;
 
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 
 	public FCPTestDDA(String directory,
 			  boolean wantTheNodeToRead,
 			  boolean wantTheNodeToWrite,
-			  FCPQueueManager queueManager) {
+			  FCPQueryManager queryManager) {
 
 		try {
 			this.dir = new File(directory).getCanonicalPath();
@@ -44,7 +44,7 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 
 		this.wantRead  = wantTheNodeToRead;
 		this.wantWrite = wantTheNodeToWrite;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 
@@ -55,9 +55,9 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 		msg.setValue("WantReadDirectory", Boolean.toString(wantRead));
 		msg.setValue("WantWriteDirectory", Boolean.toString(wantWrite));
 
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 
-		return queueManager.getQueryManager().writeMessage(msg);
+		return queryManager.writeMessage(msg);
 	}
 
 	public boolean stop() {
@@ -146,7 +146,7 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 			if ("7".equals(msg.getValue("Code"))) {
 				Logger.warning(this, "Node doesn't support TestDDA (-> ProtocolError) => DDA desactivated");
 
-				queueManager.getQueryManager().getConnection().setLocalSocket(false);
+				queryManager.getConnection().setLocalSocket(false);
 
 				nodeCanRead = false;
 				nodeCanWrite = false;
@@ -186,7 +186,7 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 				answer.setValue("ReadContent", data != null ? data : "bleh");
 			}
 
-			queueManager.getQueryManager().writeMessage(answer);
+			queryManager.writeMessage(answer);
 		}
 
 
@@ -210,7 +210,7 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 			if (wantWrite)
 				deleteFile(writeTestFile);
 
-			queueManager.getQueryManager().deleteObserver(this);
+			queryManager.deleteObserver(this);
 
 			setChanged();
 			notifyObservers();

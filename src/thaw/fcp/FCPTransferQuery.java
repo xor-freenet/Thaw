@@ -47,7 +47,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	private long startupTime = -1;
 	private long completionTime = -1;
 	
-	private String id;
+	private String id;   /**< A string to uniquely identify to the client the file you are receiving.*/
 	
 	/**
 	 * @param id can be null if currently unknown

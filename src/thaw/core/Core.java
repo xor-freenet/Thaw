@@ -224,7 +224,7 @@ public class Core implements Observer {
 				if (!running) ret = false;
 
 				if (ret) {
-					final FCPWatchGlobal watchGlobal = new FCPWatchGlobal(true, queueManager);
+					final FCPWatchGlobal watchGlobal = new FCPWatchGlobal(true, queryManager);
 					watchGlobal.start();
 				}
 

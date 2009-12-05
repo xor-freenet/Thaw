@@ -30,7 +30,7 @@ public class PeerHelper {
 
 
 	public static class PeerAdder implements PeerAction {
-		private FCPQueueManager queueManager;
+		private FCPQueryManager queryManager;
 		private AbstractButton src;
 		private MainWindow mainWindow;
 
@@ -40,8 +40,8 @@ public class PeerHelper {
 		private JTextArea refArea;
 		private JTextField urlField;
 
-		public PeerAdder(FCPQueueManager queueManager, MainWindow mainWindow, AbstractButton actionSource) {
-			this.queueManager = queueManager;
+		public PeerAdder(FCPQueryManager queryManager, MainWindow mainWindow, AbstractButton actionSource) {
+			this.queryManager = queryManager;
 			this.src = actionSource;
 			this.mainWindow = mainWindow;
 
@@ -115,7 +115,7 @@ public class PeerHelper {
 				ref = ref.trim();
 
 				if (looksValid(ref)) {
-					addPeer(queueManager, ref);
+					addPeer(queryManager, ref);
 					dialog.setVisible(false);
 				} else {
 					new thaw.gui.WarningWindow(dialog,
@@ -138,8 +138,8 @@ public class PeerHelper {
 	}
 
 
-	public static void addPeer(FCPQueueManager queueManager, String ref) {
-		FCPAddPeer addPeer = new FCPAddPeer(ref, queueManager);
+	public static void addPeer(FCPQueryManager queryManager, String ref) {
+		FCPAddPeer addPeer = new FCPAddPeer(ref, queryManager);
 		addPeer.start();
 
 		/* see you later :) */
@@ -148,13 +148,13 @@ public class PeerHelper {
 
 
 	public static class PeerRemover implements PeerAction {
-		private FCPQueueManager queueManager;
+		private FCPQueryManager queryManager;
 		private AbstractButton src;
 
 		private Peer target;
 
-		public PeerRemover(FCPQueueManager queueManager, AbstractButton actionSource) {
-			this.queueManager = queueManager;
+		public PeerRemover(FCPQueryManager queryManager, AbstractButton actionSource) {
+			this.queryManager = queryManager;
 			this.src = actionSource;
 
 			if (actionSource != null) {
@@ -185,13 +185,13 @@ public class PeerHelper {
 				return;
 			}
 
-			removePeer(queueManager, target.getIdentity());
+			removePeer(queryManager, target.getIdentity());
 		}
 	}
 
 
-	public static void removePeer(FCPQueueManager queueManager, String peer) {
-		FCPRemovePeer addPeer = new FCPRemovePeer(peer, queueManager);
+	public static void removePeer(FCPQueryManager queryManager, String peer) {
+		FCPRemovePeer addPeer = new FCPRemovePeer(peer, queryManager);
 		addPeer.start();
 	}
 

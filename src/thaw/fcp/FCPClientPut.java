@@ -19,6 +19,7 @@ import thaw.core.ThawRunnable;
 public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 	private File localFile;
 	private long fileSize = 0;
@@ -58,6 +59,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		super((String)parameters.get("identifier"), true);
 
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 		setParameters(parameters);
 	}
 
@@ -88,6 +90,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		super(null, true);
 
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 
 		this.getCHKOnly = getCHKOnly;
 		localFile = file;
@@ -142,6 +145,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		toTheNodeProgress = 100;
 
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 
 		if(publicKey.startsWith("CHK"))
 			keyType = KEY_TYPE_CHK;
@@ -192,19 +196,19 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		}
 
 
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 		
 		setBlockNumbers(-1, -1, -1, false);
 		setStatus(true, false, false);
 
 		sha = null;
 
-		if (queueManager.getQueryManager().getConnection().isLocalSocket() && localFile != null) {
+		if (queryManager.getConnection().isLocalSocket() && localFile != null) {
 			status = "Computing hash to get approval from the node ...";
 
 			setIdentifier(queueManager.getAnID() + "-"+ localFile.getName());
 
-			String salt = queueManager.getQueryManager().getConnection().getClientHello().getConnectionId()
+			String salt = queryManager.getConnection().getClientHello().getConnectionId()
 				+"-"+ getIdentifier()
 				+"-";
 			Logger.info(this, "Salt used for this transfer: ~" + salt+ "~");
@@ -302,7 +306,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 
 	public boolean startInsert() {
-		final FCPConnection connection = queueManager.getQueryManager().getConnection();
+		final FCPConnection connection = queryManager.getConnection();
 
 		toTheNodeProgress= 0;
 
@@ -326,7 +330,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 		sending = true;
 
-		final FCPConnection connection = queueManager.getQueryManager().getConnection();
+		final FCPConnection connection = queryManager.getConnection();
 
 		status = "Sending to the node";
 
@@ -397,7 +401,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 		Logger.info(this, "Sending "+Long.toString(fileSize)+" bytes on socket ...");
 
-		queueManager.getQueryManager().writeMessage(msg, false);
+		queryManager.writeMessage(msg, false);
 
 		boolean ret = true;
 
@@ -439,7 +443,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 
 	private boolean sendFile() {
-		final FCPConnection connection = queueManager.getQueryManager().getConnection();
+		final FCPConnection connection = queryManager.getConnection();
 
 		long remaining = fileSize;
 		byte[] data = null;
@@ -515,7 +519,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		boolean wasFinished = isFinished();
 		
 		if(removeRequest()) {
-			queueManager.getQueryManager().deleteObserver(this);
+			queryManager.deleteObserver(this);
 
 			status = "Stopped";
 
@@ -588,7 +592,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 					sending = false;
 
 					notifyChange();
-					queueManager.getQueryManager().deleteObserver(this);
+					queryManager.deleteObserver(this);
 					return;
 				}
 
@@ -601,7 +605,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			if("PutSuccessful".equals(msg.getMessageName())) {
 				setStatus(false, true, true);
 				
-				queueManager.getQueryManager().deleteObserver(this);
+				queryManager.deleteObserver(this);
 
 				setStartupTime(Long.valueOf(msg.getValue("StartupTime")).longValue());
 				setCompletionTime(Long.valueOf(msg.getValue("CompletionTime")).longValue());
@@ -649,7 +653,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 				}
 
 				Logger.info(this, "PersistentRequestRemoved >> Removing from the queue");
-				queueManager.getQueryManager().deleteObserver(this);
+				queryManager.deleteObserver(this);
 				queueManager.remove(this);
 
 				notifyChange();
@@ -687,7 +691,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 				if(lockOwner) {
 					lockOwner = false;
-					queueManager.getQueryManager().getConnection().removeFromWriterQueue();
+					queryManager.getConnection().removeFromWriterQueue();
 				}
 
 				Logger.warning(this, "Protocol error ! : "+msg.getValue("CodeDescription"));
@@ -816,11 +820,11 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			else
 				msg.setValue("Global", "false");
 
-			queueManager.getQueryManager().writeMessage(msg);
+			queryManager.writeMessage(msg);
 
 			setStatus(false, false, false);
 
-			queueManager.getQueryManager().deleteObserver(this);
+			queryManager.deleteObserver(this);
 		} else {
 			Logger.notice(this, "Nothing to remove");
 		}
@@ -843,7 +847,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		if(clientToken && (getPath() != null))
 			msg.setValue("ClientToken", getPath());
 
-		queueManager.getQueryManager().writeMessage(msg);
+		queryManager.writeMessage(msg);
 	}
 
 	public int getThawPriority() {

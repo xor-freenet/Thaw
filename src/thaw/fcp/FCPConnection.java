@@ -164,18 +164,8 @@ public class FCPConnection extends Observable {
 		if((socket != null) && !socket.isClosed())
 			disconnect();
 
-		try {
-			socket = new Socket(nodeAddress, port);
-
-		} catch(final java.net.UnknownHostException e) {
-			Logger.error(this, "Error while trying to connect to "+nodeAddress+":"+port+" : "+
-				     e.toString());
-			socket = null;
-			return false;
-		} catch(final java.io.IOException e) {
-			Logger.error(this, "Error while trying to connect to "+nodeAddress+":"+port+" : "+
-				     e.toString() + " ; "+e.getMessage());
-			socket = null;
+		socket = openSocket(nodeAddress, port);
+		if(socket == null){
 			return false;
 		}
 
@@ -206,6 +196,25 @@ public class FCPConnection extends Observable {
 		this.notifyObservers();
 
 		return true;
+	}
+
+	
+	protected Socket openSocket(String nodeAddress, int port) {
+		Socket socket;
+		try {
+			socket = new Socket(nodeAddress, port);
+
+		} catch(final java.net.UnknownHostException e) {
+			Logger.error(this, "Error while trying to connect to "+nodeAddress+":"+port+" : "+
+				     e.toString());
+			socket = null;
+		} catch(final java.io.IOException e) {
+			Logger.error(this, "Error while trying to connect to "+nodeAddress+":"+port+" : "+
+				     e.toString() + " ; "+e.getMessage());
+			socket = null;
+		}
+
+		return socket;
 	}
 
 	public boolean isOutputBufferEmpty() {

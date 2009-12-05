@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 
 public class FCPGetConfig extends Observable implements FCPQuery, Observer {
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 	
 	private final boolean withCurrent;
 	private final boolean withShortDescription;
@@ -19,7 +19,7 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 	public FCPGetConfig(boolean withCurrent, boolean withShortDescription,
 	                    boolean withLongDescription, boolean withDefaults,
 	                    boolean withSortOrder, boolean withExpertFlag,
-	                    boolean withForceWriteFlag, FCPQueueManager queueManager) {
+	                    boolean withForceWriteFlag, FCPQueryManager queryManager) {
 		this.withCurrent = withCurrent;
 		this.withShortDescription = withShortDescription;
 		this.withLongDescription = withLongDescription;
@@ -27,7 +27,7 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 		this.withSortOrder = withSortOrder;
 		this.withExpertFlag = withExpertFlag;
 		this.withForceWriteFlag = withForceWriteFlag;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 	public int getQueryType() {
@@ -35,7 +35,7 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 	}
 
 	public boolean start() {
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 		
 		FCPMessage msg = new FCPMessage();
 		msg.setMessageName("GetConfig");
@@ -48,13 +48,13 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 		msg.setValue("WithExpertFlag", Boolean.toString(withExpertFlag));
 		msg.setValue("WithForceWriteFlag", Boolean.toString(withForceWriteFlag));
 		
-		queueManager.getQueryManager().writeMessage(msg);
+		queryManager.writeMessage(msg);
 		
 		return true;
 	}
 
 	public boolean stop() {
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 		
 		return true;
 	}

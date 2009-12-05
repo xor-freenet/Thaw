@@ -3,14 +3,14 @@ package thaw.fcp;
 
 public class FCPRemovePeer implements FCPQuery {
 	private String name;
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 	/**
 	 * Ref can be a real ref, or URL=http://where.to-get-the-ref-on-the.net/
 	 */
-	public FCPRemovePeer(String name, FCPQueueManager queueManager) {
+	public FCPRemovePeer(String name, FCPQueryManager queryManager) {
 		this.name = name;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 
@@ -21,7 +21,7 @@ public class FCPRemovePeer implements FCPQuery {
 
 		msg.setValue("NodeIdentifier", name);
 
-		return queueManager.getQueryManager().writeMessage(msg);
+		return queryManager.writeMessage(msg);
 	}
 
 

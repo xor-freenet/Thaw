@@ -3,14 +3,14 @@ package thaw.fcp;
 
 public class FCPAddPeer implements FCPQuery {
 	private String ref;
-	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 
 	/**
 	 * Ref can be a real ref, or URL=http://where.to-get-the-ref-on-the.net/
 	 */
-	public FCPAddPeer(String ref, FCPQueueManager queueManager) {
+	public FCPAddPeer(String ref, FCPQueryManager queryManager) {
 		this.ref = ref;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 	}
 
 
@@ -36,7 +36,7 @@ public class FCPAddPeer implements FCPQuery {
 			msg.setValue(optName, optValue);
 		}
 
-		return queueManager.getQueryManager().writeMessage(msg);
+		return queryManager.writeMessage(msg);
 	}
 
 

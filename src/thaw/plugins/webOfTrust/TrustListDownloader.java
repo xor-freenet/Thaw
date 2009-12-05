@@ -11,6 +11,7 @@ import java.sql.*;
 import thaw.core.Config;
 import thaw.core.Logger;
 
+import thaw.fcp.FCPQueryManager;
 import thaw.fcp.FCPQueueManager;
 import thaw.fcp.FCPClientGet;
 import thaw.fcp.FCPMetaTransferQuery;
@@ -35,11 +36,12 @@ public class TrustListDownloader implements Observer, Signatures.SignaturesObser
 	private final FCPMetaTransferQuery metaQuery;
 	private Hashtable ulprs;
 	private final FCPQueueManager queueManager;
-	
+
 	public TrustListDownloader(Hsqldb db, FCPQueueManager queueManager, Config config) {
 		this.db = db;
 		this.queueManager = queueManager;
-		this.metaQuery = new FCPMetaTransferQuery(queueManager);
+		FCPQueryManager queryManager = queueManager.getQueryManager();
+		this.metaQuery = new FCPMetaTransferQuery(queryManager);
 		
 		ulprs = new Hashtable();
 		

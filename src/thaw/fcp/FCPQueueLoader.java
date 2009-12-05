@@ -12,29 +12,28 @@ import thaw.core.Logger;
  */
 public class FCPQueueLoader implements FCPQuery, Observer {
 	private final FCPQueueManager queueManager;
+	private final FCPQueryManager queryManager;
 	private String thawId;
 
 	public FCPQueueLoader(final String thawId, FCPQueueManager queueManager) {
 		this.thawId = thawId;
 		this.queueManager = queueManager;
+		this.queryManager = queueManager.getQueryManager();
 	}
 
 	public boolean start() {
-		queueManager.getQueryManager().addObserver(this);
+		queryManager.addObserver(this);
 
-
-		final FCPListPersistentRequests listPersistent = new FCPListPersistentRequests(queueManager);
-		final boolean ret = listPersistent.start();
+		final FCPListPersistentRequests listPersistent = new FCPListPersistentRequests(queryManager);
+		return listPersistent.start();
 
 		//if(ret)
 		//	queueManager.getQueryManager().getConnection().addToWriterQueue();
-
-		return ret;
 	}
 
 
 	public boolean stop() {
-		queueManager.getQueryManager().deleteObserver(this);
+		queryManager.deleteObserver(this);
 		return true;
 	}
 
@@ -77,7 +76,7 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 									-1, queueManager);
 
 			if(queueManager.addQueryToTheRunningQueue(clientGet, false))
-				queueManager.getQueryManager().addObserver(clientGet);
+				queryManager.addObserver(clientGet);
 			else
 				Logger.info(this, "Already in the running queue");
 
@@ -135,7 +134,7 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 
 
 			if(queueManager.addQueryToTheRunningQueue(clientPut, false))
-				queueManager.getQueryManager().addObserver(clientPut);
+				queryManager.addObserver(clientPut);
 			else
 				Logger.info(this, "Already in the running queue");
 

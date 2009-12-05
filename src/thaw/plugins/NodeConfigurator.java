@@ -29,7 +29,7 @@ public class NodeConfigurator implements Plugin {
 		
 		boolean advanced = Boolean.valueOf(core.getConfig().getValue("advancedMode")).booleanValue();
 		
-		configTab = new NodeConfiguratorTab(advanced, core.getQueueManager());
+		configTab = new NodeConfiguratorTab(advanced, core.getQueueManager().getQueryManager());
 		
 		core.getConfigWindow().addTab(I18n.getMessage("thaw.plugin.nodeConfig"),
 			      thaw.gui.IconBox.minSettings,

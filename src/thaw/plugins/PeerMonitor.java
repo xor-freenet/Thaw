@@ -46,14 +46,14 @@ public class PeerMonitor implements thaw.core.Plugin, Observer, ActionListener
 		public void run() {
 			while(running) {
 				if (getNode == null) {
-					getNode = new FCPGetNode(false /* private */, true /* volatile */, core.getQueueManager());
+					getNode = new FCPGetNode(false /* private */, true /* volatile */, core.getQueueManager().getQueryManager());
 					getNode.addObserver(this);
 				}
 
 				getNode.start();
 
 				if (listPeers == null) {
-					listPeers = new FCPListPeers(false /* metadata */, true/* volatile */, core.getQueueManager());
+					listPeers = new FCPListPeers(false /* metadata */, true/* volatile */, core.getQueueManager().getQueryManager());
 					listPeers.addObserver(this);
 				}
 
@@ -100,14 +100,16 @@ public class PeerMonitor implements thaw.core.Plugin, Observer, ActionListener
 
 
 	public boolean run(Core core) {
+		FCPQueryManager queryManager = core.getQueueManager().getQueryManager();
 		this.core = core;
+
 
 		core.getConfig().addListener("advancedMode", this);
 
 		unfoldButton = new JButton("<");
 		unfoldButton.addActionListener(this);
 
-		peerPanel = new PeerMonitorPanel(this, core.getQueueManager(), core.getConfig(),
+		peerPanel = new PeerMonitorPanel(this, queryManager, core.getConfig(),
 						 core.getMainWindow());
 
 		peerPanel.addObserver(this);

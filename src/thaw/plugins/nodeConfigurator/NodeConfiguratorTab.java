@@ -27,10 +27,10 @@ import java.util.Vector;
 import thaw.core.I18n;
 import thaw.fcp.FCPGetConfig;
 import thaw.fcp.FCPModifyConfig;
-import thaw.fcp.FCPQueueManager;
+import thaw.fcp.FCPQueryManager;
 
 public class NodeConfiguratorTab implements Observer, ActionListener, ListSelectionListener {
-	private FCPQueueManager queueManager;
+	private FCPQueryManager queryManager;
 	private boolean advanced;
 	
 	private JPanel panel;
@@ -60,9 +60,9 @@ public class NodeConfiguratorTab implements Observer, ActionListener, ListSelect
 	private final static String trueStr = I18n.getMessage("thaw.common.true");
 	private final static String falseStr = I18n.getMessage("thaw.common.false");
 
-	public NodeConfiguratorTab(boolean advanced, FCPQueueManager queueManager) {
+	public NodeConfiguratorTab(boolean advanced, FCPQueryManager queryManager) {
 		this.advanced = advanced;
-		this.queueManager = queueManager;
+		this.queryManager = queryManager;
 		
 		JScrollPane sc;
 		
@@ -159,7 +159,7 @@ public class NodeConfiguratorTab implements Observer, ActionListener, ListSelect
 		FCPGetConfig getConfig = new FCPGetConfig(true /* current */, false /* with short desc */,
 												  true /* with long desc */, true /* with defaults */,
 												  true /* with sort order */, true /* with expert flag */,
-												  false /* with force write flag */,queueManager);
+												  false /* with force write flag */,queryManager);
 		getConfig.addObserver(this);
 		getConfig.start();
 	}
@@ -217,7 +217,7 @@ public class NodeConfiguratorTab implements Observer, ActionListener, ListSelect
 					value = "false";
 			}
 			
-			FCPModifyConfig modifConf = new FCPModifyConfig(name, value, queueManager);
+			FCPModifyConfig modifConf = new FCPModifyConfig(name, value, queryManager);
 			modifConf.start();
 			
 			refresh();
