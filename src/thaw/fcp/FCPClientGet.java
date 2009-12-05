@@ -17,8 +17,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private int maxRetries = -1;
 	private final static int PACKET_SIZE = 65536;
 
-	private FCPQueueManager queueManager;
-	private FCPQueryManager duplicatedQueryManager;
+	private final FCPQueueManager queueManager;
+	private FCPQueryManager duplicatedQueryManager;           /* TODO: Necessary? */
 
 	private String key = null;
 	private String filename = null; /* Extract from the key */
@@ -87,9 +87,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			    			final int maxRetries,
 			    			final FCPQueueManager queueManager) {
 
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir);
-
-		this.queueManager = queueManager;
+		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
 
 		this.status = status;
 
@@ -127,8 +125,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			    final int persistence, boolean globalQueue,
 			    final int maxRetries,
 			    String destinationDir,
-			    boolean noDDA) {
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir);
+			    boolean noDDA,
+			    FCPQueueManager queueManager) {
+		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
 		this.noDDA = noDDA;
 	}
 
@@ -141,7 +140,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	public FCPClientGet(final String key, final int priority,
 			    final int persistence, boolean globalQueue,
 			    final int maxRetries,
-			    String destinationDir) {
+			    String destinationDir,
+			    FCPQueueManager queueManager) {
 		super(null, false);
 
 		if (globalQueue && (persistence >= PERSISTENCE_UNTIL_DISCONNECT))
@@ -151,10 +151,11 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		this.maxRetries = maxRetries;
 		this.key = key;
-		this.priority = priority;
+		this.setPriority(priority);
 		this.persistence = persistence;
 		this.globalQueue = globalQueue;
 		this.destinationDir = destinationDir;
+		this.queueManager = queueManager;
 
 		fileSize = 0;
 		attempt  = 0;
@@ -181,8 +182,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			    final int maxRetries,
 			    String destinationDir,
 			    long maxSize,
-			    boolean noDDA) {
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, maxSize);
+			    boolean noDDA,
+			    FCPQueueManager queueManager) {
+		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, maxSize, queueManager);
 		this.noDDA = noDDA;
 	}
 
@@ -193,9 +195,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			    final int persistence, boolean globalQueue,
 			    final int maxRetries,
 			    String destinationDir,
-			    long maxSize) {
-		this(key, priority, persistence, globalQueue, maxRetries,
-		     destinationDir);
+			    long maxSize,
+			    FCPQueueManager queueManager) {
+		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
 		this.maxSize = maxSize;
 	}
 
@@ -206,14 +208,11 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		this.noRedir = noRedir;
 	}
 
-
-	public boolean start(final FCPQueueManager queueManager) {
+	public boolean start(){
 		attempt++;
-		
+
 		setStatus(true, false, false);
 
-		this.queueManager = queueManager;
-		
 		/* TODO : seems to be true sometimes => find why */ 
 		if (queueManager == null
 				|| queueManager.getQueryManager() == null
@@ -248,7 +247,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		queryMessage.setValue("Identifier", getIdentifier());
 		queryMessage.setValue("Verbosity", "1");
 		queryMessage.setValue("MaxRetries", Integer.toString(maxRetries));
-		queryMessage.setValue("PriorityClass", Integer.toString(priority));
+		queryMessage.setValue("PriorityClass", Integer.toString(getPriority()));
 
 		if (maxSize > 0)
 			queryMessage.setValue("MaxSize", Long.toString(maxSize));
@@ -323,7 +322,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				if (message.getValue("PriorityClass") == null) {
 					Logger.warning(this, "No priority specified ?! Message ignored.");
 				} else {
-					priority = Integer.parseInt(message.getValue("PriorityClass"));
+					setPriority(Integer.parseInt(message.getValue("PriorityClass")));
 				}
 				break;
 
@@ -400,7 +399,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		Logger.notice(this, "IdentifierCollision ! Resending with another id");
 
 		setIdentifier(null);
-		start(queueManager);
+		start();
 
 		notifyChange();
 	}
@@ -416,9 +415,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			if (destinationDir == null)
 				destinationDir = new File(finalPath).getAbsoluteFile().getParent();
 
-			testDDA = new FCPTestDDA(destinationDir, false, true);
+			testDDA = new FCPTestDDA(destinationDir, false, true, queueManager);
 			testDDA.addObserver(this);
-			testDDA.start(queueManager);
+			testDDA.start();
 		}
 		else if("15".equals( message.getValue("Code") )) {
 			Logger.debug(this, "Unknown URI ? was probably a stop order so no problem ...");
@@ -491,7 +490,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		if (restartIfFailed) {
 			restartIfFailed = false;
-			start(queueManager);
+			start();
 		}
 		else if (!"13".equals(message.getValue("Code"))){ /* if != of Data Not Found */
 			Logger.notice(this, "GetFailed : "+message.getValue("CodeDescription"));
@@ -607,6 +606,14 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	protected boolean ddaAllowed() {
 		return queueManager.getQueryManager().getConnection().isLocalSocket() && !noDDA;
+	}
+
+	protected int getPriority() {
+		return priority;
+	}
+
+	protected void setPriority(int priority) {
+		this.priority = priority;
 	}
 
 
@@ -997,7 +1004,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	}
 	
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		return stop(queueManager, true);
 	}
 
@@ -1033,7 +1040,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		msg.setMessageName("ModifyPersistentRequest");
 		msg.setValue("Global", Boolean.toString(globalQueue));
 		msg.setValue("Identifier", getIdentifier());
-		msg.setValue("PriorityClass", Integer.toString(priority));
+		msg.setValue("PriorityClass", Integer.toString(getPriority()));
 
 		if(clientToken && (destinationDir != null))
 			msg.setValue("ClientToken", destinationDir);
@@ -1044,17 +1051,17 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 
 	public int getThawPriority() {
-		return priority;
+		return getPriority();
 	}
 
 	public int getFCPPriority() {
-		return priority;
+		return getPriority();
 	}
 
 	public void setFCPPriority(final int prio) {
 		Logger.info(this, "Setting priority to "+Integer.toString(prio));
 
-		priority = prio;
+		setPriority(prio);
 
 		notifyChange();
 	}
@@ -1155,7 +1162,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		result.put("URI", key);
 		result.put("Filename", filename);
-		result.put("Priority", Integer.toString(priority));
+		result.put("Priority", Integer.toString(getPriority()));
 		result.put("Persistence", Integer.toString(persistence));
 		result.put("Global", Boolean.toString(globalQueue));
 		result.put("ClientToken", destinationDir);
@@ -1179,7 +1186,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		Logger.debug(this, "Resuming key : "+key);
 
 		filename       = (String)parameters.get("Filename");
-		priority       = Integer.parseInt((String)parameters.get("Priority"));
+		setPriority(Integer.parseInt((String)parameters.get("Priority")));
 		persistence    = Integer.parseInt((String)parameters.get("Persistence"));
 		globalQueue    = Boolean.valueOf((String)parameters.get("Global")).booleanValue();
 		destinationDir = (String)parameters.get("ClientToken");

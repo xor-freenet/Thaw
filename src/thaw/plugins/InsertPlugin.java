@@ -143,11 +143,11 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 			if((privateKey != null) && !"".equals( privateKey )) {
 				clientPut = new FCPClientPut(new File(files[i]), keyType, rev, name,
 							     "USK@"+privateKey+"/", priority,
-							     global, persistence);
+							     global, persistence,core.getQueueManager());
 			} else {
 				clientPut = new FCPClientPut(new File(files[i]), keyType, rev, name,
 							     null, priority,
-							     global, persistence);
+							     global, persistence, core.getQueueManager());
 			}
 
 			if(mimeType != null) {

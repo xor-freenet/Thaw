@@ -5,17 +5,13 @@ package thaw.fcp;
  */
 public interface FCPQuery {
 
-	/**
-	 * @param queueManager QueueManager gives access to QueryManager.
-	 */
-	public boolean start(FCPQueueManager queueManager);
+	public boolean start();
 
 	/**
 	 * Definitive stop. Transfer is considered as failed.
 	 * @return false if really it *cannot* stop the query.
-	 * @param queueManager QueueManager gives access to QueryManager.
 	 */
-	public boolean stop(FCPQueueManager queueManager);
+	public boolean stop();
 
 	/**
 	 * Tell if the query is a download query or an upload query.

@@ -18,7 +18,7 @@ import thaw.core.ThawRunnable;
  */
 public class FCPClientPut extends FCPTransferQuery implements Observer {
 
-	private FCPQueueManager queueManager;
+	private final FCPQueueManager queueManager;
 
 	private File localFile;
 	private long fileSize = 0;
@@ -72,8 +72,8 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	public FCPClientPut(final File file, final int keyType,
 			    final int rev, final String name,
 			    final String privateKey, final int priority,
-			    final boolean global, final int persistence) {
-		this(file, keyType, rev, name, privateKey, priority, global, persistence, false);
+			    final boolean global, final int persistence, FCPQueueManager queueManager) {
+		this(file, keyType, rev, name, privateKey, priority, global, persistence, false, queueManager);
 	}
 
 	/**
@@ -83,8 +83,11 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			    final int rev, final String name,
 			    final String privateKey, final int priority,
 			    final boolean global, final int persistence,
-			    final boolean getCHKOnly) {
+			    final boolean getCHKOnly,
+			    FCPQueueManager queueManager) {
 		super(null, true);
+
+		this.queueManager = queueManager;
 
 		this.getCHKOnly = getCHKOnly;
 		localFile = file;
@@ -170,8 +173,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	}
 
 
-	public boolean start(final FCPQueueManager queueManager) {
-		this.queueManager = queueManager;
+	public boolean start() {
 		putFailedCode = -1;
 		setIdentifier(null);
 
@@ -240,10 +242,10 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	public void generateSSK() {
 		status = "Generating keys";
 
-		sskGenerator = new FCPGenerateSSK();
+		sskGenerator = new FCPGenerateSSK(queueManager);
 
 		sskGenerator.addObserver(this);
-		sskGenerator.start(queueManager);
+		sskGenerator.start();
 	}
 
 
@@ -509,7 +511,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		return true;
 	}
 
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		boolean wasFinished = isFinished();
 		
 		if(removeRequest()) {
@@ -704,7 +706,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			if("IdentifierCollision".equals(msg.getMessageName())) {
 				status = "Identifier collision";
-				start(queueManager); /* et hop ca repart :) */
+				start(); /* et hop ca repart :) */
 				return;
 			}
 

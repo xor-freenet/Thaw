@@ -203,7 +203,7 @@ public class Core implements Observer {
 
 			clientHello = new FCPClientHello(queryManager, config.getValue("thawId"));
 
-			if(!clientHello.start(null)) {
+			if(!clientHello.start()) {
 				Logger.warning(this, "Id already used or timeout !");
 				subDisconnect();
 				ret = false;
@@ -224,15 +224,15 @@ public class Core implements Observer {
 				if (!running) ret = false;
 
 				if (ret) {
-					final FCPWatchGlobal watchGlobal = new FCPWatchGlobal(true);
-					watchGlobal.start(queueManager);
+					final FCPWatchGlobal watchGlobal = new FCPWatchGlobal(true, queueManager);
+					watchGlobal.start();
 				}
 
 				if (!running) ret = false;
 
 				if (ret) {
-					final FCPQueueLoader queueLoader = new FCPQueueLoader(config.getValue("thawId"));
-					queueLoader.start(queueManager);
+					final FCPQueueLoader queueLoader = new FCPQueueLoader(config.getValue("thawId"), queueManager);
+					queueLoader.start();
 				}
 
 				if (!running) ret = false;

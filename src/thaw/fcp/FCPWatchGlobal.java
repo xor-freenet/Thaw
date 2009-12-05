@@ -2,13 +2,15 @@ package thaw.fcp;
 
 public class FCPWatchGlobal implements FCPQuery {
 	private boolean watch;
+	private final FCPQueueManager queueManager;
 
 
-	public FCPWatchGlobal(final boolean v) {
+	public FCPWatchGlobal(final boolean v, FCPQueueManager queueManager) {
 		watch = v;
+		this.queueManager = queueManager;
 	}
 
-	public boolean start(final FCPQueueManager queueManager) {
+	public boolean start() {
 		final FCPMessage message = new FCPMessage();
 
 		message.setMessageName("WatchGlobal");
@@ -25,7 +27,7 @@ public class FCPWatchGlobal implements FCPQuery {
 		return true;
 	}
 
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		return true;
 	}
 

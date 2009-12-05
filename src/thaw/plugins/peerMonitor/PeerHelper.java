@@ -139,8 +139,8 @@ public class PeerHelper {
 
 
 	public static void addPeer(FCPQueueManager queueManager, String ref) {
-		FCPAddPeer addPeer = new FCPAddPeer(ref);
-		addPeer.start(queueManager);
+		FCPAddPeer addPeer = new FCPAddPeer(ref, queueManager);
+		addPeer.start();
 
 		/* see you later :) */
 		/* (ie when the next ListPeers will be done) */
@@ -191,8 +191,8 @@ public class PeerHelper {
 
 
 	public static void removePeer(FCPQueueManager queueManager, String peer) {
-		FCPRemovePeer addPeer = new FCPRemovePeer(peer);
-		addPeer.start(queueManager);
+		FCPRemovePeer addPeer = new FCPRemovePeer(peer, queueManager);
+		addPeer.start();
 	}
 
 }

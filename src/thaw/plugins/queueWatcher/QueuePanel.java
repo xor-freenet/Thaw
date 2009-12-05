@@ -329,7 +329,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 	public class ActionReplier implements ThawRunnable {
 		private int action;
 		private int new_priority;
-		private Vector queries;
+		private final Vector queries;
 
 		public ActionReplier(final int action, final int new_priority) {
 			this.action = action;
@@ -354,7 +354,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 					final FCPTransferQuery query = (FCPTransferQuery)it.next();
 					if(query.isFinished() && query.isSuccessful() &&
 					   (!(query instanceof FCPClientGet) || (!query.isSuccessful() || ((FCPClientGet)query).isWritingSuccessful()))) {
-						if(query.stop(core.getQueueManager())) {
+						if(query.stop()) {
 							core.getQueueManager().remove(query);
 						}
 					}
@@ -389,13 +389,13 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 
 				if(action == ACTION_REMOVE_SELECTED) {
 
-					if(query.stop(core.getQueueManager())) {
+					if(query.stop()) {
 						core.getQueueManager().remove(query);
 					}
 				}
 
 				if(action == ACTION_CANCEL_SELECTED) {
-					query.stop(core.getQueueManager());
+					query.stop();
 				}
 
 				if(action == ACTION_DELAY_SELECTED) {
@@ -406,7 +406,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 				}
 
 				if(action == ACTION_RESTART_SELECTED) {
-					query.stop(core.getQueueManager());
+					query.stop();
 
 					if ((query instanceof FCPClientGet) && query.getPath() != null) {
 						File target = new File(query.getPath());
@@ -418,7 +418,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 					if(query.getMaxAttempt() >= 0)
 						query.setAttempt(0);
 
-					query.start(core.getQueueManager());
+					query.start();
 				}
 
 				if (action == ACTION_COPY_KEYS_SELECTED) {

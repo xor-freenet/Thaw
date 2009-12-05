@@ -454,7 +454,8 @@ public class Comment extends Observable implements Observer, ActionListener {
                                                     FreenetURIHelper.convertSSKtoUSK(privateKey)+"/", /* the convertion fonction forget the '/' */
 						    2, /* priority */
 						    false, /* global */
-						    FCPClientPut.PERSISTENCE_FOREVER ); /* persistence */
+						    FCPClientPut.PERSISTENCE_FOREVER /* persistence */,
+						    queueManager);
                 put.addObserver(this);
 
 		return queueManager.addQueryToTheRunningQueue(put);
@@ -793,11 +794,12 @@ public class Comment extends Observable implements Observer, ActionListener {
 						    FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT /* persistence */,
 						    false /* global queue */, 0 /* maxretries */,
 						    System.getProperty("java.io.tmpdir"),
-						    MAX_SIZE, true /* no DDA */);
+						    MAX_SIZE, true /* no DDA */,
+						    queueManager);
 
 		get.addObserver(this);
 
-		return get.start(queueManager);
+		return get.start();
 	}
 
 
@@ -808,7 +810,7 @@ public class Comment extends Observable implements Observer, ActionListener {
 			
 			if (query.isFinished()) {
 				query.deleteObserver(this);
-				query.stop(queueManager);
+				query.stop();
 				queueManager.remove(query);
 			}
 
@@ -816,7 +818,7 @@ public class Comment extends Observable implements Observer, ActionListener {
 				FCPClientPut put = (FCPClientPut)o;
 
 				if (put.isFinished() && put.isSuccessful()) {
-					if (put.stop(queueManager))
+					if (put.stop())
 						queueManager.remove(put);
 					/* because the PersistentPut message sent by the node problably made it
 					 * added to the queueManager  by the QueueLoader*/
@@ -831,7 +833,7 @@ public class Comment extends Observable implements Observer, ActionListener {
 									       null);
 					if (ret == JOptionPane.YES_OPTION) {
 						/* we stop */
-						if (put.stop(queueManager))
+						if (put.stop())
 							queueManager.remove(put);
 						/* and we restart */
 						insertComment(queueManager, mainWindow);

@@ -104,9 +104,9 @@ public class TrustListUploader implements Signatures.SignaturesObserver, Observe
 		
 		Logger.notice(this, "Regenerating a key pair for the wot of trust");
 
-		FCPGenerateSSK sskGenerator = new FCPGenerateSSK();
+		FCPGenerateSSK sskGenerator = new FCPGenerateSSK(queueManager);
 		sskGenerator.addObserver(this);
-		sskGenerator.start(queueManager);
+		sskGenerator.start();
 	}
 	
 	/**
@@ -264,7 +264,8 @@ public class TrustListUploader implements Signatures.SignaturesObserver, Observe
 											"trustList", FreenetURIHelper.convertSSKtoUSK(privateKey)+"/", /* the convertion fonction forget the '/' */
 											2, /* priority */
 										    false, /* global */
-										    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT); /* persistence */
+										    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT,  /* persistence */
+											queueManager);
 				upload.addObserver(this);
 
 				queueManager.addQueryToTheRunningQueue(upload);
@@ -334,7 +335,7 @@ public class TrustListUploader implements Signatures.SignaturesObserver, Observe
 				} else
 					Logger.warning(this, "Unable to insert trust list !");
 				
-				upload.stop(queueManager);
+				upload.stop();
 				queueManager.remove(upload);
 				
 				if (upload.getPath() != null)

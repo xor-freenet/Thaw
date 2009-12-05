@@ -90,7 +90,7 @@ public class File implements Observer, FileContainer {
 
 				if (queueManager != null) {
 					Logger.notice(this, "REMOVING");
-					if(put.stop(queueManager)) {
+					if(put.stop()) {
 						queueManager.remove(put);
 					}
 
@@ -277,7 +277,8 @@ public class File implements Observer, FileContainer {
 								null /* private key */,
 								FCPClientPut.DEFAULT_PRIORITY,
 								true /* global */, FCPClientPut.PERSISTENCE_FOREVER,
-								true /* getCHKOnly */);
+								true /* getCHKOnly */,
+								queueManager);
 
 
 		this.queueManager = queueManager; /* so the transfer will be removed when finished */
@@ -313,7 +314,8 @@ public class File implements Observer, FileContainer {
 								FCPClientGet.PERSISTENCE_FOREVER,
 								true, /* <= global queue */
 								-1, /* <= max retries */
-								targetPath);
+								targetPath,
+								queueManager);
 
 		queueManager.addQueryToThePendingQueue(clientGet);
 
@@ -344,7 +346,8 @@ public class File implements Observer, FileContainer {
 								null, /* privateKey : EDONTCARE */
 								FCPClientPut.DEFAULT_PRIORITY,
 								true, /* global queue */
-								FCPClientPut.PERSISTENCE_FOREVER);
+								FCPClientPut.PERSISTENCE_FOREVER,
+								queueManager);
 		queueManager.addQueryToThePendingQueue(clientPut);
 
 		clientPut.addObserver(this);

@@ -49,7 +49,7 @@ public class FCPQueryManager extends Observable implements ThawRunnable {
 	}
 
 	/**
-	 * Blocking until a message is reveived.
+	 * Blocking until a message is received.
 	 * More exactly, read until "Data\n" or "EndMessage\n" is read.
 	 */
 	public FCPMessage readMessage() {
@@ -255,7 +255,7 @@ public class FCPQueryManager extends Observable implements ThawRunnable {
 
 		final FCPClientHello clientHello = new FCPClientHello(queryManager, connectionId);
 
-		if (!clientHello.start(null)) {
+		if (!clientHello.start()) {
 			Logger.warning(this, "ID already used ?! Using initial socket ...");
 			newConnection.disconnect();
 			return this;

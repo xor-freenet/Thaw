@@ -159,9 +159,9 @@ public class NodeConfiguratorTab implements Observer, ActionListener, ListSelect
 		FCPGetConfig getConfig = new FCPGetConfig(true /* current */, false /* with short desc */,
 												  true /* with long desc */, true /* with defaults */,
 												  true /* with sort order */, true /* with expert flag */,
-												  false /* with force write flag */);
+												  false /* with force write flag */,queueManager);
 		getConfig.addObserver(this);
-		getConfig.start(queueManager);
+		getConfig.start();
 	}
 	
 	private void refreshDisplay() {
@@ -217,8 +217,8 @@ public class NodeConfiguratorTab implements Observer, ActionListener, ListSelect
 					value = "false";
 			}
 			
-			FCPModifyConfig modifConf = new FCPModifyConfig(name, value);
-			modifConf.start(queueManager);
+			FCPModifyConfig modifConf = new FCPModifyConfig(name, value, queueManager);
+			modifConf.start();
 			
 			refresh();
 			

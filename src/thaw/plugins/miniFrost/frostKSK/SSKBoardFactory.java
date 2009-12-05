@@ -191,10 +191,10 @@ public class SSKBoardFactory extends KSKBoardFactory {
 
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == generate) {
-				FCPGenerateSSK generator = new FCPGenerateSSK();
+				FCPGenerateSSK generator = new FCPGenerateSSK(core.getQueueManager());
 
 				generator.addObserver(this);
-				generator.start(core.getQueueManager());
+				generator.start();
 
 				return;
 			} else if (e.getSource() == ok) {

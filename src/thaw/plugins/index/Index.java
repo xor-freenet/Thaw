@@ -771,7 +771,8 @@ public class Index extends Observable implements MutableTreeNode,
 			put = new FCPClientPut(targetFile, FCPClientPut.KEY_TYPE_SSK,
 					       rev, realName, privateKey, 2 /*priority*/,
 					       true /* global queue */,
-					       FCPClientPut.PERSISTENCE_FOREVER);
+					       FCPClientPut.PERSISTENCE_FOREVER,
+					       queueManager);
 			put.setMetadata("ContentType", "application/x-freenet-index");
 
 			if (indexBrowser != null && indexBrowser.getIndexTree() != null)
@@ -912,14 +913,15 @@ public class Index extends Observable implements MutableTreeNode,
 					     10, /* maxRetries */
 					     System.getProperty("java.io.tmpdir"), /* destination directory */
 					     MAX_SIZE, /* max size */
-					     true /* <= noDDA */);
+					     true /* <= noDDA */,
+					     queueManager);
 
 		/*
 		 * These requests are usually quite fast, and don't consume too much
-		 * of bandwith / CPU. So we can skip the queue and start immediatly
+		 * of bandwidth / CPU. So we can skip the queue and start immediately
 		 * (and like this, they won't appear in the queue)
 		 */
-		clientGet.start(queueManager);
+		clientGet.start();
 
 		if (indexTree != null)
 			indexTree.addUpdatingIndex(this);
@@ -1745,10 +1747,10 @@ public class Index extends Observable implements MutableTreeNode,
 		private FCPGenerateSSK sskGenerator;
 
 		public CommentKeyRegenerator(FCPQueueManager queueManager) {
-			sskGenerator = new FCPGenerateSSK();
+			sskGenerator = new FCPGenerateSSK(queueManager);
 			sskGenerator.addObserver(this);
 
-			sskGenerator.start(queueManager);
+			sskGenerator.start();
 		}
 
 

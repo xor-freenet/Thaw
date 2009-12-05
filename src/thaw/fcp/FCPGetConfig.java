@@ -6,7 +6,7 @@ import java.util.Hashtable;
 import java.util.Enumeration;
 
 public class FCPGetConfig extends Observable implements FCPQuery, Observer {
-	private FCPQueueManager queueManager;
+	private final FCPQueueManager queueManager;
 	
 	private final boolean withCurrent;
 	private final boolean withShortDescription;
@@ -17,9 +17,9 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 	private final boolean withForceWriteFlag;
 
 	public FCPGetConfig(boolean withCurrent, boolean withShortDescription,
-						boolean withLongDescription, boolean withDefaults,
-						boolean withSortOrder, boolean withExpertFlag,
-						boolean withForceWriteFlag) {
+	                    boolean withLongDescription, boolean withDefaults,
+	                    boolean withSortOrder, boolean withExpertFlag,
+	                    boolean withForceWriteFlag, FCPQueueManager queueManager) {
 		this.withCurrent = withCurrent;
 		this.withShortDescription = withShortDescription;
 		this.withLongDescription = withLongDescription;
@@ -27,15 +27,14 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 		this.withSortOrder = withSortOrder;
 		this.withExpertFlag = withExpertFlag;
 		this.withForceWriteFlag = withForceWriteFlag;
+		this.queueManager = queueManager;
 	}
 
 	public int getQueryType() {
 		return 0;
 	}
 
-	public boolean start(FCPQueueManager queueManager) {
-		this.queueManager = queueManager;
-		
+	public boolean start() {
 		queueManager.getQueryManager().addObserver(this);
 		
 		FCPMessage msg = new FCPMessage();
@@ -54,7 +53,7 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 		return true;
 	}
 
-	public boolean stop(FCPQueueManager queueManager) {
+	public boolean stop() {
 		queueManager.getQueryManager().deleteObserver(this);
 		
 		return true;
@@ -149,7 +148,7 @@ public class FCPGetConfig extends Observable implements FCPQuery, Observer {
 			setting.setElement(element, value);
 		}
 		
-		stop(queueManager);
+		stop();
 
 		setChanged();
 		notifyObservers(configSettings);

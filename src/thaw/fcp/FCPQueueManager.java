@@ -17,7 +17,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 	private final static int PRIORITY_MIN = 6; /* So 0 to 6 */
 
-	private FCPQueryManager queryManager;
+	private final FCPQueryManager queryManager;
 	private int maxDownloads, maxInsertions;
 
 	/* offset in the array == priority */
@@ -42,6 +42,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	public FCPQueueManager(final FCPQueryManager queryManager,
 			       final String thawId,
 			       final int maxDownloads, final int maxInsertions) {
+		this.queryManager = queryManager;
 		lastId = 0;
 		queueCompleted = false;
 
@@ -49,7 +50,6 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 		setMaxDownloads(maxDownloads);
 		setMaxInsertions(maxInsertions);
 
-		setQueryManager(queryManager);
 		resetQueues();
 
 		queryManager.getConnection().addObserver(this);
@@ -81,14 +81,6 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	public void setMaxInsertions(final int maxInsertions) {
 		this.maxInsertions = maxInsertions;
 	}
-
-	/**
-	 * You should call resetQueues() after calling this function.
-	 */
-	public void setQueryManager(final FCPQueryManager queryManager) {
-		this.queryManager = queryManager;
-	}
-
 
 	/**
 	 * Will purge the current known queue.
@@ -204,7 +196,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 		}
 
 		if(callStart)
-			query.start(this);
+			query.start();
 
 		synchronized(runningQueries) {
 			runningQueries.add(query);
@@ -251,7 +243,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 			final FCPTransferQuery query = (FCPTransferQuery)queryIt.next();
 
 			if(!query.isPersistent() && !query.isFinished())
-				query.start(this);
+				query.start();
 		}
 
 		Logger.info(this, "Restart done.");

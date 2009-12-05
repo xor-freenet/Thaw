@@ -207,9 +207,9 @@ public class IndexManagementHelper {
 
 			FCPGenerateSSK sskGenerator;
 
-			sskGenerator = new FCPGenerateSSK();
+			sskGenerator = new FCPGenerateSSK(getQueueManager());
 			sskGenerator.addObserver(this);
-			sskGenerator.start(getQueueManager());
+			sskGenerator.start();
 		}
 
 

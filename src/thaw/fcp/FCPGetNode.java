@@ -42,13 +42,16 @@ public class FCPGetNode extends Observable implements FCPQuery, Observer {
 
 	private Hashtable allParameters;
 
+	private final FCPQueueManager queueManager;
 
-	public FCPGetNode(boolean withPrivate, boolean withVolatile) {
+
+	public FCPGetNode(boolean withPrivate, boolean withVolatile, FCPQueueManager queueManager) {
 		this.withPrivate = withPrivate;
 		this.withVolatile = withVolatile;
+		this.queueManager = queueManager;
 	}
 
-	public boolean start(FCPQueueManager queueManager) {
+	public boolean start() {
 		FCPMessage msg = new FCPMessage();
 
 		msg.setMessageName("GetNode");
@@ -60,7 +63,7 @@ public class FCPGetNode extends Observable implements FCPQuery, Observer {
 		return queueManager.getQueryManager().writeMessage(msg);
 	}
 
-	public boolean stop(FCPQueueManager queueManager) {
+	public boolean stop() {
 		queueManager.getQueryManager().deleteObserver(this);
 		return true;
 	}

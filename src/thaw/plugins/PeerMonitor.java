@@ -46,19 +46,19 @@ public class PeerMonitor implements thaw.core.Plugin, Observer, ActionListener
 		public void run() {
 			while(running) {
 				if (getNode == null) {
-					getNode = new FCPGetNode(false /* private */, true /* volatile */);
+					getNode = new FCPGetNode(false /* private */, true /* volatile */, core.getQueueManager());
 					getNode.addObserver(this);
 				}
 
-				getNode.start(core.getQueueManager());
+				getNode.start();
 
 				if (listPeers == null) {
-					listPeers = new FCPListPeers(false /* metadata */, true /* volatile */);
+					listPeers = new FCPListPeers(false /* metadata */, true/* volatile */, core.getQueueManager());
 					listPeers.addObserver(this);
 				}
 
 				if (listPeers.hasEnded())
-					listPeers.start(core.getQueueManager());
+					listPeers.start();
 
 				try {
 					Thread.sleep(DEFAULT_REFRESH_RATE * 1000);

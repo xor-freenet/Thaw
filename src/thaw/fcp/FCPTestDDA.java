@@ -27,12 +27,13 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 	private boolean nodeCanRead;
 	private boolean nodeCanWrite;
 
-	private FCPQueueManager queueManager;
+	private final FCPQueueManager queueManager;
 
 
 	public FCPTestDDA(String directory,
 			  boolean wantTheNodeToRead,
-			  boolean wantTheNodeToWrite) {
+			  boolean wantTheNodeToWrite,
+			  FCPQueueManager queueManager) {
 
 		try {
 			this.dir = new File(directory).getCanonicalPath();
@@ -43,12 +44,11 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 
 		this.wantRead  = wantTheNodeToRead;
 		this.wantWrite = wantTheNodeToWrite;
+		this.queueManager = queueManager;
 	}
 
 
-	public boolean start(FCPQueueManager queueManager) {
-		this.queueManager = queueManager;
-
+	public boolean start() {
 		FCPMessage msg = new FCPMessage();
 		msg.setMessageName("TestDDARequest");
 		msg.setValue("Directory", dir);
@@ -60,7 +60,7 @@ public class FCPTestDDA extends Observable implements FCPQuery, Observer {
 		return queueManager.getQueryManager().writeMessage(msg);
 	}
 
-	public boolean stop(FCPQueueManager queueManager) {
+	public boolean stop() {
 		/* Red Hot Chili Peppers - Can't stop */
 		return false;
 	}

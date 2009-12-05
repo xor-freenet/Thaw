@@ -34,10 +34,13 @@ public class TrustListDownloader implements Observer, Signatures.SignaturesObser
 	
 	private final FCPMetaTransferQuery metaQuery;
 	private Hashtable ulprs;
+	private final FCPQueueManager queueManager;
 	
 	public TrustListDownloader(Hsqldb db, FCPQueueManager queueManager, Config config) {
 		this.db = db;
+		this.queueManager = queueManager;
 		this.metaQuery = new FCPMetaTransferQuery(queueManager);
+		
 		ulprs = new Hashtable();
 		
 		metaQuery.addObserver(this);
@@ -73,7 +76,8 @@ public class TrustListDownloader implements Observer, Signatures.SignaturesObser
 			     			-1, /* maxRetries => -1 => ULPR */
 			     			System.getProperty("java.io.tmpdir"), /* destination directory */
 			     			MAX_SIZE, /* max size */
-			     			true /* <= noDDA */);
+			     			true /* <= noDDA */,
+			     			queueManager);
 		ulprs.put(FreenetURIHelper.getComparablePart(key), get);
 		metaQuery.start(get);
 		

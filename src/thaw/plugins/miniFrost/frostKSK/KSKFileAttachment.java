@@ -56,7 +56,7 @@ public class KSKFileAttachment
 
 
 	public void computeKey(FCPQueueManager queueManager, java.io.File file) {
-		this.queueManager = queueManager;
+		this.queueManager = queueManager;     /* CAB TODO: Should this be finalized? */
 
 		FCPClientPut put = new FCPClientPut(file,
 						    FCPClientPut.KEY_TYPE_CHK,
@@ -66,7 +66,8 @@ public class KSKFileAttachment
 						    FCPClientPut.DEFAULT_PRIORITY,
 						    false /* global */,
 						    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT,
-						    true /* getCHKOnly */);
+						    true /* getCHKOnly */,
+						    queueManager);
 		put.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(put);
 	}
@@ -85,7 +86,7 @@ public class KSKFileAttachment
 				put.deleteObserver(this);
 
 			if (put.isFinished() && put.isSuccessful()) {
-				put.stop(queueManager);
+				put.stop();
 				queueManager.remove(put);
 			}
 		}
@@ -265,7 +266,8 @@ public class KSKFileAttachment
 							    FCPClientGet.PERSISTENCE_FOREVER,
 							    true, /* globale queue */
 							    FCPClientGet.DEFAULT_MAX_RETRIES,
-							    dir.getPath());
+							    dir.getPath(),
+							    queueManager);
 			queueManager.addQueryToThePendingQueue(get);
 		}
 	}

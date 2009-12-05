@@ -3,16 +3,18 @@ package thaw.fcp;
 
 public class FCPAddPeer implements FCPQuery {
 	private String ref;
+	private final FCPQueueManager queueManager;
 
 	/**
 	 * Ref can be a real ref, or URL=http://where.to-get-the-ref-on-the.net/
 	 */
-	public FCPAddPeer(String ref) {
+	public FCPAddPeer(String ref, FCPQueueManager queueManager) {
 		this.ref = ref;
+		this.queueManager = queueManager;
 	}
 
 
-	public boolean start(FCPQueueManager queueManager) {
+	public boolean start() {
 		FCPMessage msg = new FCPMessage();
 
 		msg.setMessageName("AddPeer");
@@ -38,7 +40,7 @@ public class FCPAddPeer implements FCPQuery {
 	}
 
 
-	public boolean stop(FCPQueueManager queueManager) {
+	public boolean stop() {
 		/* can't stop */
 		return false;
 	}

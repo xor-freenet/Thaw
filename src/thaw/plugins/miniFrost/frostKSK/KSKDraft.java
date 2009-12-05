@@ -256,7 +256,8 @@ public class KSKDraft
 							  privateKey, /* privateKey */
 							  2, /* priority */
 							  false,
-							  FCPClientPut.PERSISTENCE_FOREVER);
+							  FCPClientPut.PERSISTENCE_FOREVER,
+							  queueManager);
 		clientPut.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(clientPut);
 	}
@@ -304,7 +305,7 @@ public class KSKDraft
 				notifyPlugin();
 
 				put.deleteObserver(this);
-				put.stop(queueManager);
+				put.stop();
 				queueManager.remove(put);
 
 				fileToInsert.delete();
@@ -344,7 +345,7 @@ public class KSKDraft
 								 thaw.gui.SysTrayIcon.MSG_WARNING);
 
 				put.deleteObserver(this);
-				put.stop(queueManager);
+				put.stop();
 				queueManager.remove(put);
 
 				//revUsed = board.getNextNonDownloadedRev(date, revUsed);

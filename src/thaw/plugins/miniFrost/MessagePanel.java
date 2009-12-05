@@ -611,7 +611,8 @@ public class MessagePanel
 							    FCPClientGet.PERSISTENCE_FOREVER,
 							    true /* global queue */,
 							    FCPClientGet.DEFAULT_MAX_RETRIES /* max retries */,
-							    destDir.getPath());
+							    destDir.getPath(),
+							    queueManager);
 
 			queueManager.addQueryToThePendingQueue(get);
 		}

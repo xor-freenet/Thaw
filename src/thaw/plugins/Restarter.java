@@ -193,12 +193,12 @@ public class Restarter implements Observer, ThawRunnable, Plugin {
 
 
 	public void restartQuery(final FCPTransferQuery query) {
-		query.stop(core.getQueueManager());
+		query.stop();
 
 		if(query.getMaxAttempt() >= 0)
 			query.setAttempt(0);
 
-		query.start(core.getQueueManager());
+		query.start();
 	}
 
 	public void update(final Observable o, final Object arg) {

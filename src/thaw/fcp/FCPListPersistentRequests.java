@@ -1,12 +1,14 @@
 package thaw.fcp;
 
 public class FCPListPersistentRequests implements FCPQuery {
+	protected final FCPQueueManager queueManager;
+
+	public FCPListPersistentRequests(FCPQueueManager queueManager) {
+		this.queueManager = queueManager;
+	}
 
 
-	public FCPListPersistentRequests() { }
-
-
-	public boolean start(final FCPQueueManager queueManager) {
+	public boolean start() {
 		final FCPMessage newMessage = new FCPMessage();
 
 		newMessage.setMessageName("ListPersistentRequests");
@@ -16,7 +18,7 @@ public class FCPListPersistentRequests implements FCPQuery {
 		return true;
 	}
 
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		return true;
 	}
 

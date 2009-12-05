@@ -73,7 +73,7 @@ public class FCPMetaTransferQuery extends Observable implements Observer {
 		}
 		
 		/* here we start for real */
-		boolean r = query.start(queueManager);
+		boolean r = query.start();
 		
 		if (r) {
 			/* Ugly hack to replace the query manager by the metaTransferQuery */
@@ -104,7 +104,7 @@ public class FCPMetaTransferQuery extends Observable implements Observer {
 		boolean r = true;
 		
 		if (!query.isFinished())
-			r = query.stop(queueManager);
+			r = query.stop();
 		
 		if (r) {
 			remove(query.getIdentifier());

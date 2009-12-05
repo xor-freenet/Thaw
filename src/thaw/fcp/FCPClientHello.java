@@ -63,9 +63,8 @@ public class FCPClientHello implements FCPQuery, Observer {
 
 	/**
 	 * Warning: This query is blocking (only this one) !
-	 * @param queueManager always null
 	 */
-	public boolean start(final FCPQueueManager queueManager) {
+	public boolean start() {
 
 		queryManager.getConnection().registerClientHello(this);
 
@@ -161,7 +160,7 @@ public class FCPClientHello implements FCPQuery, Observer {
 	/**
 	 * Not used.
 	 */
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		return true;
 	}
 

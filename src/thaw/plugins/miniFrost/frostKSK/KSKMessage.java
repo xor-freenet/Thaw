@@ -81,12 +81,12 @@ public class KSKMessage
 						    FCP_MAX_RETRIES,
 						    System.getProperty("java.io.tmpdir"),
 						    FCP_MAX_SIZE,
-						    true /* noDDA */);
+						    true /* noDDA */,
+						    queueManager);
 		get.setNoRedirectionFlag(true);
 		get.addObserver(this);
 
-		/* we override the queueManager */
-		get.start(queueManager);
+		get.start();
 	}
 
 	public void update(Observable o, Object param) {
@@ -181,7 +181,7 @@ public class KSKMessage
 			}
 		}
 		
-		get.stop(queueManager);
+		get.stop();
 		queueManager.remove(get);
 
 		setChanged();

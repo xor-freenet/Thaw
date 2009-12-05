@@ -128,7 +128,8 @@ public class FetchPlugin implements thaw.core.Plugin, ActionListener {
 											  priority,
 											  persistence,
 											  globalQueue, -1,
-											  destination));
+											  destination,
+											  core.getQueueManager()));
 			somethingStarted = true;
 		}
 

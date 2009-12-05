@@ -11,21 +11,20 @@ import thaw.core.Logger;
  * It remains active to receive and add the persistentGet/Put receive during the execution
  */
 public class FCPQueueLoader implements FCPQuery, Observer {
-	private FCPQueueManager queueManager;
+	private final FCPQueueManager queueManager;
 	private String thawId;
 
-	public FCPQueueLoader(final String thawId) {
+	public FCPQueueLoader(final String thawId, FCPQueueManager queueManager) {
 		this.thawId = thawId;
+		this.queueManager = queueManager;
 	}
 
-	public boolean start(final FCPQueueManager queueManager) {
-		this.queueManager = queueManager;
-
+	public boolean start() {
 		queueManager.getQueryManager().addObserver(this);
 
 
-		final FCPListPersistentRequests listPersistent = new FCPListPersistentRequests();
-		final boolean ret = listPersistent.start(queueManager);
+		final FCPListPersistentRequests listPersistent = new FCPListPersistentRequests(queueManager);
+		final boolean ret = listPersistent.start();
 
 		//if(ret)
 		//	queueManager.getQueryManager().getConnection().addToWriterQueue();
@@ -34,7 +33,7 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 	}
 
 
-	public boolean stop(final FCPQueueManager queueManager) {
+	public boolean stop() {
 		queueManager.getQueryManager().deleteObserver(this);
 		return true;
 	}

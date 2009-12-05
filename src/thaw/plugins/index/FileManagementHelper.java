@@ -406,7 +406,7 @@ public class FileManagementHelper {
 		     it.hasNext();) {
 			File file = (File)it.next();
 			if ((transfer = file.getTransfer(queueManager)) != null) {
-				if(transfer.stop(queueManager)) {
+				if(transfer.stop()) {
 					queueManager.remove(transfer);
 				}
 			}
