@@ -48,7 +48,7 @@ public class PluginManager {
 	private Core core = null;
 
 	// LinkedHashMap because I want to keep a predictible plugin order.
-	private LinkedHashMap plugins = null; // String (pluginName) -> Plugin
+	private LinkedHashMap<String,Plugin> plugins; // String (pluginName) -> Plugin
 
 	public final static Object pluginLock = new Object();
 
@@ -57,20 +57,20 @@ public class PluginManager {
 	 */
 	public PluginManager(final Core core) {
 		this.core = core;
-		plugins = new LinkedHashMap();
+		plugins = new LinkedHashMap<String,Plugin>();
 	}
 
 
 	/**
 	 * Returns the whole loaded plugin list.
 	 */
-	public LinkedHashMap getPlugins() {
-		return plugins;
+	public LinkedHashMap<String,Plugin> getPlugins() {
+		return new LinkedHashMap<String,Plugin>(plugins);
 	}
 
 
 	public static String[] getKnownPlugins() {
-		return knownPlugins;
+		return knownPlugins.clone();
 	}
 
 
@@ -80,9 +80,7 @@ public class PluginManager {
 	 */
 	public boolean loadAndRunPlugins() {
 		synchronized(pluginLock) {
-			plugins = new LinkedHashMap();
-
-			Vector pluginNames;
+			plugins = new LinkedHashMap<String, Plugin>();
 
 			if(core.getConfig().getPluginNames().size() == 0) {
 				Logger.notice(this, "Loading default plugin list");
@@ -94,7 +92,8 @@ public class PluginManager {
 
 			/* we duplicate the vector to avoid collisions */
 			/* (remember : plugins can load other plugins */
-			pluginNames = new Vector(core.getConfig().getPluginNames());
+			Vector<String> pluginNames;
+			pluginNames = core.getConfig().getPluginNames();
 
 			final Iterator pluginIt = pluginNames.iterator();
 
@@ -103,15 +102,13 @@ public class PluginManager {
 			if (core.getSplashScreen() != null)
 				core.getSplashScreen().setProgression(40);
 
-			while(pluginIt.hasNext()) {
-				final String pluginName = (String)pluginIt.next();
-
+			for(String pluginName : pluginNames) {
 				if (core.getSplashScreen() != null)
 					core.getSplashScreen().setProgressionAndStatus(core.getSplashScreen().getProgression()+progressJump,
 																	"Loading plugin '"+pluginName.replaceFirst("thaw.plugins.", "")+"' ...");
 
 				if (loadPlugin(pluginName) == null) {
-					Logger.notice(this, "Plugin alread loaded");
+					Logger.notice(this, "Plugin already loaded");
 				} else {
 					runPlugin(pluginName);
 				}
@@ -199,7 +196,7 @@ public class PluginManager {
 			Logger.info(this, "Starting plugin: '"+className+"'");
 	
 			try {
-				Plugin plugin = (Plugin)plugins.get(className);
+				Plugin plugin = plugins.get(className);
 	
 				javax.swing.ImageIcon icon;
 	
@@ -231,7 +228,7 @@ public class PluginManager {
 			Logger.info(this, "Stopping plugin: '"+className+"'");
 	
 			try {
-				((Plugin)plugins.get(className)).stop();
+				plugins.get(className).stop();
 	
 			} catch(final Exception e) {
 				Logger.error(this, "stopPlugin('"+className+"'): Exception: "+e);
@@ -269,6 +266,6 @@ public class PluginManager {
 	}
 
 	public Plugin getPlugin(final String className) {
-		return (Plugin)plugins.get(className);
+		return plugins.get(className);
 	}
 }

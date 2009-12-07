@@ -116,73 +116,64 @@ public class Restarter implements Observer, ThawRunnable, Plugin {
 			final int maxDownloads = core.getQueueManager().getMaxDownloads();
 			int alreadyRunning = 0;
 			int failed = 0;
-			final Vector runningQueue = core.getQueueManager().getRunningQueue();
+			final Vector<FCPTransferQuery> runningQueue = core.getQueueManager().getRunningQueue();
 
 			try {
-				synchronized(runningQueue) {
+				if(maxDownloads >= 0) {
+					/* We count how many are really running
+					   and we write down those which are failed */
+					for(final FCPTransferQuery query : runningQueue) {
+						if(query.getQueryType() != 1)
+							continue;
 
-					if(maxDownloads >= 0) {
-						/* We count how many are really running
-						   and we write down those which are failed */
-						for(final Iterator it = runningQueue.iterator();
-						    it.hasNext();) {
+						if(query.isRunning() && !query.isFinished()) {
+							alreadyRunning++;
+						}
+
+						if(query.isFinished() && !query.isSuccessful()
+						   && (restartFatals || !query.isFatallyFailed()) ) {
+							failed++;
+						}
+					}
+
+					/* We choose randomly the ones to restart */
+					while((alreadyRunning < maxDownloads) && (failed > 0)) {
+						final int toRestart = (new Random()).nextInt(failed);
+
+						final Iterator it = runningQueue.iterator();
+						int i = 0;
+
+						while(it.hasNext()) {
 							final FCPTransferQuery query = (FCPTransferQuery)it.next();
 
 							if(query.getQueryType() != 1)
 								continue;
 
-							if(query.isRunning() && !query.isFinished()) {
-								alreadyRunning++;
-							}
-
 							if(query.isFinished() && !query.isSuccessful()
-							   && (restartFatals || !query.isFatallyFailed()) ) {
-								failed++;
-							}
-						}
-
-						/* We choose randomly the ones to restart */
-						while((alreadyRunning < maxDownloads) && (failed > 0)) {
-							final int toRestart = (new Random()).nextInt(failed);
-
-							final Iterator it = runningQueue.iterator();
-							int i = 0;
-
-							while(it.hasNext()) {
-								final FCPTransferQuery query = (FCPTransferQuery)it.next();
-
-								if(query.getQueryType() != 1)
-									continue;
-
-								if(query.isFinished() && !query.isSuccessful()
-								   && (restartFatals || !query.isFatallyFailed())) {
-									if(i == toRestart) {
-										restartQuery(query);
-										break;
-									}
-
-									i++;
+							   && (restartFatals || !query.isFatallyFailed())) {
+								if(i == toRestart) {
+									restartQuery(query);
+									break;
 								}
+
+								i++;
 							}
-
-							alreadyRunning++;
-							failed--;
 						}
 
-
-					} else { /* => if maxDownloads < 0 */
-
-						/* We restart them all */
-						for(final Iterator it = runningQueue.iterator();
-						    it.hasNext();) {
-							final FCPTransferQuery query = (FCPTransferQuery)it.next();
-							if((query.getQueryType() == 1) && query.isFinished()
-							   && !query.isSuccessful()
-							   && (restartFatals || !query.isFatallyFailed()))
-								restartQuery(query);
-						}
+						alreadyRunning++;
+						failed--;
 					}
 
+
+				} else { /* => if maxDownloads < 0 */
+
+					/* We restart them all */
+					for(final FCPTransferQuery query : runningQueue) {
+						if((query.getQueryType() == 1) && query.isFinished()
+						   && !query.isSuccessful()
+						   && (restartFatals || !query.isFatallyFailed()))
+							restartQuery(query);
+					}
 				}
 			} catch(final Exception e) {
 				Logger.error(this, "Exception : "+e);

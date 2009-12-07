@@ -3,11 +3,7 @@ package thaw.core;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import java.util.*;
 import javax.swing.JScrollPane;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
@@ -22,7 +18,7 @@ public class PluginConfigPanel implements Observer, ActionListener {
 	private JPanel mainPanel;
 	private JPanel pluginConfigPanel;
 
-	private Vector pluginCheckBoxes = null;
+	private Vector<JCheckBox> pluginCheckBoxes = null;
 
 	public PluginConfigPanel(final ConfigWindow configWindow, final Core core) {
 		this.core = core;
@@ -60,37 +56,30 @@ public class PluginConfigPanel implements Observer, ActionListener {
 	 */
 	public void refreshList() {
 		if (pluginCheckBoxes != null) {
-			for(Iterator it = pluginCheckBoxes.iterator();
-			    it.hasNext();) {
-				pluginConfigPanel.remove((JCheckBox)it.next());
+			for(JCheckBox checkBox : pluginCheckBoxes) {
+				pluginConfigPanel.remove(checkBox);
 			}
 		}
 
 		PluginManager pluginManager = core.getPluginManager();
 
-		pluginCheckBoxes = new Vector();
+		pluginCheckBoxes = new Vector<JCheckBox>();
 
 		String[] knownPlugins = PluginManager.getKnownPlugins();
 
-		for (int i = 0 ; i < knownPlugins.length ; i++) {
-			JCheckBox c = new JCheckBox(knownPlugins[i].replaceFirst("thaw.plugins.", ""));
+		for(String knownPlugin : knownPlugins) {
+			JCheckBox c = new JCheckBox(knownPlugin.replaceFirst("thaw.plugins.", ""));
 			c.addActionListener(this);
 			c.setSelected(false);
 			pluginCheckBoxes.add(c);
 			pluginConfigPanel.add(c);
 		}
 
-		LinkedHashMap loadedPlugins = pluginManager.getPlugins();
-		Iterator it = (new Vector(loadedPlugins.values())).iterator();
+		LinkedHashMap<String,Plugin> loadedPlugins = pluginManager.getPlugins();
+		Collection<Plugin> loadedPluginsValues = loadedPlugins.values();
 
-		while(it.hasNext()) {
-			Plugin plugin = (Plugin)it.next();
-
-			Iterator checkBoxIt = pluginCheckBoxes.iterator();
-
-			while(checkBoxIt.hasNext()) {
-				JCheckBox c = (JCheckBox)checkBoxIt.next();
-
+		for(Plugin plugin : loadedPluginsValues) {
+			for(JCheckBox c : pluginCheckBoxes) {
 				if (c.getText().equals(plugin.getClass().getName().replaceFirst("thaw.plugins.", ""))) {
 					c.setSelected(true);
 					c.setText(c.getText()+" ("+plugin.getNameForUser()+")");

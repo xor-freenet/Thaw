@@ -13,6 +13,7 @@ import javax.swing.JTable;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
 import thaw.core.I18n;
 import thaw.core.Logger;
@@ -27,7 +28,7 @@ import thaw.plugins.TrayIcon;
 
 
 public class QueueTableModel extends javax.swing.table.AbstractTableModel implements Observer {
-	private static final long serialVersionUID = 20060709;
+	private static final long serialVersionUID = 20091205;
 	private final static String totalTimeStr = I18n.getMessage("thaw.plugin.queueWatcher.totalTime");
 	private final static String downloadSuccessfulStr = I18n.getMessage("thaw.plugin.queueWatcher.downloadSuccessful");
 	private final static String downloadFailedStr = I18n.getMessage("thaw.plugin.queueWatcher.downloadFailed");
@@ -35,18 +36,18 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 	private final static String insertionFailedStr = I18n.getMessage("thaw.plugin.queueWatcher.insertionFailed");
 	private final static String unspecifiedStr = I18n.getMessage("thaw.common.unspecified");
 
-	private final Vector columnNames;
+	private final Vector<String> columnNames;
 
-    private Vector queries = null;
+    private final Vector<FCPTransferQuery> queries = new Vector<FCPTransferQuery>();
 
-	private boolean isForInsertions = false;
+	private final boolean isForInsertions;
 
 
 	private boolean isSortedAsc = false;
 	private int sortedColumn = -1;
 
-	private FCPQueueManager queueManager;
-	private PluginManager pluginManager;
+	private final FCPQueueManager queueManager;
+	private final PluginManager pluginManager;
 
 	public QueueTableModel(boolean isForInsertions,
 			       PluginManager pluginManager,
@@ -57,7 +58,7 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 		this.queueManager = queueManager;
 		this.isForInsertions = isForInsertions;
 
-		columnNames = new Vector();
+		columnNames = new Vector<String>();
 
 		columnNames.add(" ");
 		columnNames.add(I18n.getMessage("thaw.common.file"));
@@ -85,10 +86,9 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 
 	public int getRowCount() {
-		if(queries != null) {
+		synchronized(queries) {
 			return queries.size();
-		} else
-			return 0;
+		}
 	}
 
 	public int getColumnCount() {
@@ -96,7 +96,7 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 	}
 
 	public String getColumnName(final int col) {
-		String result = (String)columnNames.get(col);
+		String result = columnNames.get(col);
 
 		if(col == sortedColumn) {
 			if(isSortedAsc)
@@ -110,10 +110,13 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 
 	public Object getValueAt(final int row, int column) {
-		if(row >= queries.size())
-			return null;
+		final FCPTransferQuery query;
+		synchronized(queries) {
+			if(row >= queries.size())
+				return null;
 
-		final FCPTransferQuery query = (FCPTransferQuery)queries.get(row);
+			query = queries.get(row);
+		}
 
 		if (column == 0) {
 
@@ -206,19 +209,13 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 	 * Don't call notifyObservers !
 	 */
 	public void resetTable() {
-
-		if(queries != null) {
-			synchronized(queries) {
-				for(final Iterator it = queries.iterator();
-				    it.hasNext();) {
-					final Observable query = (Observable)it.next();
-					query.deleteObserver(this);
-				}
+		synchronized(queries) {
+			for(Observable query : queries) {
+				query.deleteObserver(this);
 			}
+
+		queries.clear();
 		}
-
-		queries = new Vector();
-
 	}
 
 	public void reloadQueue() {
@@ -226,39 +223,35 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 		addQueries(queueManager.getRunningQueue());
 
-		final Vector[] pendings = queueManager.getPendingQueues();
+		final Vector<Vector<FCPTransferQuery>> pendings = queueManager.getPendingQueues();
 
-		for(int i = 0;i < pendings.length ; i++)
-			addQueries(pendings[i]);
+		for(Vector<FCPTransferQuery> pending : pendings) {
+			addQueries(pending);
+		}
 	}
 
-	public void addQueries(final Vector queries) {
-		synchronized(queries) {
+	public void addQueries(final Iterable<FCPTransferQuery> queries) {
+		for(FCPTransferQuery query : queries) {
+			if((query.getQueryType() == 1) && !isForInsertions)
+				addQuery(query);
 
-			for(final Iterator it = queries.iterator();
-			    it.hasNext();) {
-
-				final FCPTransferQuery query = (FCPTransferQuery)it.next();
-
-				if((query.getQueryType() == 1) && !isForInsertions)
-					addQuery(query);
-
-				if((query.getQueryType() == 2) && isForInsertions)
-					addQuery(query);
-			}
+			if((query.getQueryType() == 2) && isForInsertions)
+				addQuery(query);
 		}
 	}
 
 	public void addQuery(final FCPTransferQuery query) {
 		if (!query.isPersistent())
 			return;
-		
-		if(queries.contains(query)) {
-			Logger.debug(this, "addQuery() : Already known");
-			return;
+
+		synchronized(queries) {
+			if(queries.contains(query)) {
+				Logger.debug(this, "addQuery() : Already known");
+				return;
+			}
 		}
 
-		((Observable)query).addObserver(this);
+		query.addObserver(this);
 
 		synchronized(queries) {
 			queries.add(query);
@@ -266,19 +259,22 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 		sortTable();
 
-		final int changedRow = queries.indexOf(query);
+		final int changedRow;
+		synchronized(queries) {
+			changedRow = queries.indexOf(query);
+		}
 
 		this.notifyObservers(new TableModelEvent(this, changedRow, changedRow, TableModelEvent.ALL_COLUMNS, TableModelEvent.INSERT));
 	}
 
 	public void removeQuery(final FCPTransferQuery query) {
-		((Observable)query).deleteObserver(this);
+		query.deleteObserver(this);
 
 		sortTable();
 
-		final int changedRow = queries.indexOf(query);
-
+		final int changedRow;
 		synchronized(queries) {
+			changedRow = queries.indexOf(query);
 			queries.remove(query);
 		}
 
@@ -290,24 +286,25 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 
 	public FCPTransferQuery getQuery(final int row) {
-		try {
-			return (FCPTransferQuery)queries.get(row);
-		} catch(final java.lang.ArrayIndexOutOfBoundsException e) {
-			Logger.notice(this, "Query not found, row: "+row);
-			return null;
+		synchronized(queries) {
+			try {
+				return queries.get(row);
+			} catch(final java.lang.ArrayIndexOutOfBoundsException e) {
+				Logger.notice(this, "Query not found, row: "+row);
+				return null;
+			}
 		}
 	}
 
 	/**
 	 * returns a *copy*
 	 */
-	public Vector getQueries() {
-		final Vector newVect = new Vector();
+	public Vector<FCPTransferQuery> getQueries() {
+		final Vector<FCPTransferQuery> newVect = new Vector<FCPTransferQuery>();
 
 		synchronized(queries) {
-			for(final Iterator queryIt = queries.iterator() ;
-			    queryIt.hasNext();) {
-				newVect.add(queryIt.next());
+			for(FCPTransferQuery query : queries) {
+				newVect.add(query);
 			}
 		}
 
@@ -364,38 +361,46 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 				return;
 			}
 
-			if(queries.contains(query)) { // then it's a removing
-				removeQuery(query);
-				return;
+			synchronized(queries) {
+ 				if(queries.contains(query)) { // then it's a removing
+					removeQuery(query);
+					return;
+				}
 			}
 			
 			/* else we don't know */
 			reloadQueue();
 			return;
 
-		} else if (o instanceof FCPTransferQuery
-		    && queries.indexOf(o) >= 0
-		    && ((FCPTransferQuery)o).isFinished()
-		    && (arg == null || !(arg instanceof Long /* update of the total time/ETA */)) ) {
-
-			String str = null;
-
-			boolean success = ((FCPTransferQuery)o).isSuccessful();
-
-			if (o instanceof FCPClientGet) {
-				str = (success ?
-				       downloadSuccessfulStr :
-				       downloadFailedStr);
-			} else if (o instanceof FCPClientPut) {
-				str = (success ?
-				       insertionSuccessfulStr :
-				       insertionFailedStr);
+		} else if (o instanceof FCPTransferQuery ) {
+			int queryIndex;
+			synchronized(queries) {
+				queryIndex = queries.indexOf(o);
 			}
 
-			if (str != null) {
-				str = str.replaceAll("X", ((FCPTransferQuery)o).getFilename());
-				TrayIcon.popMessage(pluginManager, "Thaw",
-						    str, thaw.gui.SysTrayIcon.MSG_INFO);
+			if( queryIndex >= 0
+				&& ((FCPTransferQuery)o).isFinished()
+				&& (arg == null || !(arg instanceof Long /* update of the total time/ETA */)) ) {
+
+				String str = null;
+
+				boolean success = ((FCPTransferQuery)o).isSuccessful();
+
+				if (o instanceof FCPClientGet) {
+					str = (success ?
+						   downloadSuccessfulStr :
+						   downloadFailedStr);
+				} else if (o instanceof FCPClientPut) {
+					str = (success ?
+						   insertionSuccessfulStr :
+						   insertionFailedStr);
+				}
+
+				if (str != null) {
+					str = str.replaceAll("X", ((FCPTransferQuery)o).getFilename());
+					TrayIcon.popMessage(pluginManager, "Thaw",
+								str, thaw.gui.SysTrayIcon.MSG_INFO);
+				}
 			}
 
 		}
@@ -404,21 +409,24 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 			int oldPos = -1;
 			int i = 0;
 
-			if (queries != null) {
+			synchronized(queries) {
 				oldPos = queries.indexOf(o);
 			}
 
 			sortTable();
 
-			if (queries != null && (i = queries.indexOf(o)) >= 0) {
+			synchronized(queries) {
+				i = queries.indexOf(o);
+			}
+
+			if (i >= 0) {
 				if (oldPos != i && oldPos >= 0)
 					this.notifyObservers(oldPos);
 				this.notifyObservers(i);
 				return;
 			}
 
-
-			Logger.warning(this, "update(): unknow change");
+			Logger.warning(this, "update(): unknown change");
 
 			try {
 				throw new Exception("meh");
@@ -435,14 +443,14 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 	 * @return false if nothing sorted
 	 */
 	public boolean sortTable() {
-		if((sortedColumn < 0) || (queries.size() <= 0))
-			return false;
+		synchronized(queries){
+			if((sortedColumn < 0) || (queries.size() <= 0))
+				return false;
 
-		synchronized(queries) {
 			Collections.sort(queries, new QueryComparator(isSortedAsc, sortedColumn, isForInsertions));
-		}
 
-		return true;
+			return true;
+		}
 	}
 
 

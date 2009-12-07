@@ -25,6 +25,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableModel;
 
 import thaw.core.Core;
 import thaw.core.ThawThread;
@@ -83,7 +84,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 
 	private boolean insertionQueue = false;
 
-	public QueueWatcher queueWatcher;
+	private QueueWatcher queueWatcher;
 
 	public QueuePanel(final Core core, final QueueWatcher queueWatcher,
 					final DetailPanel detailPanel, boolean isForInsertionQueue) {
@@ -208,9 +209,9 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 		if(core.getQueueManager() != null) {
 			this.addToTable(core.getQueueManager().getRunningQueue());
 
-			final Vector[] pendingQueues = core.getQueueManager().getPendingQueues();
-			for(int i = 0 ; i < pendingQueues.length ; i++) {
-				this.addToTable(pendingQueues[i]);
+			final Vector<Vector<FCPTransferQuery>> pendingQueues = core.getQueueManager().getPendingQueues();
+			for(Vector<FCPTransferQuery> pendingQueue : pendingQueues) {
+				this.addToTable(pendingQueue);
 			}
 		}
 	}
@@ -251,17 +252,17 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 	 * return a vector made of FCPTransferQueries.
 	 * Doesn't refresh the selection !
 	 */
-	public Vector getSelectedQueries() {
-		final Vector queries = new Vector();
-		final Vector initialQueries = tableModel.getQueries();
+	public Vector<FCPTransferQuery> getSelectedQueries() {
+		final Vector<FCPTransferQuery> queries = new Vector<FCPTransferQuery>();
+		final Vector<FCPTransferQuery> initialQueries = tableModel.getQueries();
 
 		if(selectedRows == null)
 			return queries;
 
 		/* Create a separate vector to avoid collisions */
-		for(int i = 0 ; i < selectedRows.length; i++) {
-			if (initialQueries.size() > selectedRows[i])
-				queries.add(initialQueries.get(selectedRows[i]));
+		for(int selectedRow : selectedRows) {
+			if (initialQueries.size() > selectedRow)
+				queries.add(initialQueries.get(selectedRow));
 		}
 
 		return queries;
@@ -283,15 +284,9 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 	/**
 	 * @param queries Vector of FCPTransferQuery only
 	 */
-	public synchronized void addToTable(final Vector queries) {
-		synchronized(queries) {
-			for(final Iterator queryIt = queries.iterator();
-			    queryIt.hasNext();) {
-
-				final FCPTransferQuery query = (FCPTransferQuery)queryIt.next();
-
-				this.addToTable(query);
-			}
+	public synchronized void addToTable(final Iterable<FCPTransferQuery> queries) {
+		for(FCPTransferQuery query : queries) {
+			this.addToTable(query);
 		}
 	}
 
@@ -329,7 +324,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 	public class ActionReplier implements ThawRunnable {
 		private int action;
 		private int new_priority;
-		private final Vector queries;
+		private final Vector<FCPTransferQuery> queries;
 
 		public ActionReplier(final int action, final int new_priority) {
 			this.action = action;
@@ -337,7 +332,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 			if (selectedRows != null)
 				this.queries = getSelectedQueries();
 			else
-				this.queries = new Vector();
+				this.queries = new Vector<FCPTransferQuery>();
 
 			this.new_priority = (action == ACTION_CHANGE_PRIORITY_SELECTED) ? new_priority : -1;
 		}
@@ -347,11 +342,9 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 			File dir = null;
 
 			if(action == ACTION_REMOVE_FINISHED) {
-				final Vector qs = tableModel.getQueries();
+				final Vector<FCPTransferQuery> qs = tableModel.getQueries();
 
-				for(final Iterator it = qs.iterator();
-				    it.hasNext(); ) {
-					final FCPTransferQuery query = (FCPTransferQuery)it.next();
+				for(final FCPTransferQuery query : qs) {
 					if(query.isFinished() && query.isSuccessful() &&
 					   (!(query instanceof FCPClientGet) || (!query.isSuccessful() || ((FCPClientGet)query).isWritingSuccessful()))) {
 						if(query.stop()) {
@@ -374,9 +367,7 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 					return;
 			}
 
-			for(final Iterator queryIt = queries.iterator() ; queryIt.hasNext() ;) {
-				final FCPTransferQuery query = (FCPTransferQuery)queryIt.next();
-
+			for(final FCPTransferQuery query : queries) {
 				if(query == null)
 					continue;
 

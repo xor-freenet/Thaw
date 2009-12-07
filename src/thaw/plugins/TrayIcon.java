@@ -1,9 +1,6 @@
 package thaw.plugins;
 
-import java.util.Comparator;
-import java.util.Collections;
-import java.util.Vector;
-import java.util.Iterator;
+import java.util.*;
 
 import java.awt.event.MouseListener;
 import java.awt.event.MouseEvent;
@@ -223,7 +220,7 @@ public class TrayIcon implements thaw.core.Plugin,
 		}
 	}
 
-	private Vector progressBars = null;
+	private Vector<TransferProgressBar> progressBars = null;
 
 
 	private JPanel getTransferPanel(FCPTransferQuery q) {
@@ -268,17 +265,14 @@ public class TrayIcon implements thaw.core.Plugin,
 		JPanel panel = new JPanel(new BorderLayout(10, 10));
 		panel.add(new JLabel(" "), BorderLayout.CENTER);
 
-		Vector queries = core.getQueueManager().getRunningQueue();
+		List<FCPTransferQuery> queries = core.getQueueManager().getRunningQueue();
 
 		JPanel north;
 
-		Vector newQueries = new Vector();
+		List<FCPTransferQuery> newQueries = new Vector<FCPTransferQuery>();
 
-		synchronized(queries) {
-			for (Iterator it = queries.iterator();
-			     it.hasNext();) {
-				newQueries.add(it.next());
-			}
+		for(FCPTransferQuery query : queries) {
+			newQueries.add(query);
 		}
 
 		if (newQueries.size() == 0) {
@@ -296,9 +290,8 @@ public class TrayIcon implements thaw.core.Plugin,
 
 		progressBars = new Vector();
 
-		for (Iterator it = newQueries.iterator();
-		     it.hasNext();) {
-			north.add(getTransferPanel((FCPTransferQuery)it.next()));
+		for(FCPTransferQuery query : newQueries) {
+			north.add(getTransferPanel(query));
 		}
 
 
@@ -357,10 +350,10 @@ public class TrayIcon implements thaw.core.Plugin,
 
 
 	private class ProgressBarRefresher implements ThawRunnable {
-		private Vector bars;
+		private Vector<TransferProgressBar> bars;
 		private boolean stop;
 
-		public ProgressBarRefresher(Vector bars) {
+		public ProgressBarRefresher(Vector<TransferProgressBar> bars) {
 			this.bars = bars;
 			stop = false;
 		}
@@ -368,9 +361,7 @@ public class TrayIcon implements thaw.core.Plugin,
 		public void run() {
 			while(!stop) {
 
-				for (Iterator it = bars.iterator();
-				     it.hasNext();) {
-
+				for(TransferProgressBar bar : bars) {
 					try {
 						Thread.sleep(200);
 					} catch(InterruptedException e) {
@@ -380,7 +371,6 @@ public class TrayIcon implements thaw.core.Plugin,
 					if (stop)
 						break;
 
-					TransferProgressBar bar = (TransferProgressBar)it.next();
 					bar.refresh();
 				}
 			}

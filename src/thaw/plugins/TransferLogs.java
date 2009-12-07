@@ -225,17 +225,13 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 	 * Add the current plugin as an observer on all the running query
 	 */
 	public void setAsObserverEverywhere() {
-		Vector runningQueue = core.getQueueManager().getRunningQueue();
+		Vector<FCPTransferQuery> runningQueue = core.getQueueManager().getRunningQueue();
 
-		synchronized(runningQueue) {
-			for (Iterator it = runningQueue.iterator();
-			     it.hasNext();) {
-				FCPTransferQuery query = (FCPTransferQuery)it.next();
-				notifyAddition(query);
-			}
-
-			core.getQueueManager().addObserver(this);
+		for(FCPTransferQuery query : runningQueue) {
+			notifyAddition(query);
 		}
+
+		core.getQueueManager().addObserver(this);
 	}
 
 

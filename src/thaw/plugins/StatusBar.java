@@ -114,42 +114,31 @@ public class StatusBar implements ThawRunnable, Plugin, LogListener {
 		int pending = 0;
 		int total = 0;
 
-		final Vector runningQueue = core.getQueueManager().getRunningQueue();
+		final Vector<FCPTransferQuery> runningQueue = core.getQueueManager().getRunningQueue();
 
-		synchronized(runningQueue) {
-			for(final Iterator it = runningQueue.iterator();
-			    it.hasNext(); ) {
-				final FCPTransferQuery query = (FCPTransferQuery)it.next();
+		for(FCPTransferQuery query : runningQueue) {
+			if(query.isRunning() && !query.isFinished()) {
+				running++;
+				progressTotal += 100;
+				progressDone += query.getProgression();
+			}
 
-				if(query.isRunning() && !query.isFinished()) {
-					running++;
-					progressTotal += 100;
-					progressDone += query.getProgression();
-				}
+			if(query.isFinished() && query.isSuccessful()) {
+				finished++;
+				progressTotal += 100;
+				progressDone += 100;
+			}
 
-				if(query.isFinished() && query.isSuccessful()) {
-					finished++;
-					progressTotal += 100;
-					progressDone += 100;
-				}
-
-				if(query.isFinished() && !query.isSuccessful()) {
-					failed++;
-				}
+			if(query.isFinished() && !query.isSuccessful()) {
+				failed++;
 			}
 		}
 
-		final Vector[] pendingQueues = core.getQueueManager().getPendingQueues();
-
-		synchronized(pendingQueues) {
-			for(int i =0 ; i < pendingQueues.length; i++) {
-
-				progressTotal += pendingQueues[i].size() * 100;
-				pending += pendingQueues[i].size();
-
-			}
+		final Vector<Vector<FCPTransferQuery>> pendingQueues = core.getQueueManager().getPendingQueues();
+		for(Vector<FCPTransferQuery> pendingQueue : pendingQueues) {
+			progressTotal += pendingQueue.size() * 100;
+			pending += pendingQueue.size();
 		}
-
 
 		total = finished + failed + running + pending;
 

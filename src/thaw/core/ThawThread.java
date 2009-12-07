@@ -6,7 +6,7 @@ import java.util.Iterator;
 
 public class ThawThread extends Thread {
 	private static ThreadGroup threadGroup = new ThreadGroup("Thaw");
-	private static Vector threads = new Vector();
+	private final static Vector<ThawThread> threads = new Vector<ThawThread>();
 	private static boolean allowFullStop = false;
 
 	private Object parent;
@@ -74,10 +74,7 @@ public class ThawThread extends Thread {
 				    Integer.toString(threadGroup.activeCount())+" threads "+
 				    "("+Integer.toString(threads.size())+" known)");
 
-			for (Iterator it = threads.iterator();
-			     it.hasNext();) {
-				ThawThread th = (ThawThread)it.next();
-
+			for (ThawThread th : threads){
 				if (th != null) {
 					if (th.getParent() != null) {
 						Logger.info(null,
@@ -95,10 +92,10 @@ public class ThawThread extends Thread {
 
 	public static void stopAll() {
 		synchronized(threads) {
-			for (Iterator it = threads.iterator();
-			     it.hasNext();) {
-				ThawThread th = (ThawThread)it.next();
-				th.getTarget().stop();
+			for (ThawThread th : threads) {
+				if( (th != null) && (th.getTarget() != null) ){
+					th.getTarget().stop();
+				}
 			}
 		}
 	}

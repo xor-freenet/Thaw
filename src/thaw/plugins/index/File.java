@@ -10,6 +10,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.util.Iterator;
+import java.util.Vector;
 
 import thaw.fcp.FreenetURIHelper;
 import thaw.core.Logger;
@@ -443,10 +444,8 @@ public class File implements Observer, FileContainer {
 				return false;
 			}
 
-			for (Iterator it = queue.getRunningQueue().iterator();
-			it.hasNext();) {
-				FCPTransferQuery tq = (FCPTransferQuery)it.next();
-
+			final Vector<FCPTransferQuery> runningQueue =  queue.getRunningQueue();
+			for(FCPTransferQuery tq : runningQueue) {
 				if (tq instanceof FCPClientPut) {
 					try {
 						st.setString(1, tq.getFilename());

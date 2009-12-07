@@ -1,8 +1,6 @@
 package thaw.fcp;
 
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Vector;
+import java.util.*;
 
 import thaw.core.Logger;
 import thaw.core.ThawThread;
@@ -22,17 +20,18 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 	/* offset in the array == priority */
 	/* Vector contains FCPQuery */
-	private final Vector[] pendingQueries = new Vector[FCPQueueManager.PRIORITY_MIN+1];
-	private Vector runningQueries;
 
-	private Hashtable keyTable;
-	private Hashtable filenameTable;
+	private final Vector<Vector<FCPTransferQuery>> pendingQueries = new Vector<Vector<FCPTransferQuery>>(PRIORITY_MIN+1);
+	private final Vector<FCPTransferQuery> runningQueries = new Vector<FCPTransferQuery>();
+
+	private Hashtable<String,FCPTransferQuery> keyTable;
+	private Hashtable<String,FCPTransferQuery> filenameTable;
 
 	private Thread scheduler;
 	private boolean stopThread = false;
 
 	private int lastId;
-	private String thawId;
+	private final String thawId;
 
 	private boolean queueCompleted;
 
@@ -43,10 +42,12 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 			       final String thawId,
 			       final int maxDownloads, final int maxInsertions) {
 		this.queryManager = queryManager;
+		pendingQueries.setSize(PRIORITY_MIN+1);
+
 		lastId = 0;
 		queueCompleted = false;
 
-		setThawId(thawId);
+		this.thawId = thawId;
 		setMaxDownloads(maxDownloads);
 		setMaxInsertions(maxInsertions);
 
@@ -70,10 +71,6 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 		return queryManager;
 	}
 
-	public void setThawId(final String thawId) {
-		this.thawId = thawId;
-	}
-
 	public void setMaxDownloads(final int maxDownloads) {
 		this.maxDownloads = maxDownloads;
 	}
@@ -86,20 +83,27 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	 * Will purge the current known queue.
 	 */
 	public void resetQueues() {
-		runningQueries = new Vector();
+		synchronized(runningQueries) {
+			runningQueries.clear();
+		}
 
-		for(int i = 0; i <= FCPQueueManager.PRIORITY_MIN ; i++)
-			pendingQueries[i] = new Vector();
+		synchronized(pendingQueries) {
+			for(int i = 0; i <= PRIORITY_MIN ; i++) {
+       			pendingQueries.set(i, new Vector<FCPTransferQuery>());
+			}
+		}
 
-		keyTable = new Hashtable();
-		filenameTable = new Hashtable();
+		keyTable = new Hashtable<String,FCPTransferQuery>();
+		filenameTable = new Hashtable<String,FCPTransferQuery>();
 	}
 
 	/**
-	 * Take care: Can change while you're using it.
+	 * Returns a copy of the currently pending queues.
 	 */
-	public Vector[] getPendingQueues() {
-		return pendingQueries;
+	public Vector<Vector<FCPTransferQuery>> getPendingQueues() {
+		synchronized(pendingQueries) {
+			return new Vector<Vector<FCPTransferQuery>>(pendingQueries);
+		}
 	}
 
 	/**
@@ -107,8 +111,8 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	 * The running queue contains running request, but also finished/failed ones.
 	 * synchronize on it if you want to do iterate() on it.
 	 */
-	public Vector getRunningQueue() {
-		return runningQueries;
+	public Vector<FCPTransferQuery> getRunningQueue() {
+		return new Vector<FCPTransferQuery>(runningQueries);
 	}
 
 	/**
@@ -140,7 +144,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 		Logger.notice(this, "Adding query to the pending queue ...");
 
 		synchronized(pendingQueries) {
-			pendingQueries[query.getThawPriority()].add(query);
+			pendingQueries.get(query.getThawPriority()).add(query);
 		}
 
 		String fileKey = query.getFileKey();
@@ -238,10 +242,8 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	public  void restartNonPersistent() {
 		Logger.info(this, "Restarting non persistent query");
 
-		for(final Iterator queryIt = getRunningQueue().iterator() ;
-		    queryIt.hasNext();) {
-			final FCPTransferQuery query = (FCPTransferQuery)queryIt.next();
-
+		final Vector<FCPTransferQuery> runningQueue =  getRunningQueue();
+		for(final FCPTransferQuery query : runningQueue) {
 			if(!query.isPersistent() && !query.isFinished())
 				query.start();
 		}
@@ -259,7 +261,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 		synchronized(pendingQueries) {
 			for(int i = 0 ; i <= FCPQueueManager.PRIORITY_MIN ; i++)
-				pendingQueries[i].remove(query);
+				pendingQueries.get(i).remove(query);
 		}
 
 		String fileKey = query.getFileKey();
@@ -315,8 +317,8 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 		}
 
 		synchronized(pendingQueries) {
-			for(int i = 0 ; i < pendingQueries.length ; i++) {
-				if(pendingQueries[i].contains(query))
+			for(int i = 0 ; i <= FCPQueueManager.PRIORITY_MIN ; i++) {
+				if(pendingQueries.get(i).contains(query))
 					return true;
 			}
 		}
@@ -363,7 +365,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 		synchronized(pendingQueries) {
 			for(int i = 0 ; i <= FCPQueueManager.PRIORITY_MIN ; i++) {
-				for(it = pendingQueries[i].iterator();
+				for(it = pendingQueries.get(i).iterator();
 				    it.hasNext(); )
 					{
 						final FCPTransferQuery plop = (FCPTransferQuery)it.next();
@@ -406,7 +408,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 			    priority++)	{
 
 				synchronized(pendingQueries) {
-					for(Iterator it = pendingQueries[priority].iterator();
+					for(Iterator it = pendingQueries.get(priority).iterator();
 					    it.hasNext()
 						    && ( ((maxInsertions <= -1) || (runningInsertions < maxInsertions))
 							 || ((maxDownloads <= -1) || (runningDownloads < maxDownloads)) ); ) {
@@ -419,9 +421,9 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 							&& ((maxInsertions <= -1) || (runningInsertions < maxInsertions))) ) {
 
 							Logger.debug(this, "Scheduler : Moving a query from pendingQueue to the runningQueue");
-							pendingQueries[priority].remove(query);
+							pendingQueries.get(priority).remove(query);
 
-							it = pendingQueries[priority].iterator(); /* We reset iterator */
+							it = pendingQueries.get(priority).iterator(); /* We reset iterator */
 
 							this.addQueryToTheRunningQueue(query);
 
@@ -445,8 +447,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	private void updateStats()
 	{	
 		synchronized(runningQueries) {
-			for (Iterator it = runningQueries.iterator(); it.hasNext(); ) {
-				FCPTransferQuery query = (FCPTransferQuery)it.next();
+			for(FCPTransferQuery query : runningQueries) {
 				query.updateStats();
 			}
 		}
@@ -505,9 +506,9 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 
 	public String getAnID() {
-		lastId++;
-
-		if(lastId >= 2147483647 /* 2^31 - 1 */) {
+		if (lastId < Integer.MAX_VALUE) {
+			lastId++;
+		} else {
 			lastId = 0;
 		}
 
@@ -526,7 +527,9 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 			/* Only the running queue ...
 			 * pending queries are specifics to Thaw
 			 */
-			runningQueries = new Vector();
+			synchronized(runningQueries) {
+				runningQueries.clear();
+			}
 
 			setChanged();
 			notifyObservers();

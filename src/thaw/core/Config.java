@@ -1,10 +1,7 @@
 package thaw.core;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Random;
-import java.util.Vector;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,9 +29,9 @@ public class Config {
 	public static String CONFIG_FILE_NAME = "thaw.conf.xml";
 	private final File configFile;
 
-	private final HashMap parameters; /* String (param) -> String (value) */
-	private final HashMap listeners;  /* String (param) -> Vector -> Plugin */
-	private final Vector pluginNames; /* String (plugin names) */
+	private final HashMap<String,String> parameters; /* String (param) -> String (value) */
+	private final HashMap<String,Vector<Plugin>> listeners;  /* String (param) -> Vector -> Plugin */
+	private final Vector<String> pluginNames;        /* String (plugin names) */
 
 	private final Core core;
 
@@ -44,21 +41,21 @@ public class Config {
 
 		configFile = new File(filename);
 
-		parameters = new HashMap();
-		pluginNames = new Vector();
-		listeners = new HashMap();
+		parameters = new HashMap<String,String>();
+		pluginNames = new Vector<String>();
+		listeners = new HashMap<String,Vector<Plugin>>();
 	}
 
 	/**
 	 * @return null if the value doesn't exit in the config.
 	 */
 	public String getValue(final String key) {
-		return ((String)parameters.get(key));
+		return (parameters.get(key));
 	}
 
 
 	private boolean listenChanges = false;
-	private Vector pluginsToReload = null;
+	private Vector<Plugin> pluginsToReload = null;
 
 	/**
 	 * called when majors changed will be done to the config
@@ -66,7 +63,7 @@ public class Config {
 	 */
 	public void startChanges() {
 		listenChanges = true;
-		pluginsToReload = new Vector();
+		pluginsToReload = new Vector<Plugin>();
 	}
 
 	/**
@@ -82,13 +79,10 @@ public class Config {
 		     || (currentValue != null && value == null) ) {
 
 			/* we get the plugin list to reload */
-			Vector pluginList = (Vector)listeners.get(key);
+			Vector<Plugin> pluginList = listeners.get(key);
 
 			if (listenChanges && pluginList != null) {
-				for (Iterator it = pluginList.iterator();
-				     it.hasNext();) {
-					Plugin plugin = (Plugin)it.next();
-
+				for ( Plugin plugin : pluginList ) {
 					/* if the plugin is not already in the plugin list to
 					 * reload, we add it */
 					if (pluginsToReload.indexOf(plugin) < 0) {
@@ -113,9 +107,7 @@ public class Config {
 	 * values
 	 */
 	public void applyChanges() {
-		for (Iterator it = pluginsToReload.iterator();
-		     it.hasNext();) {
-			Plugin plugin = (Plugin)it.next();
+		for (Plugin plugin : pluginsToReload) {
 			core.getPluginManager().stopPlugin(plugin.getClass().getName());
 			core.getPluginManager().runPlugin(plugin.getClass().getName());
 		}
@@ -149,8 +141,8 @@ public class Config {
 	/**
 	 * Give a vector containing the whole list of plugins.
 	 */
-	public Vector getPluginNames() {
-		return pluginNames;
+	public Vector<String> getPluginNames() {
+		return new Vector<String>(pluginNames);
 	}
 
 	/**
@@ -158,7 +150,7 @@ public class Config {
 	 */
 	public void removePlugin(final String name) {
 		for(int i = 0; i < pluginNames.size() ; i++) {
-			final String currentPlugin = (String)pluginNames.get(i);
+			final String currentPlugin = pluginNames.get(i);
 
 			if(currentPlugin.equals(name))
 				pluginNames.remove(i);
@@ -288,12 +280,9 @@ public class Config {
 
 		rootEl = xmlDoc.getDocumentElement();
 
-
-		final Iterator entries = parameters.keySet().iterator();
-
-		while(entries.hasNext()) {
-			final String entry = (String)entries.next();
-			final String value = (String)parameters.get(entry);
+		final Set<String> parameterKeySet = parameters.keySet();
+		for(String entry : parameterKeySet) {
+			final String value = parameters.get(entry);
 
 			final Element paramEl = xmlDoc.createElement("param");
 			paramEl.setAttribute("name", entry);
@@ -302,10 +291,7 @@ public class Config {
 			rootEl.appendChild(paramEl);
 		}
 
-		final Iterator plugins = pluginNames.iterator();
-
-		while(plugins.hasNext()) {
-			final String pluginName = (String)plugins.next();
+		for(String pluginName : pluginNames) {
 			final Element pluginEl = xmlDoc.createElement("plugin");
 
 			pluginEl.setAttribute("name", pluginName);
@@ -343,9 +329,7 @@ public class Config {
 
 
 	public boolean isEmpty() {
-		if(parameters.keySet().size() == 0)
-			return true;
-		return false;
+		return (parameters.keySet().size() == 0);
 	}
 
 	/**
@@ -376,10 +360,10 @@ public class Config {
 
 	public void addListener(String name, Plugin plugin) {
 
-		Vector pluginList = (Vector)listeners.get(name);
+		Vector<Plugin> pluginList = listeners.get(name);
 
 		if (pluginList == null) {
-			pluginList = new Vector();
+			pluginList = new Vector<Plugin>();
 			listeners.put(name, pluginList);
 		}
 
