@@ -36,11 +36,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	private long[] transferedBlocksPast = new long[NMB_REMINDERS];
 	private int currentReadCursor = 0; /* read Cursor in the *past arrays */
 	private int currentWriteCursor = 0; /* write Cursor in the *past arrays */
-	
-	private boolean running = false;
-	private boolean finished = false;
-	private boolean successful = false;
-	
+
 	private long averageSpeed = 0;
 	private long ETA = 0;
 	
@@ -48,7 +44,8 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	private long completionTime = -1;
 	
 	private String id;   /**< A string to uniquely identify to the client the file you are receiving.*/
-	
+	private TransferStatus transferStatus = TransferStatus.NOT_RUNNING;
+
 	/**
 	 * @param id can be null if currently unknown
 	 * @param insertion
@@ -83,11 +80,25 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 			this.reliable = reliable;
 		}
 	}
-	
+
+	protected void setStatus(TransferStatus status) {
+		transferStatus = status;
+	}
+
 	protected void setStatus(boolean running, boolean finished, boolean successful) {
-		this.running = running;
-		this.finished = ((!running) ? finished : false);
-		this.successful = (finished ? successful : false);
+		if(running) {
+			setStatus(TransferStatus.RUNNING);
+		} else {
+			if(finished) {
+				if(successful) {
+					setStatus(TransferStatus.SUCCESSFUL);
+				} else {
+					setStatus(TransferStatus.FINISHED);
+				}
+			} else {
+				setStatus(TransferStatus.NOT_RUNNING);
+			}
+		}
 	}
 	
 	/**
@@ -99,7 +110,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 		synchronized(this) {
 			/* computing average speed & ETA */
 			
-			if (completionTime >= 0 && startupTime >= 0 && finished)
+			if (completionTime >= 0 && startupTime >= 0 && isFinished())
 			{ /* wooch, final values ! :) */
 				long blocks = (insertion) ? totalBlocks : requiredBlocks;
 				long diffTime = (completionTime - startupTime) / 1000;
@@ -120,7 +131,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 			}
 			
 			
-			if (!running || finished)
+			if (!isRunning() || isFinished())
 				return;
 			
 			if (transferedBlocks < 0)
@@ -241,7 +252,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	 */
 	public int getProgression()
 	{
-		if (finished)
+		if (isFinished())
 			return 100;
 		
 		if (transferedBlocks < 0)
@@ -269,12 +280,12 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	
 	public boolean isRunning()
 	{
-		return running;
+		return transferStatus.isRunning();
 	}
 
 	public boolean isFinished()
 	{
-		return finished;
+		return transferStatus.isFinished();
 	}
 
 	/**
@@ -283,7 +294,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	 */
 	public boolean isSuccessful()
 	{
-		return successful;
+		return transferStatus.isSuccessful();
 	}
 
 	public void notifyChange() {
@@ -413,7 +424,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	 * Use to save the query in an XML file / a database / whatever.
 	 * @return A HashMap : String (parameter name) -> String (parameter value) or null.
 	 */
-	public abstract HashMap getParameters();
+	public abstract HashMap<String,String> getParameters();
 
 	/**
 	 * Opposite of getParameters().

@@ -1,0 +1,30 @@
+package thaw.fcp;
+
+public enum TransferStatus {
+	NOT_RUNNING(false,false,false),
+	RUNNING(true,false,false),
+	FINISHED(false,true,false),
+	SUCCESSFUL(false,true,true);
+
+	private boolean running;
+	private boolean finished;
+	private boolean successful;
+
+	TransferStatus(boolean running, boolean finished, boolean successful) {
+		this.running = running;
+		this.finished = finished;
+		this.successful = successful;
+	}
+
+	public boolean isRunning() {
+		return running;
+	}
+
+	public boolean isFinished() {
+		return finished;
+	}
+
+	public boolean isSuccessful() {
+		return successful;
+	}
+}

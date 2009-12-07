@@ -2,11 +2,7 @@ package thaw.fcp;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Observable;
-import java.util.Observer;
+import java.util.*;
 
 import thaw.core.Logger;
 import thaw.core.ThawThread;
@@ -44,7 +40,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	private FCPGenerateSSK sskGenerator;
 	private boolean lockOwner = false;
 
-	private final HashMap metadatas = new LinkedHashMap();
+	private final HashMap<String,String> metadatas = new LinkedHashMap<String,String>();
 
 	private final static int PACKET_SIZE = 1024;
 
@@ -120,7 +116,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		this.global = global;
 		this.persistence = persistence;
 		status = "Waiting";
-		setStatus(false, false, false);
+		setStatus(TransferStatus.NOT_RUNNING);
 		setBlockNumbers(-1, -1, -1, true);
 		attempt = 0;
 
@@ -170,7 +166,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		this.persistence = persistence;
 		
 		setBlockNumbers(-1, -1, -1, true);
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 		
 		this.status = status;
 		fatal = true;
@@ -186,7 +182,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			status = "EMPTY OR UNREACHABLE FILE";
 			
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 
 			fatal = true;
 
@@ -199,7 +195,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		queryManager.addObserver(this);
 		
 		setBlockNumbers(-1, -1, -1, false);
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		sha = null;
 
@@ -326,7 +322,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	}
 
 	public boolean continueInsert() {
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		sending = true;
 
@@ -349,10 +345,9 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		msg.setValue("URI", getInsertionKey());
 
 		if(!metadatas.isEmpty()) {
-			for(final Iterator keyIt = metadatas.keySet().iterator();
-			    keyIt.hasNext();) {
-				final String key = (String)keyIt.next();
-				final String value = (String)metadatas.get(key);
+			Collection<String> metadatasKeySet = metadatas.keySet();
+			for(String key : metadatasKeySet) {
+				final String value = metadatas.get(key);
 				msg.setValue("Metadata."+key, value);
 			}
 		}
@@ -418,7 +413,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		setBlockNumbers(-1, -1, -1, true);
 		
 		if(ret == true) {
-			setStatus(true, false, false);
+			setStatus(TransferStatus.RUNNING);
 			fatal = true;
 
 			if (!getCHKOnly)
@@ -430,7 +425,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			return true;
 		} else {
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 			Logger.warning(this, "Unable to send the file to the node");
 			status = "Unable to send the file to the node";
 
@@ -523,10 +518,10 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			status = "Stopped";
 
-			if (wasFinished)
-				setStatus(false, true, false);
+			if (wasFinished || !isSuccessful())
+				setStatus(TransferStatus.FINISHED);
 			else
-				setStatus(false, true, isSuccessful());
+				setStatus(TransferStatus.SUCCESSFUL);
 
 			fatal= true;
 
@@ -567,14 +562,13 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		if (param != null && param instanceof FCPMessage) {
 			final FCPMessage msg = (FCPMessage)param;
 
-			if((msg == null)
-			   || (msg.getValue("Identifier") == null)
+			if((msg.getValue("Identifier") == null)
 			   || !msg.getValue("Identifier").equals(getIdentifier()))
 				return;
 
 			if("URIGenerated".equals( msg.getMessageName() )
 			   || "PutFetchable".equals( msg.getMessageName() )) {
-				setStatus(true, false, false);
+				setStatus(TransferStatus.RUNNING);
 
 				publicKey = msg.getValue("URI");
 
@@ -585,7 +579,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 				if(getCHKOnly) {
 					status = "CHK";
 					
-					setStatus(false, true, true);
+					setStatus(TransferStatus.SUCCESSFUL);
 
 					toTheNodeProgress = 100;
 					fatal = false;
@@ -603,7 +597,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			}
 
 			if("PutSuccessful".equals(msg.getMessageName())) {
-				setStatus(false, true, true);
+				setStatus(TransferStatus.SUCCESSFUL);
 				
 				queryManager.deleteObserver(this);
 
@@ -647,7 +641,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			if ("PersistentRequestRemoved".equals(msg.getMessageName())) {
 				if (!isFinished()) {
-					setStatus(false, true, false);
+					setStatus(TransferStatus.FINISHED);
 					fatal = true;
 					status = "Removed";
 				}
@@ -662,7 +656,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 
 			if ("PutFailed".equals( msg.getMessageName() )) {
-				setStatus(false, true, false);
+				setStatus(TransferStatus.FINISHED);
 				fatal = true;
 				
 				putFailedCode = Integer.parseInt(msg.getValue("Code"));
@@ -686,7 +680,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			}
 
 			if("ProtocolError".equals( msg.getMessageName() )) {
-				setStatus(false, true, false);
+				setStatus(TransferStatus.FINISHED);
 				fatal = true;
 
 				if(lockOwner) {
@@ -757,7 +751,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 					final long succeeded = (new Long(msg.getValue("Succeeded"))).longValue();
 					
 					setBlockNumbers(required, total, succeeded, true);
-					setStatus(true, false, false);
+					setStatus(TransferStatus.RUNNING);
 
 					if (!getCHKOnly)
 						status = "Inserting";
@@ -791,7 +785,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		 * TODO : lower priority ?
 		 */
 		
-		setStatus(false, false, false);
+		setStatus(TransferStatus.NOT_RUNNING);
 		status = "Delayed";
 
 		fatal = true;
@@ -822,7 +816,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			queryManager.writeMessage(msg);
 
-			setStatus(false, false, false);
+			setStatus(TransferStatus.NOT_RUNNING);
 
 			queryManager.deleteObserver(this);
 		} else {
@@ -953,8 +947,8 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		return ((!isSuccessful()) && fatal);
 	}
 
-	public HashMap getParameters() {
-		final HashMap result = new HashMap();
+	public HashMap<String,String> getParameters() {
+		final HashMap<String,String> result = new HashMap<String,String>();
 
 		result.put("localFile", localFile.getPath());
 		result.put("keyType", Integer.toString(keyType));
@@ -1016,7 +1010,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		setStatus(running, finished, successful);
 
 		if ((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !isFinished()) {
-			setStatus(false, false, false);
+			setStatus(TransferStatus.NOT_RUNNING);
 			status = "Waiting";
 		}
 
@@ -1055,8 +1049,8 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		return toTheNodeProgress;
 	}
 
-	public HashMap getMetadatas() {
-		return metadatas;
+	public HashMap<String,String> getMetadatas() {
+		return new HashMap<String,String>(metadatas);
 	}
 
 	public void setMetadata(final String name, final String val) {
@@ -1067,7 +1061,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	}
 
 	public String getMetadata(final String name) {
-		return (String)metadatas.get(name);
+		return metadatas.get(name);
 	}
 
 

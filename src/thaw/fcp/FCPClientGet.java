@@ -117,7 +117,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		}
 		/* /FIX */
 
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 	}
 
 
@@ -216,7 +216,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	public boolean start(){
 		attempt++;
 
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		/* TODO : seems to be true sometimes => find why */ 
 		if (queueManager == null /* TODO: Needed anymore?*/
@@ -379,13 +379,13 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 						} else {
 							status = "Available";
-							setStatus(false, true, true);
+							setStatus(TransferStatus.SUCCESSFUL);
 							writingSuccessful = true;
 							Logger.notice(this, "Download finished => File already existing. Not rewrited");
 						}
 
 					} else {
-						setStatus(false, true, true);
+						setStatus(TransferStatus.SUCCESSFUL);
 						status = "Available but not downloaded";
 						writingSuccessful = true;
 						Logger.notice(this, "Download finished => Don't know where to put file, so file not asked to the node");
@@ -439,7 +439,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 			status = "Protocol Error ("+message.getValue("CodeDescription")+")";
 
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 
 			fatal = true;
 
@@ -466,7 +466,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		status = "Removed";
 
 		if (!isFinished()) {
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 			fatal = true;
 		}
 
@@ -507,7 +507,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			getFailedCode = Integer.parseInt(message.getValue("Code"));
 
 			status = "Failed ("+message.getValue("CodeDescription")+")";
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 
 			fatal = true;
 
@@ -545,7 +545,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 			status = "Fetching";
 			setBlockNumbers(required, total, succeeded, progressReliable);
-			setStatus(true, false, false);
+			setStatus(TransferStatus.RUNNING);
 
 		} else {
 			setBlockNumbers(-1, -1, -1, false);
@@ -564,7 +564,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		fileSize = message.getAmountOfDataWaiting();
 
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 		setStartupTime(Long.valueOf(message.getValue("StartupTime")).longValue());
 		setCompletionTime(Long.valueOf(message.getValue("CompletionTime")).longValue());
 
@@ -588,7 +588,11 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		isLockOwner = false;
 
-		setStatus(false, true, writingSuccessful);
+		if(writingSuccessful) {
+			setStatus(TransferStatus.SUCCESSFUL);
+		} else {
+			setStatus(TransferStatus.FINISHED);
+		}
 
 		queryManager.deleteObserver(this);
 
@@ -719,7 +723,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		status = "Waiting for socket availability ...";
 		fromTheNodeProgress = 1; /* display issue */
 		
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		notifyChange();
 		
@@ -743,7 +747,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		status = "Requesting file";
 		fromTheNodeProgress = 1; /* display issue */
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		notifyChange();
 		
@@ -865,7 +869,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		} else {
 			Logger.info(this, "File is supposed already written. Not rewriting.");
 			status = "File already exists";
-			setStatus(false, true, false);
+			setStatus(TransferStatus.FINISHED);
 			
 			/* Clear the data from the socket to prevent socket problems */
 			dummyDataGet(connection, size);
@@ -918,7 +922,14 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 					Logger.error(this, "Unable to write file on disk ... out of space ? : "+e.toString());
 					status = "Unable to fetch / disk probably full !";
 					writingSuccessful = false;
-					setStatus(false, true, false);
+					setStatus(TransferStatus.FINISHED);
+					try {
+						outputStream.close();
+					} catch(java.io.IOException ex) {
+						Logger.error(this, "Unable to close the file cleanly : "+ex.toString());
+						Logger.error(this, "Things seem to go wrong !");
+					}
+					newFile.delete();
 					dummyDataGet(connection, size);
 					return false;
 				}
@@ -926,7 +937,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				Logger.error(this, "Socket closed, damn !");
 				status = "Unable to read data from the node";
 				writingSuccessful = false;
-				setStatus(false, true, false);
+				setStatus(TransferStatus.FINISHED);
 				try {
 					outputStream.close();
 				} catch(java.io.IOException ex) {
@@ -998,7 +1009,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		removeRequest();
 		
-		setStatus(false, false, false);
+		setStatus(TransferStatus.NOT_RUNNING);
 
 		status = "Delayed";
 
@@ -1021,8 +1032,12 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		queryManager.deleteObserver(this);
 
 		boolean wasFinished = isFinished();
-		
-		setStatus(false, true, wasFinished && isSuccessful());
+
+		if(wasFinished && isSuccessful()) {
+			setStatus(TransferStatus.SUCCESSFUL);
+		} else {
+			setStatus(TransferStatus.FINISHED);
+		}
 
 		fatal = true;
 		status = "Stopped";
@@ -1161,7 +1176,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		return ((!isSuccessful()) && fatal);
 	}
 
-	public HashMap getParameters() {
+	public HashMap<String,String> getParameters() {
 		final HashMap<String,String> result = new HashMap<String,String>();
 
 		result.put("URI", key);
@@ -1203,11 +1218,11 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		boolean running        = Boolean.valueOf((String)parameters.get("Running")).booleanValue();
 		boolean successful     = Boolean.valueOf((String)parameters.get("Successful")).booleanValue();
 		maxRetries     = Integer.parseInt((String)parameters.get("MaxRetries"));
-		
+
 		setStatus(running, !running, successful);
 
 		if((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !isFinished()) {
-			setStatus(false, false, false);
+			setStatus(TransferStatus.NOT_RUNNING);
 			setBlockNumbers(-1, -1, -1, false);
 			status = "Waiting";
 		}
