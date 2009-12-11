@@ -396,10 +396,8 @@ public class MainWindow implements java.awt.event.ActionListener,
 		/* rebuilding menubar */
 		JMenuBar bar = new JMenuBar();
 
-		for (Iterator it = menuList.iterator();
-		     it.hasNext();) {
-			JMenu m = (JMenu)it.next();
-			bar.add(m);
+		for(JMenu menu : menuList) {
+			bar.add(menu);
 		}
 
 		mainWindow.setJMenuBar(bar);
@@ -426,7 +424,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		JMenu m = new JMenu(I18n.getMessage("thaw.menu.file"));
 
 		for(JMenuItem menuItem : fileMenuList) {
-				m.add(menuItem);
+			m.add(menuItem);
 		}
 
 		menuList.remove(fileMenu);
@@ -599,10 +597,9 @@ public class MainWindow implements java.awt.event.ActionListener,
 			new JLabel(I18n.getMessage("thaw.about.l15"))
 		};
 
-
-		for (int i = 0 ; i < labels.length ; i++) {
-			if (labels[i] instanceof JTextField) {
-				((JTextField)labels[i]).setEditable(false);
+		for(JComponent label : labels ) {
+			if (label instanceof JTextField) {
+				((JTextField)label).setEditable(false);
 			}
 		}
 
