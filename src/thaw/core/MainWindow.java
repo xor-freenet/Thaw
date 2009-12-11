@@ -58,30 +58,30 @@ public class MainWindow implements java.awt.event.ActionListener,
 	public final static int DEFAULT_SIZE_X = 790;
 	public final static int DEFAULT_SIZE_Y = 550;
 
-	private JFrame mainWindow = null;
+	private final JFrame mainWindow;
 
 	private JMenuBar menuBar = null;
 	private JMenu fileMenu = null;
 
 	private Vector fileMenuList = null;
 
-	private JMenuItem reconnectionFileMenuItem = null;
-	private JMenuItem optionsFileMenuItem = null;
-	private JMenuItem quitFileMenuItem = null;
+	private final JMenuItem reconnectionFileMenuItem;
+	private final JMenuItem optionsFileMenuItem;
+	private final JMenuItem quitFileMenuItem;
 
 	private final Vector<JMenu> menuList;
-	private JMenuItem aboutHelpMenuItem = null;
+	private final JMenuItem aboutHelpMenuItem;
 
 	private JToolBar toolBar = null;
-	private JButton connectButton = null;
-	private JButton disconnectButton = null;
-	private JButton settingsButton = null;
-	private JButton quitButton = null;
+	private final JButton connectButton;
+	private final JButton disconnectButton;
+	private final JButton settingsButton;
+	private final JButton quitButton;
 
-	private TabbedPane tabbedPane = null;
-	private JLabel statusBar = null;
+	private final TabbedPane tabbedPane;
+	private final JLabel statusBar;
 
-	private Core core = null; /* core is called back when exit() */
+	private final Core core; /* core is called back when exit() */
 
 	private Object lastToolBarModifier = null;
 
