@@ -112,7 +112,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 
 
 		fileMenu = new JMenu(I18n.getMessage("thaw.menu.file"));
-		fileMenuList = new Vector();
+		fileMenuList = new Vector<JMenuItem>();
 
 		reconnectionFileMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.reconnect"),
 							 IconBox.minReconnectAction);
