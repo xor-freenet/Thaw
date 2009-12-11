@@ -63,7 +63,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 	private JMenuBar menuBar = null;
 	private JMenu fileMenu = null;
 
-	private Vector fileMenuList = null;
+	private Vector<JMenuItem> fileMenuList = null;
 
 	private final JMenuItem reconnectionFileMenuItem;
 	private final JMenuItem optionsFileMenuItem;
@@ -412,12 +412,12 @@ public class MainWindow implements java.awt.event.ActionListener,
 	/**
 	 * Used by plugins to add their own menu / menuItem to the menu 'file'.
 	 */
-	public void insertInFileMenuAt(Object newItem, int position) {
+	public void insertInFileMenuAt(JMenuItem newItem, int position) {
 		fileMenuList.add(position, newItem);
 		refreshFileMenu();
 	}
 
-	public void removeFromFileMenu(Object item) {
+	public void removeFromFileMenu(JMenuItem item) {
 		fileMenuList.remove(item);
 		refreshFileMenu();
 	}
@@ -426,13 +426,8 @@ public class MainWindow implements java.awt.event.ActionListener,
 		/* rebuilding menubar */
 		JMenu m = new JMenu(I18n.getMessage("thaw.menu.file"));
 
-		for (Iterator it = fileMenuList.iterator();
-		     it.hasNext();) {
-			Object e = it.next();
-			if (e instanceof JMenuItem)
-				m.add((JMenuItem)e);
-			else
-				m.add((JMenu)e);
+		for(JMenuItem menuItem : fileMenuList) {
+				m.add(menuItem);
 		}
 
 		menuList.remove(fileMenu);
