@@ -43,7 +43,7 @@ public class FCPConnection extends Observable {
 	private long rawBytesWaiting = 0;
 
 	private int writersWaiting;
-	private Object monitor;
+	private final Object monitor;
 
 	private boolean duplicationAllowed = true;
 	private boolean localSocket = false;

@@ -10,7 +10,7 @@ import thaw.core.ThawRunnable;
  * Some data are sent each 'INTERVAL' (in ms).
  */
 public class FCPBufferedStream implements ThawRunnable {
-	private FCPConnection connection;
+	private final FCPConnection connection;
 	private int maxUploadSpeed;
 
 	private byte outputBuffer[];
