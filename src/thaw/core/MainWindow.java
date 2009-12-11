@@ -69,7 +69,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 	private JMenuItem optionsFileMenuItem = null;
 	private JMenuItem quitFileMenuItem = null;
 
-	private Vector menuList = null;
+	private final Vector<JMenu> menuList;
 	private JMenuItem aboutHelpMenuItem = null;
 
 	private JToolBar toolBar = null;
@@ -107,7 +107,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		// MENUS
 
 		menuBar = new JMenuBar();
-		menuList = new Vector();
+		menuList = new Vector<JMenu>();
 
 
 		fileMenu = new JMenu(I18n.getMessage("thaw.menu.file"));
