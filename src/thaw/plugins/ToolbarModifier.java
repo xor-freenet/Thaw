@@ -13,12 +13,12 @@ import thaw.core.MainWindow;
 public class ToolbarModifier {
 	private MainWindow mainWindow = null;
 
-	private Vector buttons; /* JButtons */
+	private final Vector<JButton> buttons; /* JButtons */
 
 	private boolean areDisplayed = false;
 
 	public ToolbarModifier() {
-		buttons = new Vector();
+		buttons = new Vector<JButton>();
 		areDisplayed = false;
 	}
 
@@ -99,6 +99,6 @@ public class ToolbarModifier {
 	 */
 	public void purgeButtonList() {
 		hideButtonsInTheToolbar();
-		buttons = new Vector();
+		buttons.clear();
 	}
 }
