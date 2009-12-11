@@ -69,7 +69,6 @@ public class MainWindow implements java.awt.event.ActionListener,
 	private JMenuItem optionsFileMenuItem = null;
 	private JMenuItem quitFileMenuItem = null;
 
-	private JMenu helpMenu = null;
 	private Vector menuList = null;
 	private JMenuItem aboutHelpMenuItem = null;
 
@@ -136,7 +135,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		menuBar.add(fileMenu);
 		menuList.add(fileMenu);
 
-		helpMenu = new JMenu(I18n.getMessage("thaw.menu.help"));
+		JMenu helpMenu = new JMenu(I18n.getMessage("thaw.menu.help"));
 
 		aboutHelpMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.about"),
 						  IconBox.minHelp);
