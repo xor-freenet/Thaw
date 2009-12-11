@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -284,7 +285,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 	 * @param modifier Correspond to the caller object: it's a security to avoid that a modifier wipe out the buttons from another one
 	 * @param newButtons JButton vector : if null, then it means to remove the buttons from the toolbar. Only the object having currently its buttons displayed will be able to remove them, other will simply be ignored.
 	 */
-	public void changeButtonsInTheToolbar(final Object modifier, final Vector newButtons) {
+	public void changeButtonsInTheToolbar(final Object modifier, final Collection<JButton> newButtons) {
 		JToolBar newToolBar;
 
 		Logger.debug(this, "changeButtonsInTheToolbar() : Called by "+modifier.getClass().getName());
@@ -308,9 +309,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		newToolBar.addSeparator();
 
 		if (newButtons != null) {
-			for (final Iterator it = newButtons.iterator();
-			     it.hasNext();) {
-				final JButton button = (JButton)it.next();
+			for(final JButton button : newButtons) {
 				if (button != null) {
 					button.setBorderPainted(false);
 					newToolBar.add(button);
