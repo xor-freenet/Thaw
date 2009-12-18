@@ -27,7 +27,7 @@ public class IndexFolder implements IndexTreeNode, MutableTreeNode {
 
 	private static final long serialVersionUID = 2L;
 
-	private Hsqldb db;
+	private final Hsqldb db;
 	private Config config;
 
 	private int id;
@@ -722,29 +722,31 @@ public class IndexFolder implements IndexTreeNode, MutableTreeNode {
 	private void deleteChildFoldersRecursivly(int id) throws SQLException {
 		Vector children = new Vector();
 
-		PreparedStatement st =
-			db.getConnection().prepareStatement("SELECT indexFolders.id FROM indexFolders where indexfolders.parent = ?");
-		st.setInt(1, id);
+		synchronized(db.dbLock) {
+			PreparedStatement st =
+				db.getConnection().prepareStatement("SELECT indexFolders.id FROM indexFolders where indexfolders.parent = ?");
+			st.setInt(1, id);
 
-		ResultSet set = st.executeQuery();
+			ResultSet set = st.executeQuery();
 
-		while(set.next()) {
-			children.add(new Integer(set.getInt("id")));
+			while(set.next()) {
+				children.add(new Integer(set.getInt("id")));
+			}
+
+			st.close();
+
+			st = db.getConnection().prepareStatement("DELETE from indexfolders where id = ?");
+
+			for (Iterator it = children.iterator();
+				 it.hasNext();) {
+				Integer nextId = (Integer)it.next();
+				deleteChildFoldersRecursivly(nextId.intValue());
+				st.setInt(1, nextId.intValue());
+				st.execute();
+			}
+
+			st.close();
 		}
-		
-		st.close();
-
-		st = db.getConnection().prepareStatement("DELETE from indexfolders where id = ?");
-
-		for (Iterator it = children.iterator();
-		     it.hasNext();) {
-			Integer nextId = (Integer)it.next();
-			deleteChildFoldersRecursivly(nextId.intValue());
-			st.setInt(1, nextId.intValue());
-			st.execute();
-		}
-		
-		st.close();
 	}
 
 
