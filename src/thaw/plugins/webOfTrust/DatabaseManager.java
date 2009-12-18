@@ -38,9 +38,8 @@ public class DatabaseManager {
 				+ "keyDate TIMESTAMP NOT NULL, "
 				+ "score SMALLINT NOT NULL, "
 				+ "sigId INTEGER NOT NULL, "
-				+ "lastDownload TIMESTAMP DEFAULT NULL NULL, "
-				+ "lastUpdate TIMESTAMP DEFAULT NULL NULL, "
-				+ "PRIMARY KEY(id), "
+				+ "lastDownload TIMESTAMP DEFAULT NULL, "
+				+ "lastUpdate TIMESTAMP DEFAULT NULL, "
 				+ "FOREIGN KEY(sigId) REFERENCES signatures (id))");
 		
 		sendQuery(db, "CREATE CACHED TABLE wotTrustLists ("
@@ -48,7 +47,6 @@ public class DatabaseManager {
 				+ "source INTEGER NOT NULL, "
 				+ "destination INTEGER NOT NULL, "
 				+ "trustLevel SMALLINT NOT NULL, "
-				+ "PRIMARY KEY(id), "
 				+ "FOREIGN KEY(source) REFERENCES signatures (id), "
 				+ "FOREIGN KEY(destination) REFERENCES signatures(id))");
 	}

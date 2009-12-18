@@ -29,6 +29,9 @@ import org.w3c.dom.Element;
 
 import org.xml.sax.*;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.xml.sax.helpers.DefaultHandler;
 
@@ -282,115 +285,108 @@ public class DatabaseManager {
 		/* category syntax:
 		 *  "folder[/subfolder[/subsubfolder]]"
 		 */
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE categories ("
 			  + "id INTEGER IDENTITY NOT NULL,"
-			  + "name VARCHAR(255) NOT NULL,"
-			  + "PRIMARY KEY(id))");
+			  + "name VARCHAR(255) NOT NULL)");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexFolders ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "name VARCHAR(255) NOT NULL,"
 			  + "positionInTree INTEGER NOT NULL,"
 			  + "modifiableIndexes BOOLEAN NOT NULL," /* Obsolete */
-			  + "parent INTEGER NULL,"
-			  + "PRIMARY KEY (id),"
+			  + "parent INTEGER,"
 			  + "FOREIGN KEY (parent) REFERENCES indexFolders (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexes ("
 			  + "id INTEGER IDENTITY NOT NULL, "
 			  + "originalName VARCHAR(255) NOT NULL, "
-			  + "displayName VARCHAR(255) NULL, "
+			  + "displayName VARCHAR(255) DEFAULT NULL, "
 			  + "publicKey VARCHAR(255) NOT NULL, "
-			  + "privateKey VARCHAR(255) NULL, "
+			  + "privateKey VARCHAR(255) DEFAULT NULL, "
 			  + "publishPrivateKey BOOLEAN DEFAULT FALSE NOT NULL, "
-			  + "author VARCHAR(255) NULL, "
+			  + "author VARCHAR(255) DEFAULT NULL, "
 			  + "positionInTree INTEGER NOT NULL, "
 			  + "revision INTEGER NOT NULL, "
-			  + "insertionDate DATE DEFAULT NULL NULL, "
-			  + "categoryId INTEGER DEFAULT NULL NULL, "
+			  + "insertionDate DATE DEFAULT NULL, "
+			  + "categoryId INTEGER DEFAULT NULL, "
 			  + "newRev BOOLEAN DEFAULT FALSE NOT NULL, "
 			  + "newComment BOOLEAN DEFAULT FALSE NOT NULL, "
-			  + "parent INTEGER NULL, " /* direct parent */
-			  + "PRIMARY KEY (id), "
+			  + "parent INTEGER, " /* direct parent */
 			  + "FOREIGN KEY (parent) REFERENCES indexFolders (id), "
 			  + "FOREIGN KEY (categoryId) REFERENCES categories (id))");
 
 		/* direct AND indirect parents */
-		sendQuery(db, /* this table avoid some horrible recursivities */
+		sendCreateTableQuery(db, /* this table avoid some horrible recursivities */
 			  "CREATE CACHED TABLE indexParents ("
 			  + "indexId INTEGER NOT NULL,"
-			  + "folderId INTEGER NULL)");
+			  + "folderId INTEGER)");
 		//+ "FOREIGN KEY (indexId) REFERENCES indexes (id)"
 		//+ "FOREIGN KEY (folderId) REFERENCES indexFolders (id))");
 
 
 		/* direct AND indirect parents */
-		sendQuery(db, /* this table avoid some horrible recursivities */
+		sendCreateTableQuery(db, /* this table avoid some horrible recursivities */
 			  "CREATE CACHED TABLE folderParents ("
 			  + "folderId INTEGER NOT NULL,"
-			  + "parentId INTEGER NULL)");
+			  + "parentId INTEGER)");
 		//+ "FOREIGN KEY (folderId) REFERENCES indexFolders (id)"
 		//+ "FOREIGN KEY (parentId) REFERENCES indexFolders (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE files ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "filename VARCHAR(255) NOT NULL,"
 			  + "publicKey VARCHAR(350) NOT NULL," // key ~= 100 + filename == 255 max => 350
-			  + "localPath VARCHAR(500) NULL,"
-			  + "mime VARCHAR(50) NULL,"
+			  + "localPath VARCHAR(500) DEFAULT NULL,"
+			  + "mime VARCHAR(50) DEFAULT NULL,"
 			  + "size BIGINT NOT NULL,"
-			  + "category INTEGER NULL," // TODO : This field is unused, to remove ?
+			  + "category INTEGER," // TODO : This field is unused, to remove ?
 			  + "indexParent INTEGER NOT NULL,"
 			  + "toDelete BOOLEAN DEFAULT FALSE NOT NULL,"
 			  + "dontDelete BOOLEAN DEFAULT FALSE NOT NULL,"
-			  + "PRIMARY KEY (id),"
 			  + "FOREIGN KEY (indexParent) REFERENCES indexes (id),"
 			  + "FOREIGN KEY (category) REFERENCES categories (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE links ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "publicKey VARCHAR(350) NOT NULL," // key ~= 100 + filename == 255 max
 			  + "mark INTEGER NOT NULL,"
 			  + "comment VARCHAR(512) NOT NULL,"
 			  + "indexParent INTEGER NOT NULL,"
-			  + "indexTarget INTEGER NULL,"
+			  + "indexTarget INTEGER,"
 			  + "toDelete BOOLEAN DEFAULT false NOT NULL,"
 			  + "dontDelete BOOLEAN DEFAULT false NOT NULL,"
 			  + "blackListed BOOLEAN DEFAULT false NOT NULL,"
 			  + "category INTEGER DEFAULT NULL, "
-			  + "PRIMARY KEY (id),"
 			  + "FOREIGN KEY (indexParent) REFERENCES indexes (id),"
 			  + "FOREIGN KEY (indexTarget) REFERENCES indexes (id),"
 			  + "FOREIGN KEY (category) REFERENCES categories (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE metadataNames ("
 			  + "id INTEGER IDENTITY NOT NULL,"
-			  + "name VARCHAR(255) NOT NULL,"
-			  + "PRIMARY KEY (id))");
+			  + "name VARCHAR(255) NOT NULL)");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE metadatas ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "nameId INTEGER NOT NULL,"
 			  + "value VARCHAR(255) NOT NULL,"
 			  + "fileId INTEGER NOT NULL,"
-			  + "PRIMARY KEY (id),"
 			  + "FOREIGN KEY (fileId) REFERENCES files (id),"
 			  + "FOREIGN KEY (nameId) REFERENCES metadataNames (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexBlackList ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "publicKey VARCHAR(350) NOT NULL,"
 			  + "name VARCHAR(255) NOT NULL)");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexCommentKeys ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "publicKey VARCHAR(255) NOT NULL,"
@@ -398,7 +394,7 @@ public class DatabaseManager {
 			  + "indexId INTEGER NOT NULL,"
 			  + "FOREIGN KEY (indexId) REFERENCES indexes (id))");
 
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexComments ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "authorId INTEGER NOT NULL,"
@@ -413,7 +409,7 @@ public class DatabaseManager {
 		 * black listed comments should not be fetched.
 		 * and if they are already fetched, they will be ignored at display time
 		 */
-		sendQuery(db,
+		sendCreateTableQuery(db,
 			  "CREATE CACHED TABLE indexCommentBlackList ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "rev INTEGER NOT NULL,"
@@ -460,6 +456,29 @@ public class DatabaseManager {
 			return false;
 		}
 	}
+
+
+	/**
+	 * Given a CREATE TABLE expression, determines if the table exists.
+	 * If the table does not exist, calls sendQuery(db,query). 
+	 */
+	protected static boolean sendCreateTableQuery(final Hsqldb db, final String query) {
+		String tableName;
+
+		tableName = db.getTableNameFromCreateTable(query);
+
+		if(tableName != null) {
+			if(!db.tableExists(tableName)) {
+				Logger.warning(new DatabaseManager(), "Creating table "+tableName);
+				return sendQuery(db, query);
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
+	}
+
 
 	/**
 	 * try to use the auto increment instead
@@ -1001,7 +1020,7 @@ public class DatabaseManager {
 		if (!sendQuery(db, /* this table avoid some horrible recusirvities */
 			       "CREATE CACHED TABLE indexParents ("
 			       + "indexId INTEGER NOT NULL,"
-			       + "folderId INTEGER NULL)")) {
+			       + "folderId INTEGER)")) {
 			Logger.error(new DatabaseManager(), "Unable to create table because");
 			return false;
 		}
@@ -1010,7 +1029,7 @@ public class DatabaseManager {
 		if (!sendQuery(db, /* this table avoid some horrible recursivities */
 			       "CREATE CACHED TABLE folderParents ("
 			       + "folderId INTEGER NOT NULL,"
-			       + "parentId INTEGER NULL)")) {
+			       + "parentId INTEGER)")) {
 			Logger.error(new DatabaseManager(), "Unable to create table because");
 			return false;
 		}
@@ -1152,7 +1171,7 @@ public class DatabaseManager {
 
 
 	public static boolean convertDatabase_6_to_7(Hsqldb db) {
-		if (!sendQuery(db, "ALTER TABLE indexes ADD COLUMN insertionDate DATE DEFAULT NULL NULL")) {
+		if (!sendQuery(db, "ALTER TABLE indexes ADD COLUMN insertionDate DATE DEFAULT NULL")) {
 			Logger.error(new DatabaseManager(), "Error while converting the database (6 to 7) ! (adding column to index table)");
 			return false;
 		}
@@ -1175,7 +1194,7 @@ public class DatabaseManager {
 
 
 	public static boolean convertDatabase_8_to_9(Hsqldb db) {
-		if (!sendQuery(db, "ALTER TABLE indexes ADD COLUMN categoryId INTEGER DEFAULT NULL NULL")
+		if (!sendQuery(db, "ALTER TABLE indexes ADD COLUMN categoryId INTEGER DEFAULT NULL")
 		    || !sendQuery(db, "ALTER TABLE indexes ADD FOREIGN KEY (categoryId) REFERENCES categories (id)")) {
 
 			Logger.error(new DatabaseManager(), "Error while converting the database (8 to 9) !");
@@ -1187,7 +1206,7 @@ public class DatabaseManager {
 	}
 	
 	public static boolean convertDatabase_9_to_10(Hsqldb db) {
-		if (!sendQuery(db, "ALTER TABLE links ADD COLUMN category INTEGER DEFAULT NULL NULL")
+		if (!sendQuery(db, "ALTER TABLE links ADD COLUMN category INTEGER DEFAULT NULL")
 				|| !sendQuery(db, "ALTER TABLE links ADD FOREIGN KEY (category) REFERENCES categories (id)")) {
 
 			Logger.error(new DatabaseManager(), "Error while converting the database (8 to 9) !");

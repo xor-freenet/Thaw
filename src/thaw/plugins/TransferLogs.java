@@ -158,17 +158,17 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 
 
 	protected void createTables() {
-		sendQuery("CREATE CACHED TABLE transferLogs ("
+		sendCreateTableQuery(db,
+				"CREATE CACHED TABLE transferLogs ("
 			  + "id INTEGER IDENTITY NOT NULL,"
 			  + "dateStart TIMESTAMP NOT NULL,"
-			  + "dateEnd TIMESTAMP NULL,"
+			  + "dateEnd TIMESTAMP,"
 			  + "transferType TINYINT NOT NULL,"
-			  + "key VARCHAR(500) NULL,"
-			  + "filename VARCHAR(128) NULL, "
-			  + "size BIGINT NULL, " /* long */
+			  + "key VARCHAR(500),"
+			  + "filename VARCHAR(128), "
+			  + "size BIGINT, " /* long */
 			  + "isDup BOOLEAN NOT NULL, "
-			  + "isSuccess BOOLEAN NOT NULL, "
-			  + "PRIMARY KEY (id))");
+			  + "isSuccess BOOLEAN NOT NULL)");
 	}
 
 	protected boolean isDup(String key) {
@@ -199,10 +199,6 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 		return false;
 	}
 
-
-	protected boolean sendQuery(String query) {
-		return sendQuery(db, query);
-	}
 
 	/**
 	 * Returns no error / Throws no exception.
@@ -430,6 +426,28 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 			Thread th = new ThawThread(new KeyExporter(), "Key exporter", this);
 			th.start();
 			return;
+		}
+	}
+
+
+		/**
+	 * Given a CREATE TABLE expression, determines if the table exists.
+	 * If the table does not exist, calls sendQuery(db,query).
+	 */
+	protected boolean sendCreateTableQuery(final Hsqldb db, final String query) {
+		String tableName;
+
+		tableName = db.getTableNameFromCreateTable(query);
+
+		if(tableName != null) {
+			if(!db.tableExists(tableName)) {
+				Logger.warning(this, "Creating table "+tableName);
+				return sendQuery(db, query);
+			} else {
+				return true;
+			}
+		} else {
+			return false;
 		}
 	}
 }

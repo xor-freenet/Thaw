@@ -218,7 +218,7 @@ public class KSKBoardFactory
 	}
 
 	protected boolean convertDatabase_0_to_1() {
-		boolean b = sendQuery("ALTER TABLE frostKSKMessages ADD COLUMN encryptedFor INTEGER DEFAULT NULL NULL");
+		boolean b = sendQuery("ALTER TABLE frostKSKMessages ADD COLUMN encryptedFor INTEGER DEFAULT NULL");
 
 		boolean c = sendQuery("ALTER TABLE frostKSKMessages ADD FOREIGN KEY (encryptedFor) REFERENCES signatures (id)");
 		b = b & c;
@@ -234,7 +234,7 @@ public class KSKBoardFactory
 	}
 
 	protected boolean convertDatabase_2_to_3() {
-		if (!sendQuery("ALTER TABLE frostKSKMessages ADD COLUMN keyDate DATE DEFAULT NULL NULL")) {
+		if (!sendQuery("ALTER TABLE frostKSKMessages ADD COLUMN keyDate DATE DEFAULT NULL")) {
 			Logger.error(this, "Error while converting the board database from version 2 to 3");
 			return false;
 		}
@@ -273,15 +273,13 @@ public class KSKBoardFactory
 		sendQuery("CREATE CACHED TABLE frostKSKBoards ("
 			  + "id INTEGER IDENTITY NOT NULL, "
 			  + "name VARCHAR(128) NOT NULL, "
-			  + "lastUpdate DATE DEFAULT NULL NULL, "
-			  + "PRIMARY KEY(id))");
+			  + "lastUpdate DATE DEFAULT NULL)");
 
 		sendQuery("CREATE CACHED TABLE frostSSKBoards ("
 			  + "id INTEGER IDENTITY NOT NULL, "
 			  + "publicKey VARCHAR(256) NOT NULL, "
-			  + "privateKey VARCHAR(256) NULL, "
+			  + "privateKey VARCHAR(256), "
 			  + "kskBoardId INTEGER NOT NULL, "
-			  + "PRIMARY KEY(id), "
 			  + "FOREIGN KEY (kskBoardId) REFERENCES frostKSKBoards (id))");
 		
 		sendQuery("CREATE CACHED TABLE frostKSKInvalidSlots ("
@@ -290,26 +288,24 @@ public class KSKBoardFactory
 				+ "date DATE NOT NULL, "
 				+ "minRev INTEGER NOT NULL, "
 				+ "maxRev INTEGER NOT NULL, "
-				+ "PRIMARY KEY(id), "
 				+ "FOREIGN KEY (boardId) REFERENCES frostKSKBoards (id))");
 
 		sendQuery("CREATE CACHED TABLE frostKSKMessages ("
 			  + "id INTEGER IDENTITY NOT NULL, "
-			  + "subject VARCHAR(512) NULL, "
+			  + "subject VARCHAR(512), "
 			  + "nick VARCHAR(128) NOT NULL, "
-			  + "sigId INTEGER NULL, "
+			  + "sigId INTEGER, "
 			  + "content VARCHAR(32768) NOT NULL, "
 			  + "keyDate DATE NOT NULL, "
 			  + "date TIMESTAMP NOT NULL, "
 			  + "msgId VARCHAR(128) NOT NULL, "
-			  + "inReplyToId VARCHAR(128) NULL, "
-			  + "inReplyTo INTEGER NULL, "
+			  + "inReplyToId VARCHAR(128), "
+			  + "inReplyTo INTEGER, "
 			  + "rev INTEGER NOT NULL, "
 			  + "read BOOLEAN DEFAULT FALSE NOT NULL, "
 			  + "archived BOOLEAN DEFAULT FALSE NOT NULL, "
-			  + "encryptedFor INTEGER DEFAULT NULL NULL, "
+			  + "encryptedFor INTEGER DEFAULT NULL, "
 			  + "boardId INTEGER NOT NULL, "
-			  + "PRIMARY KEY(id), "
 			  + "FOREIGN KEY (boardId) REFERENCES frostKSKBoards (id), "
 			  + "FOREIGN KEY (inReplyTo) REFERENCES frostKSKMessages (id), "
 			  + "FOREIGN KEY (sigId) REFERENCES signatures (id), "
@@ -321,17 +317,15 @@ public class KSKBoardFactory
 			  + "size BIGINT NOT NULL, "
 			  + "key VARCHAR(512) NOT NULL, "
 			  + "messageId INTEGER NOT NULL, "
-			  + "PRIMARY KEY(id), "
 			  + "FOREIGN KEY (messageId) REFERENCES frostKSKMessages (id))");
 
 		sendQuery("CREATE CACHED TABLE frostKSKAttachmentBoards ("
 			  + "id INTEGER IDENTITY NOT NULL, "
 			  + "name VARCHAR(128) NOT NULL, "
-			  + "publicKey VARCHAR(256) NULL, "
-			  + "privateKey VARCHAR(256) NULL, "
-			  + "description VARCHAR(512) NULL, "
+			  + "publicKey VARCHAR(256), "
+			  + "privateKey VARCHAR(256), "
+			  + "description VARCHAR(512), "
 			  + "messageId INTEGER NOT NULL, "
-			  + "PRIMARY KEY(id), "
 			  + "FOREIGN KEY (messageId) REFERENCES frostKSKMessages (id))");
 
 		if (core.getConfig().getValue("frostKSKDatabaseVersion") == null)

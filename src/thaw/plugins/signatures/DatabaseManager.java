@@ -62,14 +62,13 @@ public class DatabaseManager {
 
 
 	public static void createTables(Hsqldb db) {
-		sendQuery(db, "CREATE CACHED TABLE signatures ("
+		sendCreateTableQuery(db, "CREATE CACHED TABLE signatures ("
 			  + "id INTEGER IDENTITY NOT NULL, "
 			  + "nickName VARCHAR(255) NOT NULL, "
 			  + "publicKey VARCHAR(400) NOT NULL, " /* publicKey */
-			  + "privateKey VARCHAR(400) DEFAULT NULL NULL, " /* privateKey */
+			  + "privateKey VARCHAR(400) DEFAULT NULL, " /* privateKey */
 			  + "isDup BOOLEAN DEFAULT FALSE NOT NULL, "
-			  + "trustLevel TINYINT DEFAULT 0 NOT NULL, " /* See Identity.java */
-			  + "PRIMARY KEY(id))");
+			  + "trustLevel TINYINT DEFAULT 0 NOT NULL)"); /* See Identity.java */
 	}
 
 
@@ -111,9 +110,31 @@ public class DatabaseManager {
 		    || !sendQuery(db, "ALTER TABLE signatures DROP y")
 		    || !sendQuery(db, "ALTER TABLE signatures DROP x")
 		    || !sendQuery(db, "ALTER TABLE signatures ADD publicKey VARCHAR(400) NOT NULL")
-		    || !sendQuery(db, "ALTER TABLE signatures ADD privateKey VARCHAR(400) NULL"))
+		    || !sendQuery(db, "ALTER TABLE signatures ADD privateKey VARCHAR(400)"))
 			return false;
 
 		return true;
+	}
+
+
+		/**
+	 * Given a CREATE TABLE expression, determines if the table exists.
+	 * If the table does not exist, calls sendQuery(db,query).
+	 */
+	protected static boolean sendCreateTableQuery(final Hsqldb db, final String query) {
+		String tableName;
+
+		tableName = db.getTableNameFromCreateTable(query);
+
+		if(tableName != null) {
+			if(!db.tableExists(tableName)) {
+				Logger.warning(new DatabaseManager(), "Creating table "+tableName);
+				return sendQuery(db, query);
+			} else {
+				return true;
+			}
+		} else {
+			return false;
+		}
 	}
 }

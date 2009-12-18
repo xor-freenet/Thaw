@@ -2,7 +2,12 @@ package thaw.plugins;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import thaw.core.Core;
 import thaw.core.I18n;
 import thaw.core.LibraryPlugin;
@@ -124,5 +129,47 @@ public class Hsqldb extends LibraryPlugin {
 
 	public javax.swing.ImageIcon getIcon() {
 		return thaw.gui.IconBox.database;
+	}
+
+
+	/**
+	 * Determines if the table exists in the database.
+	 * @param tableName Name of the table to test.
+	 * @return True if the table exists, else false.
+	 */
+	public boolean tableExists(final String tableName) {
+		try {
+			executeQuery("SELECT COUNT(1) FROM "+tableName);
+			/* The table exists */
+			return true;
+		} catch(final SQLException e) {
+			return false;
+		}
+	}
+
+
+	/**
+	 * Given a "CREATE TABLE" query, extracts the table name.
+	 *
+	 * TODO: Where should this go?  It doesn't use this class...
+	 *
+	 * @param query Create table query
+	 * @return Table name contained in the create table query.
+	 */
+	public String getTableNameFromCreateTable(final String query) {
+		try {
+			Pattern findTablePattern = Pattern.compile("(?i)\\A\\s*CREATE\\s(?:MEMORY|CACHED|GLOBAL|TEMPORARY|TEMP|TEXT|\\s)+\\sTABLE\\s([\\w]+).*", Pattern.MULTILINE);
+			Matcher findTableMatcher = findTablePattern.matcher(query);
+			if (findTableMatcher.find()) {
+				return findTableMatcher.group(1);
+			} else {
+				Logger.warning(this, "No table name found in query: "+query);
+				return null;
+			}
+		} catch (PatternSyntaxException ex) {
+			// Syntax error in the regular expression
+			Logger.error(this, "PatternSyntaxException: "+ex.getMessage());
+			return null;
+		}
 	}
 }
