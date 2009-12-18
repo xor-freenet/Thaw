@@ -59,9 +59,21 @@ public class Hsqldb extends LibraryPlugin {
 		
 		connection = DriverManager.getConnection(core.getConfig().getValue("hsqldb.url"),
 							 "sa", "");
-		
+
+		try {
 		executeQuery("SET LOGSIZE 50;");
-		executeQuery("SET CHECKPOINT DEFRAG 50;");
+		} catch (final java.sql.SQLException e) {
+			/* Newer versions of HSQLDB have an alternate log size property */
+			executeQuery("SET FILES LOG SIZE 50;");
+		}
+
+		try {
+			executeQuery("SET CHECKPOINT DEFRAG 50;");
+		} catch (final java.sql.SQLException e) {
+			/* Newer versions of HSQLDB use a different property */
+			executeQuery("SET FILES DEFRAG 50;");
+		}
+		
 		executeQuery("SET PROPERTY \"hsqldb.nio_data_file\" FALSE");
 	}
 
