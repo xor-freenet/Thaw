@@ -59,30 +59,32 @@ public class Link extends java.util.Observable implements Comparable, LinkContai
 		this.id = id;
 
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("SELECT links.publicKey AS publicKey, "+
-													" links.blackListed AS blacklisted," +
-													" links.indexParent AS indexParent, "+
-													" categories.name AS categoryName "+
-													" FROM links LEFT OUTER JOIN categories "+
-													" ON links.category = categories.id "+
-								 					" WHERE links.id = ? LIMIT 1");
+				st = db.getConnection().prepareStatement("SELECT links.publicKey AS publicKey, "+
+														" links.blackListed AS blacklisted," +
+														" links.indexParent AS indexParent, "+
+														" categories.name AS categoryName "+
+														" FROM links LEFT OUTER JOIN categories "+
+														" ON links.category = categories.id "+
+														" WHERE links.id = ? LIMIT 1");
 
-			st.setInt(1, id);
+				st.setInt(1, id);
 
-			ResultSet rs = st.executeQuery();
+				ResultSet rs = st.executeQuery();
 
-			if (rs.next()) {
-				publicKey = rs.getString("publicKey");
-				parentId = rs.getInt("indexParent");
-				blackListed = rs.getBoolean("blackListed");
-				category = rs.getString("categoryName");
-			} else {
-				Logger.error(this, "Link '"+Integer.toString(id)+"' not found.");
+				if (rs.next()) {
+					publicKey = rs.getString("publicKey");
+					parentId = rs.getInt("indexParent");
+					blackListed = rs.getBoolean("blackListed");
+					category = rs.getString("categoryName");
+				} else {
+					Logger.error(this, "Link '"+Integer.toString(id)+"' not found.");
+				}
+
+				st.close();
 			}
-			
-			st.close();
 		} catch(SQLException e) {
 			Logger.error(this, "Error while loading data for link '"+Integer.toString(id)+"': "+e.toString());
 		}
@@ -167,14 +169,16 @@ public class Link extends java.util.Observable implements Comparable, LinkContai
 
 	public void setParent(final Index index) {
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("UPDATE links SET indexParent = ? "+
-								 "WHERE id = ?");
-			st.setInt(1, index.getId());
-			st.setInt(2, id);
-			st.execute();
-			st.close();
+				st = db.getConnection().prepareStatement("UPDATE links SET indexParent = ? "+
+									 "WHERE id = ?");
+				st.setInt(1, index.getId());
+				st.setInt(2, id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to set parent because: "+e.toString());
 		}
@@ -238,14 +242,16 @@ public class Link extends java.util.Observable implements Comparable, LinkContai
 		this.publicKey = key;
 
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("UPDATE links SET publicKey = ? "+
-								 "WHERE id = ?");
-			st.setString(1, key);
-			st.setInt(2, id);
-			st.execute();
-			st.close();
+				st = db.getConnection().prepareStatement("UPDATE links SET publicKey = ? "+
+									 "WHERE id = ?");
+				st.setString(1, key);
+				st.setInt(2, id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Error while changing publicKey: "+e.toString());
 		}
@@ -256,13 +262,15 @@ public class Link extends java.util.Observable implements Comparable, LinkContai
 	 */
 	public void delete() {
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("DELETE FROM links WHERE id = ?");
-			st.setInt(1, id);
+				st = db.getConnection().prepareStatement("DELETE FROM links WHERE id = ?");
+				st.setInt(1, id);
 
-			st.execute();
-			st.close();
+				st.execute();
+				st.close();
+			}
 		} catch(final SQLException e) {
 			Logger.error(this, "Unable to remove link because: "+e.toString());
 		}

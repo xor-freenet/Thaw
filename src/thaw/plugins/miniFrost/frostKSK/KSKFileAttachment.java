@@ -378,15 +378,16 @@ public class KSKFileAttachment
 
 				ResultSet set = st.executeQuery();
 
+				PreparedStatement stDelete = db.getConnection().prepareStatement("DELETE FROM frostKSKAttachmentFiles "+
+										 "WHERE messageId = ?");
 				while(set.next()) {
 					int id = set.getInt("id");
-					st = db.getConnection().prepareStatement("DELETE FROM frostKSKAttachmentFiles "+
-										 "WHERE messageId = ?");
-					st.setInt(1, id);
-					st.execute();
+					stDelete.setInt(1, id);
+					stDelete.execute();
 				}
 				
 				st.close();
+				stDelete.close();
 			}
 		} catch(SQLException e) {
 			Logger.error(null, "Can't destroy the file attachments of the board because : "+e.toString());

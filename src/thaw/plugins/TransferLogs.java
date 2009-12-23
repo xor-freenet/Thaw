@@ -296,45 +296,45 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 
 				String strLine;
 
-				PreparedStatement st = null;
-
-				try {
-					st = db.getConnection().prepareStatement("INSERT INTO transferLogs "+
-							"(dateStart, dateEnd, transferType,"+
-							" key, filename, size, isDup, isSuccess) "+
-							" VALUES "+
-					"(?, ?, 0, ?, ?, NULL, ?, TRUE)");
-				} catch(SQLException e) {
-					Logger.error(this, "Error while preparing to import keys : "+e.toString()); 
-				}
-
-				while ((strLine = br.readLine()) != null)   {
-					String key = strLine.trim();
-
-					if (!FreenetURIHelper.isAKey(key))
-						continue;
-
-					boolean isDup = isDup(key);
+				synchronized(db.dbLock) {
+					PreparedStatement st = null;
 
 					try {
-						synchronized(db.dbLock) {
-							st.setTimestamp(1, date);
-							st.setTimestamp(2, date);
-							st.setString(3, key);
-							st.setString(4, FreenetURIHelper.getFilenameFromKey(key));
-							st.setBoolean(5, isDup);
-
-							st.execute();
-						}
+						st = db.getConnection().prepareStatement("INSERT INTO transferLogs "+
+								"(dateStart, dateEnd, transferType,"+
+								" key, filename, size, isDup, isSuccess) "+
+								" VALUES "+
+						"(?, ?, 0, ?, ?, NULL, ?, TRUE)");
 					} catch(SQLException e) {
-						Logger.error(this, "Error while adding an event to the logs: "+e.toString());
+						Logger.error(this, "Error while preparing to import keys : "+e.toString());
 					}
-				}
 
-				try {
-					st.close();
-				} catch(SQLException e) {
-					/* \_o< */
+					while ((strLine = br.readLine()) != null)   {
+						String key = strLine.trim();
+
+						if (!FreenetURIHelper.isAKey(key))
+							continue;
+
+						boolean isDup = isDup(key);
+
+						try {
+								st.setTimestamp(1, date);
+								st.setTimestamp(2, date);
+								st.setString(3, key);
+								st.setString(4, FreenetURIHelper.getFilenameFromKey(key));
+								st.setBoolean(5, isDup);
+
+								st.execute();
+						} catch(SQLException e) {
+							Logger.error(this, "Error while adding an event to the logs: "+e.toString());
+						}
+					}
+
+					try {
+						st.close();
+					} catch(SQLException e) {
+						/* \_o< */
+					}
 				}
 
 				in.close();

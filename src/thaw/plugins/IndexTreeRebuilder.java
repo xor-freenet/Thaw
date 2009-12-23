@@ -35,27 +35,28 @@ public class IndexTreeRebuilder implements Plugin {
 		}
 
 		private void rebuildIndex(Vector parents, int indexId) throws SQLException {
+			synchronized(db.dbLock) {
+				PreparedStatement st =
+					db.getConnection().prepareStatement("INSERT INTO indexParents "+
+										"(indexId, folderId) "+
+										"VALUES (?, ?)");
 
-			PreparedStatement st =
-				db.getConnection().prepareStatement("INSERT INTO indexParents "+
-								    "(indexId, folderId) "+
-								    "VALUES (?, ?)");
+				for (Iterator it = parents.iterator();
+					 it.hasNext();) {
+					st.setInt(1, indexId);
 
-			for (Iterator it = parents.iterator();
-			     it.hasNext();) {
-				st.setInt(1, indexId);
+					int parent = ((Integer)it.next()).intValue();
 
-				int parent = ((Integer)it.next()).intValue();
+					if (parent >= 0)
+						st.setInt(2, parent);
+					else
+						st.setNull(2, Types.INTEGER);
 
-				if (parent >= 0)
-					st.setInt(2, parent);
-				else
-					st.setNull(2, Types.INTEGER);
+					st.execute();
+				}
 
-				st.execute();
+				st.close();
 			}
-			
-			st.close();
 		}
 
 
@@ -68,85 +69,85 @@ public class IndexTreeRebuilder implements Plugin {
 			Vector newParentsVector = new Vector(parents);
 			newParentsVector.add(new Integer(folderId));
 
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			/* rebuild all the indexes in the subfolders */
+				/* rebuild all the indexes in the subfolders */
 
-			String where = ((folderId >= 0) ?
-					"WHERE parent = ?" :
-					"WHERE parent IS NULL");
+				String where = ((folderId >= 0) ?
+						"WHERE parent = ?" :
+						"WHERE parent IS NULL");
 
-			st = db.getConnection().prepareStatement("SELECT id FROM indexFolders "+where);
+				st = db.getConnection().prepareStatement("SELECT id FROM indexFolders "+where);
 
-			if (folderId >= 0)
-				st.setInt(1, folderId);
-
-			ResultSet set = st.executeQuery();
-
-			while(set.next()) {
-				rebuild(newParentsVector, set.getInt("id"));
-			}
-
-			st.close();
-
-			/* rebuild all the indexes in this folder */
-
-			st = db.getConnection().prepareStatement("SELECT id FROM indexes "+where);
-
-			if (folderId >= 0)
-				st.setInt(1, folderId);
-
-			set = st.executeQuery();
-
-			while(set.next()) {
-				rebuildIndex(newParentsVector, set.getInt("id"));
-			}
-
-			st.close();
-
-			/* rebuild this folder */
-
-			st = db.getConnection().prepareStatement("INSERT INTO folderParents "+
-								 "(folderId, parentId) "+
-								 "VALUES (?, ?)");
-
-			for (Iterator it = parents.iterator();
-			     it.hasNext();) {
 				if (folderId >= 0)
 					st.setInt(1, folderId);
-				else
-					st.setNull(1, Types.INTEGER);
 
-				int parent = ((Integer)it.next()).intValue();
+				ResultSet set = st.executeQuery();
 
-				if (parent >= 0)
-					st.setInt(2, parent);
-				else
-					st.setNull(2, Types.INTEGER);
+				while(set.next()) {
+					rebuild(newParentsVector, set.getInt("id"));
+				}
 
-				st.execute();
+				st.close();
+
+				/* rebuild all the indexes in this folder */
+
+				st = db.getConnection().prepareStatement("SELECT id FROM indexes "+where);
+
+				if (folderId >= 0)
+					st.setInt(1, folderId);
+
+				set = st.executeQuery();
+
+				while(set.next()) {
+					rebuildIndex(newParentsVector, set.getInt("id"));
+				}
+
+				st.close();
+
+				/* rebuild this folder */
+
+				st = db.getConnection().prepareStatement("INSERT INTO folderParents "+
+									 "(folderId, parentId) "+
+									 "VALUES (?, ?)");
+
+				for (Iterator it = parents.iterator();
+					 it.hasNext();) {
+					if (folderId >= 0)
+						st.setInt(1, folderId);
+					else
+						st.setNull(1, Types.INTEGER);
+
+					int parent = ((Integer)it.next()).intValue();
+
+					if (parent >= 0)
+						st.setInt(2, parent);
+					else
+						st.setNull(2, Types.INTEGER);
+
+					st.execute();
+				}
+
+				st.close();
 			}
-
-			st.close();
 		}
 
-		/**
-		 * Take the db lock before calling this function !
-		 */
+
 		public void rebuild() throws SQLException {
+			synchronized(db.dbLock) {
+				/* quick & dirty, as usual */
+				PreparedStatement st =
+					db.getConnection().prepareStatement("DELETE FROM indexParents");
+				st.execute();
+				st.close();
 
-			/* quick & dirty, as usual */
-			PreparedStatement st =
-				db.getConnection().prepareStatement("DELETE FROM indexParents");
-			st.execute();
+				st = db.getConnection().prepareStatement("DELETE FROM folderParents");
+				st.execute();
+				st.close();
 
-			st = db.getConnection().prepareStatement("DELETE FROM folderParents");
-			st.execute();
-			
-			st.close();
-
-			rebuild(new Vector(), -1);
-
+				rebuild(new Vector(), -1);
+			}
 		}
 
 
@@ -175,9 +176,7 @@ public class IndexTreeRebuilder implements Plugin {
 
 				if (running) {
 					try {
-						synchronized(db.dbLock) {
-							rebuild();
-						}
+						rebuild();
 					} catch(SQLException e) {
 						/* wow, getting creepy */
 						Logger.error(this, "Index tree rebuild failed : "+e.toString());

@@ -17,7 +17,7 @@ import thaw.plugins.TransferLogs;
 
 
 public class Transfer implements Observer {
-	private Hsqldb db;
+	private final Hsqldb db;
 
 	private FCPTransferQuery query;
 
@@ -251,12 +251,14 @@ public class Transfer implements Observer {
 	private void updateKey(String qKey) {
 		Logger.info(this, "Updating key in logs");
 		try {
-			PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
-										   "key = ? WHERE id = ?");
-			st.setString(1, qKey);
-			st.setInt(2, this.id);
-			st.execute();
-			st.close();
+			synchronized(db.dbLock) {
+				PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
+											   "key = ? WHERE id = ?");
+				st.setString(1, qKey);
+				st.setInt(2, this.id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to update key in transfer logs because : "+e.toString());
 		}
@@ -266,12 +268,14 @@ public class Transfer implements Observer {
 		Logger.info(this, "Updating file size in logs");
 
 		try {
-			PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
-										   "size = ? WHERE id = ?");
-			st.setLong(1, size);
-			st.setInt(2, this.id);
-			st.execute();
-			st.close();
+			synchronized(db.dbLock) {
+				PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
+											   "size = ? WHERE id = ?");
+				st.setLong(1, size);
+				st.setInt(2, this.id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to update size in transfer logs because : "+e.toString());
 		}
@@ -282,15 +286,17 @@ public class Transfer implements Observer {
 		Logger.info(this, "Updating end date in logs");
 
 		try {
-			PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
-										   "dateEnd = ?, isSuccess = ?"+
-										   "WHERE id = ?");
-			dateEnd = new Timestamp(query.getCompletionTime());
-			st.setTimestamp(1, dateEnd);
-			st.setBoolean(2, successful);
-			st.setInt(3, this.id);
-			st.execute();
-			st.close();
+			synchronized(db.dbLock) {
+				PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
+											   "dateEnd = ?, isSuccess = ?"+
+											   "WHERE id = ?");
+				dateEnd = new Timestamp(query.getCompletionTime());
+				st.setTimestamp(1, dateEnd);
+				st.setBoolean(2, successful);
+				st.setInt(3, this.id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to update dateEnd in transfer logs because : "+e.toString());
 		}
@@ -300,14 +306,16 @@ public class Transfer implements Observer {
 		Logger.info(this, "Updating start date in logs");
 
 		try {
-			PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
-										   "dateStart = ?"+
-										   "WHERE id = ?");
-			dateStart = new Timestamp(query.getStartupTime());
-			st.setTimestamp(1, dateStart);
-			st.setInt(2, this.id);
-			st.execute();
-			st.close();
+			synchronized(db.dbLock) {
+				PreparedStatement st = db.getConnection().prepareStatement("UPDATE transferLogs SET "+
+											   "dateStart = ?"+
+											   "WHERE id = ?");
+				dateStart = new Timestamp(query.getStartupTime());
+				st.setTimestamp(1, dateStart);
+				st.setInt(2, this.id);
+				st.execute();
+				st.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to update dateEnd in transfer logs because : "+e.toString());
 		}

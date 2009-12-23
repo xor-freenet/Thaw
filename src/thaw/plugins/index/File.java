@@ -23,7 +23,7 @@ import thaw.plugins.Hsqldb;
 
 
 public class File implements Observer, FileContainer {
-	private Hsqldb db = null;
+	private final Hsqldb db;
 	private int id = -1; /* -1 = undefined */
 
 	private String filename = null;

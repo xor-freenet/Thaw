@@ -44,7 +44,7 @@ public class IndexBrowserPanel implements javax.swing.event.TreeSelectionListene
 		this.config       = core.getConfig();
 		this.mainWindow   = core.getMainWindow();
 
-		blackList = new BlackList(core, this);
+		blackList = new BlackList(db, core, this);
 
 		unknownList = new UnknownIndexList(queueManager, this);
 

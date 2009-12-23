@@ -617,7 +617,7 @@ public class DatabaseManager {
 
 
 	protected static class DatabaseHandler extends DefaultHandler {
-		private Hsqldb db;
+		private final Hsqldb db;
 		private IndexBrowserPanel indexBrowser;
 
 		private IndexFolder importFolder;
@@ -875,111 +875,108 @@ public class DatabaseManager {
 	 * used by convertDatabase_1_to_2()
 	 */
 	private static boolean insertChildIn(Hsqldb db, int folderId) throws SQLException {
-		java.util.Vector results;
+		java.util.Vector<Integer> results;
 		int i = 0, j;
 
 		Logger.notice(new DatabaseManager(), "Expanding folder "+Integer.toString(folderId));
-		
-		PreparedStatement st;
 
-		st = db.getConnection().prepareStatement("SELECT id FROM indexFolders WHERE "+
-							 ((folderId >= 0) ? "parent = ?" : "parent IS NULL"));
+		synchronized(db.dbLock) {
+			PreparedStatement st;
 
-		if (folderId >= 0)
-			st.setInt(1, folderId);
+			st = db.getConnection().prepareStatement("SELECT id FROM indexFolders WHERE "+
+								 ((folderId >= 0) ? "parent = ?" : "parent IS NULL"));
 
-		ResultSet set = st.executeQuery();
-		results = new java.util.Vector();
+			if (folderId >= 0)
+				st.setInt(1, folderId);
 
-		while(set.next()) {
-			results.add(new Integer(set.getInt("id")));
+			ResultSet set = st.executeQuery();
+			results = new java.util.Vector<Integer>();
+
+			while(set.next()) {
+				results.add(set.getInt("id"));
+			}
+
+			st.close();
 		}
-		
-		st.close();
 
-		for (java.util.Iterator it = results.iterator();
-		     it.hasNext();) {
-			int nextId = ((Integer)it.next()).intValue();
+		synchronized(db.dbLock) {
+			PreparedStatement getChildFolders = db.getConnection().prepareStatement("SELECT folderId FROM folderParents WHERE parentId = ?");
+			PreparedStatement setChildFolders = db.getConnection().prepareStatement("INSERT INTO folderParents (folderId, parentId) VALUES (?, ?)");
+			PreparedStatement getChildIndexes = db.getConnection().prepareStatement("SELECT indexId FROM indexParents WHERE folderId = ?");
+		    PreparedStatement setChildIndexes = db.getConnection().prepareStatement("INSERT INTO indexParents (indexId, folderId) VALUES (?, ?)");
 
-			if (!insertChildIn(db, nextId)) {
-				Logger.error(new DatabaseManager(), "halted");
-				return false;
-			}
+			for (int nextId : results) {
+				if (!insertChildIn(db, nextId)) {
+					Logger.error(new DatabaseManager(), "halted");
+					getChildFolders.close();
+					setChildFolders.close();
+					getChildIndexes.close();
+					setChildIndexes.close();
+					return false;
+				}
 
-			i++;
+				i++;
 
-			st = db.getConnection().prepareStatement("SELECT folderId FROM folderParents WHERE parentId = ?");
-			st.setInt(1, nextId);
+				getChildFolders.setInt(1, nextId);
 
-			Vector childFolders = new Vector();
+				Vector childFolders = new Vector();
 
-			j = 0;
+				j = 0;
 
-			ResultSet rs = st.executeQuery();
+				ResultSet rs = getChildFolders.executeQuery();
 
-			while(rs.next()) {
-				j++;
-				childFolders.add(new Integer(rs.getInt("folderId")));
-			}
-			
-			st.close();
-			
-			st = db.getConnection().prepareStatement("INSERT INTO folderParents (folderId, parentId) "+
-			 "VALUES (?, ?)");
+				while(rs.next()) {
+					j++;
+					childFolders.add(new Integer(rs.getInt("folderId")));
+				}
 
-			for (Iterator ite = childFolders.iterator();
-			     ite.hasNext();) {
-				Integer a = (Integer)ite.next();
-
-				
-				st.setInt(1, a.intValue());
-				if (folderId < 0)
-					st.setNull(2, Types.INTEGER);
-				else
-					st.setInt(2, folderId);
-
-				st.execute();
-			}
-			
-			st.close();
+				for (Iterator ite = childFolders.iterator();
+					 ite.hasNext();) {
+					Integer a = (Integer)ite.next();
 
 
-			st = db.getConnection().prepareStatement("SELECT indexId FROM indexParents WHERE folderId = ?");
-			st.setInt(1, nextId);
+					setChildFolders.setInt(1, a.intValue());
+					if (folderId < 0)
+						setChildFolders.setNull(2, Types.INTEGER);
+					else
+						setChildFolders.setInt(2, folderId);
 
-			Vector childIndexes = new Vector();
+					setChildFolders.execute();
+				}
 
-			rs = st.executeQuery();
+				getChildIndexes.setInt(1, nextId);
 
-			while(rs.next()) {
-				j++;
-				childIndexes.add(new Integer(rs.getInt("indexId")));
-			}
-			
-			st.close();
+				Vector childIndexes = new Vector();
 
-			if (j == 0) {
-				Logger.warning(new DatabaseManager(), "empty folder (id = "+Integer.toString(nextId)+") ?");
-			}
-			
-			st = db.getConnection().prepareStatement("INSERT INTO indexParents (indexId, folderId) "+
-													"VALUES (?, ?)");
+				rs = getChildIndexes.executeQuery();
 
-			for (Iterator ite = childIndexes.iterator();
-			     ite.hasNext();) {
-				Integer a = (Integer)ite.next();
+				while(rs.next()) {
+					j++;
+					childIndexes.add(new Integer(rs.getInt("indexId")));
+				}
 
-				st.setInt(1, a.intValue());
-				if (folderId < 0)
-					st.setNull(2, Types.INTEGER);
-				else
-					st.setInt(2, folderId);
+				if (j == 0) {
+					Logger.warning(new DatabaseManager(), "empty folder (id = "+Integer.toString(nextId)+") ?");
+				}
 
-				st.execute();
+				for (Iterator ite = childIndexes.iterator();
+					 ite.hasNext();) {
+					Integer a = (Integer)ite.next();
+
+					setChildIndexes.setInt(1, a.intValue());
+					if (folderId < 0)
+						setChildIndexes.setNull(2, Types.INTEGER);
+					else
+						setChildIndexes.setInt(2, folderId);
+
+					setChildIndexes.execute();
+				}
 			}
 			
-			st.close();
-
+			getChildFolders.close();
+			setChildFolders.close();
+			getChildIndexes.close();
+			setChildIndexes.close();
 		}
 
 		Logger.notice(new DatabaseManager(), Integer.toString(i) + " child folder found for folder "+Integer.toString(folderId));
@@ -1061,44 +1058,45 @@ public class DatabaseManager {
 		/* convert SSK into USK */
 
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("SELECT id, publicKey, originalName, revision FROM indexes");
+				st = db.getConnection().prepareStatement("SELECT id, publicKey, originalName, revision FROM indexes");
 
-			PreparedStatement subSt;
-			subSt = db.getConnection().prepareStatement("UPDATE indexes "+
-								    "SET publicKey = ? "+
-								    "WHERE id = ?");
+				PreparedStatement subSt;
+				subSt = db.getConnection().prepareStatement("UPDATE indexes "+
+										"SET publicKey = ? "+
+										"WHERE id = ?");
 
-			ResultSet set = st.executeQuery();
+				ResultSet set = st.executeQuery();
 
-			while(set.next()) {
-				String key = set.getString("publicKey");
+				while(set.next()) {
+					String key = set.getString("publicKey");
 
-				if (key != null && key.startsWith("SSK@")) {
-					int id = set.getInt("id");
-					String name = set.getString("originalName");
-					int rev = set.getInt("revision");
+					if (key != null && key.startsWith("SSK@")) {
+						int id = set.getInt("id");
+						String name = set.getString("originalName");
+						int rev = set.getInt("revision");
 
-					String newKey;
+						String newKey;
 
-					if (key.endsWith("/"))
-						newKey = key.replaceFirst("SSK@", "USK@")+name+"/"+rev+"/"+name+".frdx";
-					else
-						newKey = key.replaceFirst("SSK@", "USK@")+"/"+name+"/"+rev+"/"+name+".frdx";
+						if (key.endsWith("/"))
+							newKey = key.replaceFirst("SSK@", "USK@")+name+"/"+rev+"/"+name+".frdx";
+						else
+							newKey = key.replaceFirst("SSK@", "USK@")+"/"+name+"/"+rev+"/"+name+".frdx";
 
-					Logger.notice(new DatabaseManager(), "Replacing "+key+" with "+newKey);
+						Logger.notice(new DatabaseManager(), "Replacing "+key+" with "+newKey);
 
-					subSt.setString(1, newKey);
-					subSt.setInt(2, id);
+						subSt.setString(1, newKey);
+						subSt.setInt(2, id);
 
-					subSt.execute();
+						subSt.execute();
+					}
 				}
-			}
-			
-			st.close();
-			subSt.close();
 
+				st.close();
+				subSt.close();
+			}
 		} catch(SQLException e) {
 			Logger.error(new DatabaseManager(), "Error while converting SSK into USK : "+e.toString());
 			return false;

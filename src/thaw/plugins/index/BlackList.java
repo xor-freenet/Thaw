@@ -29,8 +29,8 @@ import thaw.plugins.Hsqldb;
  */
 public class BlackList implements ActionListener {
 
-	private Core core;
-	private Hsqldb db;
+	private final Core core;
+	private final Hsqldb db;
 	private IndexBrowserPanel indexBrowser = null;
 
 	private JPanel panel = null;
@@ -43,13 +43,14 @@ public class BlackList implements ActionListener {
 	private boolean visible;
 
 	private BlackList() {
-
+		this.db = null;
+		this.core = null;
 	}
 
 
-	public BlackList(Core core, IndexBrowserPanel indexBrowser) {
+	public BlackList(Hsqldb db, Core core, IndexBrowserPanel indexBrowser) {
 		this.core = core;
-		this.db = indexBrowser.getDb();
+		this.db = db;
 		this.indexBrowser = indexBrowser;
 
 
@@ -286,6 +287,7 @@ public class BlackList implements ActionListener {
 				st.setString(1, key);
 				st.setString(2, Index.getNameFromKey(key));
 				st.execute();
+				st.close();
 
 				st = db.getConnection().prepareStatement("UPDATE links "+
 									 "SET blackListed = true "+
@@ -331,12 +333,14 @@ public class BlackList implements ActionListener {
 					anotherSt.execute();
 				}
 
+				st.close();
 
 				st = db.getConnection().prepareStatement("DELETE FROM indexBlackList WHERE id = ?");
 				st.setInt(1, id);
 				st.execute();
 				
 				st.close();
+				anotherSt.close();
 			}
 		} catch(SQLException e) {
 			Logger.error(new BlackList(), "Error while removing an entry from the blacklist : "+e.toString());

@@ -19,7 +19,7 @@ public class GraphBuilder implements ThawRunnable {
 
 	private IndexWebGrapher plugin;
 	private GraphPanel graphPanel;
-	private Hsqldb db;
+	private final Hsqldb db;
 
 	private boolean faster;
 	private boolean finish;

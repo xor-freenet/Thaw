@@ -331,15 +331,17 @@ public class KSKBoardAttachment
 
 				ResultSet set = st.executeQuery();
 
+				PreparedStatement stDelete;
+				stDelete = db.getConnection().prepareStatement("DELETE FROM frostKSKAttachmentBoards "+
+										 "WHERE messageId = ?");
 				while(set.next()) {
 					int id = set.getInt("id");
-					st = db.getConnection().prepareStatement("DELETE FROM frostKSKAttachmentBoards "+
-										 "WHERE messageId = ?");
-					st.setInt(1, id);
-					st.execute();
+					stDelete.setInt(1, id);
+					stDelete.execute();
 				}
 				
 				st.close();
+				stDelete.close();
 			}
 		} catch(SQLException e) {
 			Logger.error(null, "Can't destroy the board attachments of the board because : "+e.toString());

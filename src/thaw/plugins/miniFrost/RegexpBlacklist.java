@@ -101,11 +101,12 @@ public class RegexpBlacklist implements Observer, ActionListener {
 				while(set.next()) {
 					synchronized(blacklist) {
 						blacklist.add(set.getString("regexp"));
-					}				}
+					}
+				}
+				st.close();
 			}
 		} catch(SQLException e) {
 			Logger.error(this, "Error while loading the regexp blacklist: "+e.toString());
-			return;
 		}
 	}
 
@@ -118,6 +119,7 @@ public class RegexpBlacklist implements Observer, ActionListener {
 
 				st = db.getConnection().prepareStatement("DELETE FROM regexpBlacklist");
 				st.execute();
+				st.close();
 
 				st = db.getConnection().prepareStatement("INSERT INTO regexpBlackList (regexp) "+
 									 "VALUES (?)");
@@ -129,11 +131,11 @@ public class RegexpBlacklist implements Observer, ActionListener {
 						st.execute();
 					}
 				}
+				st.close();
 
 			}
 		} catch(SQLException e) {
 			Logger.error(this, "Error while saving the regexp blacklist: "+e.toString());
-			return;
 		}
 	}
 

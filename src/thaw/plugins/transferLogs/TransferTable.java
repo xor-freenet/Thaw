@@ -223,7 +223,7 @@ public class TransferTable implements MouseListener {
 
 		private Vector transfers = null;
 
-		private Hsqldb db;
+		private final Hsqldb db;
 
 		public TransferTableModel(Hsqldb db) {
 			super();
@@ -389,7 +389,7 @@ public class TransferTable implements MouseListener {
 		private JComboBox pageSelecter;
 		private JButton rightButton;
 
-		private Hsqldb db;
+		private final Hsqldb db;
 		private TransferTableModel model;
 
 		private int pageMax;

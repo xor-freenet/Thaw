@@ -842,31 +842,33 @@ public class IndexTree extends java.util.Observable implements MouseListener, Ac
 		String realKey = FreenetURIHelper.getComparablePart(key);
 
 		try {
-			final Connection c = indexBrowser.getDb().getConnection();
-			PreparedStatement st;
+			synchronized(indexBrowser.getDb().dbLock) {
+				final Connection c = indexBrowser.getDb().getConnection();
+				PreparedStatement st;
 
-			String query;
+				String query;
 
-			query = "SELECT id FROM indexes WHERE LOWER(publicKey) LIKE ?";
+				query = "SELECT id FROM indexes WHERE LOWER(publicKey) LIKE ?";
 
 
-			Logger.info(this, query + " : " + realKey+"%");
+				Logger.info(this, query + " : " + realKey+"%");
+	
+				st = c.prepareStatement(query);
 
-			st = c.prepareStatement(query);
+				st.setString(1, realKey+"%");
 
-			st.setString(1, realKey+"%");
+				if (st.execute()) {
+					final ResultSet results = st.getResultSet();
 
-			if (st.execute()) {
-				final ResultSet results = st.getResultSet();
-
-				if (results.next()) {
+					if (results.next()) {
+						st.close();
+						return true;
+					}
 					st.close();
-					return true;
 				}
-				st.close();
+				else
+					st.close();
 			}
-			else
-				st.close();
 
 		} catch(final java.sql.SQLException e) {
 			Logger.warning(this, "Exception while trying to check if '"+key+"' is already know: '"+e.toString()+"'");

@@ -688,19 +688,17 @@ public class Comment extends Observable implements Observer, ActionListener {
 			Logger.info(this, "Parsing done");
 
 			try {
+				if (existsInTheBdd()) {
+					Logger.debug(this, "Comment already in db");
+					newComment = false;
+					valid = false;
+					return false;
+				}
+
+				Logger.info(this, "New comment !");
+
+				newComment = true;
 				synchronized(db.dbLock) {
-
-					if (existsInTheBdd()) {
-						Logger.debug(this, "Comment already in db");
-						newComment = false;
-						valid = false;
-						return false;
-					}
-
-					Logger.info(this, "New comment !");
-
-					newComment = true;
-
 					PreparedStatement st;
 
 					st = db.getConnection().prepareStatement("INSERT INTO indexComments "+
@@ -744,7 +742,6 @@ public class Comment extends Observable implements Observer, ActionListener {
 
 	/**
 	 * r and s must be set
-	 * You have to do the synchronized(db.dbLock) !
 	 */
 	private boolean existsInTheBdd() {
 		if (sig == null) {
@@ -753,18 +750,20 @@ public class Comment extends Observable implements Observer, ActionListener {
 		}
 
 		try {
-			PreparedStatement st;
+			synchronized(db.dbLock) {
+				PreparedStatement st;
 
-			st = db.getConnection().prepareStatement("SELECT id FROM indexComments "+
-								 "WHERE sig = ?");
+				st = db.getConnection().prepareStatement("SELECT id FROM indexComments "+
+									 "WHERE sig = ?");
 
-			st.setString(1, sig);
+				st.setString(1, sig);
 
-			ResultSet set = st.executeQuery();
+				ResultSet set = st.executeQuery();
 
-			boolean b = (set.next());
-			st.close();
-			return b;
+				boolean b = (set.next());
+				st.close();
+				return b;
+			}
 		} catch(SQLException e) {
 			Logger.error(this, "Unable to check if the comment is already in the bdd, because: "+e.toString());
 		}

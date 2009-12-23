@@ -205,17 +205,7 @@ public class WotIdentity extends Identity implements TrustListParser.TrustListCo
 	}
 
 	
-	
-	private PreparedStatement insertTrustLinkSt = null;
-	
 	public void start() {
-		try {
-			insertTrustLinkSt = getDb().getConnection().prepareStatement("INSERT INTO wotTrustLists (source, destination, trustLevel) VALUES (?, ?, ?)");
-		} catch(SQLException e) {
-			Logger.error(this, "Error while updating a trust list in the db (3) : "+e.toString());
-			return;
-		}
-		
 		purgeTrustList();
 	}
 
@@ -236,12 +226,6 @@ public class WotIdentity extends Identity implements TrustListParser.TrustListCo
 	}
 
 	public void end() {
-		try {
-			insertTrustLinkSt.close();
-			insertTrustLinkSt = null;
-		} catch(SQLException e) {
-
-		}
 	}
 
 	public void updateIdentity(Identity i) {
@@ -263,10 +247,12 @@ public class WotIdentity extends Identity implements TrustListParser.TrustListCo
 		
 		try {
 			synchronized(getDb().dbLock) {
+				PreparedStatement insertTrustLinkSt = getDb().getConnection().prepareStatement("INSERT INTO wotTrustLists (source, destination, trustLevel) VALUES (?, ?, ?)");
 				insertTrustLinkSt.setInt(1, getId());
 				insertTrustLinkSt.setInt(2, target.getId());
 				insertTrustLinkSt.setInt(3, i.getTrustLevel());
 				insertTrustLinkSt.execute();
+				insertTrustLinkSt.close();
 			}
 		} catch(SQLException e) {
 			Logger.error(this, "Error while updating a trust list in the db (2) : "+e.toString());

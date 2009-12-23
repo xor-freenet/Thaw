@@ -120,11 +120,13 @@ public class Hsqldb extends LibraryPlugin {
 
 
 	public void executeQuery(final String query) throws java.sql.SQLException {
-		final Statement stmt = connection.createStatement();
+		synchronized(dbLock) {
+			final Statement stmt = connection.createStatement();
 
-		stmt.execute(query);
-		
-		stmt.close();
+			stmt.execute(query);
+
+			stmt.close();
+		}
 	}
 
 	public javax.swing.ImageIcon getIcon() {

@@ -17,7 +17,7 @@ public class AutoRefresh implements ThawRunnable, java.util.Observer {
 	public final static int DEFAULT_INTERVAL = 150;
 	public final static int DEFAULT_INDEX_NUMBER = 10;
 
-	private Hsqldb db;
+	private final Hsqldb db;
 	private IndexBrowserPanel browserPanel;
 	private Config config;
 
@@ -90,54 +90,55 @@ public class AutoRefresh implements ThawRunnable, java.util.Observer {
 		}
 
 		try {
-			Connection c = db.getConnection();
-			PreparedStatement st;
-			ResultSet results;
-			int ret;
+			synchronized(db.dbLock) {
+				Connection c = db.getConnection();
+				PreparedStatement st;
+				ResultSet results;
+				int ret;
 
-			st = c.prepareStatement("SELECT id, originalName, displayName, "+
-						"       publicKey, privateKey, publishPrivateKey, "+
-						"       author, positionInTree, revision, "+
-						"       insertionDate "+
-						"FROM indexes ORDER by RAND() LIMIT 1");
+				st = c.prepareStatement("SELECT id, originalName, displayName, "+
+							"       publicKey, privateKey, publishPrivateKey, "+
+							"       author, positionInTree, revision, "+
+							"       insertionDate "+
+							"FROM indexes ORDER by RAND() LIMIT 1");
 
-			results = st.executeQuery();
+				results = st.executeQuery();
+	
 
+				if (results == null || !results.next()) {
+					st.close();
+					return -1;
+				}
 
-			if (results == null || !results.next()) {
+				ret = results.getInt("id");
+
+				Index index;
+
+				if (results.getString("privateKey") == null
+					|| results.getInt("revision") > 0) {
+
+					Logger.debug(this, "Index unavailable on freenet -> not updated");
+
+					index = new Index(browserPanel.getDb(),
+							  config,
+							  results.getInt("id"),
+							  null, results.getString("publicKey"),
+							  results.getInt("revision"),
+							  results.getString("privateKey"),
+							  results.getBoolean("publishPrivateKey"),
+							  results.getString("displayName"),
+							  results.getDate("insertionDate"),
+							  false, false);
+
+					index.downloadFromFreenet(this, browserPanel.getIndexTree(), queueManager);
+
+					browserPanel.getIndexTree().redraw();
+				}
+
 				st.close();
-				return -1;
+
+				return ret;
 			}
-
-			ret = results.getInt("id");
-
-			Index index;
-
-			if (results.getString("privateKey") == null
-			    || results.getInt("revision") > 0) {
-
-				Logger.debug(this, "Index unavailable on freenet -> not updated");
-
-				index = new Index(browserPanel.getDb(),
-						  config,
-						  results.getInt("id"),
-						  null, results.getString("publicKey"),
-						  results.getInt("revision"),
-						  results.getString("privateKey"),
-						  results.getBoolean("publishPrivateKey"),
-						  results.getString("displayName"),
-						  results.getDate("insertionDate"),
-						  false, false);
-
-				index.downloadFromFreenet(this, browserPanel.getIndexTree(), queueManager);
-
-				browserPanel.getIndexTree().redraw();
-			}
-			
-			st.close();
-
-			return ret;
-
 		} catch(java.sql.SQLException e) {
 			Logger.error(this, "SQLEXCEPTION while autorefreshing: "+e.toString());
 			return -2;
