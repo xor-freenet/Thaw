@@ -1,5 +1,7 @@
 package thaw.core;
 
+import thaw.gui.MainWindow;
+
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Toolkit;

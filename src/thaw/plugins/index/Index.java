@@ -28,7 +28,7 @@ import thaw.core.Main;
 import thaw.core.I18n;
 import thaw.core.Logger;
 import thaw.core.Config;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 
 import thaw.fcp.FreenetURIHelper;
 import thaw.fcp.FCPClientGet;

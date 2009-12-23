@@ -5,7 +5,7 @@ import java.util.Vector;
 import javax.swing.JButton;
 
 import thaw.core.Logger;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 
 /**
  * Not a plugin ! Just an helper for the plugins !

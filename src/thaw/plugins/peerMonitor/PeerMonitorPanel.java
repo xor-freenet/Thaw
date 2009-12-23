@@ -28,6 +28,8 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 
 import java.util.Observable;
+
+import thaw.gui.MainWindow;
 import thaw.plugins.PeerMonitor;
 
 import thaw.plugins.ToolbarModifier;
@@ -107,7 +109,7 @@ public class PeerMonitorPanel extends Observable implements ActionListener, Mous
 	public PeerMonitorPanel(PeerMonitor peerMonitor,
 				FCPQueryManager queryManager,
 				Config config,
-				thaw.core.MainWindow mainWindow) {
+				MainWindow mainWindow) {
 		buttonActions = new Vector();
 
 		this.peerMonitor = peerMonitor;

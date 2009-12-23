@@ -30,7 +30,7 @@ import thaw.core.Logger;
 import thaw.gui.WarningWindow;
 import thaw.fcp.FCPClientPut;
 import thaw.plugins.InsertPlugin;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 
 
 public class InsertPanel implements ActionListener, ItemListener, Observer {

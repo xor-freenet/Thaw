@@ -16,6 +16,7 @@ import javax.swing.JComboBox;
 
 import java.util.Locale;
 
+import thaw.gui.ConfigWindow;
 import thaw.gui.FileChooser;
 
 /**

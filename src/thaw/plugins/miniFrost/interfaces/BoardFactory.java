@@ -1,5 +1,6 @@
 package thaw.plugins.miniFrost.interfaces;
 
+import thaw.gui.MainWindow;
 import thaw.plugins.MiniFrost;
 import thaw.plugins.WebOfTrust;
 
@@ -46,7 +47,7 @@ public interface BoardFactory {
 	 * display the dialog asking for a name, etc.
 	 * the tree will be reloaded after that
 	 */
-	public void createBoard(thaw.core.MainWindow mainWindow /*BoardFolder parent*/);
+	public void createBoard(MainWindow mainWindow /*BoardFolder parent*/);
 
 
 	/**

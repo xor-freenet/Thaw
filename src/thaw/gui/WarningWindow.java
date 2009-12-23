@@ -4,7 +4,7 @@ import javax.swing.JOptionPane;
 import java.awt.Component;
 
 import thaw.core.Core;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 import thaw.core.I18n;
 
 /**

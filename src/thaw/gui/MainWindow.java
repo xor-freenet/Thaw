@@ -1,30 +1,20 @@
-package thaw.core;
+package thaw.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Vector;
 
 import javax.swing.Icon;
-import javax.swing.JComponent;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JToolBar;
-import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 import java.awt.event.WindowListener;
 
-import thaw.gui.TabbedPane;
-import thaw.gui.IconBox;
+import thaw.core.*;
 
 
 /**
@@ -52,8 +42,7 @@ import thaw.gui.IconBox;
  *
  * @author <a href="mailto:jflesch@nerim.net">Jerome Flesch</a>
  */
-public class MainWindow implements java.awt.event.ActionListener,
-				   WindowListener,
+public class MainWindow implements WindowListener,
 				   java.util.Observer {
 
 	public final static int DEFAULT_SIZE_X = 790;
@@ -61,30 +50,17 @@ public class MainWindow implements java.awt.event.ActionListener,
 
 	private final JFrame mainWindow;
 
-	private JMenuBar menuBar = null;
-	private JMenu fileMenu = null;
+	private MenuBar menuBar;
+	private ToolBar toolBar;
 
-	private Vector<JMenuItem> fileMenuList = null;
 
-	private final JMenuItem reconnectionFileMenuItem;
-	private final JMenuItem optionsFileMenuItem;
-	private final JMenuItem quitFileMenuItem;
-
-	private final Vector<JMenu> menuList;
-	private final JMenuItem aboutHelpMenuItem;
-
-	private JToolBar toolBar = null;
-	private final JButton connectButton;
-	private final JButton disconnectButton;
-	private final JButton settingsButton;
-	private final JButton quitButton;
 
 	private final TabbedPane tabbedPane;
 	private final JLabel statusBar;
 
 	private final Core core; /* core is called back when exit() */
 
-	private Object lastToolBarModifier = null;
+
 
 	/**
 	 * Creates a new <code>MainWindow</code> instance, and so a new Swing window.
@@ -106,70 +82,10 @@ public class MainWindow implements java.awt.event.ActionListener,
 		}
 
 		// MENUS
-
-		menuBar = new JMenuBar();
-		menuList = new Vector<JMenu>();
-
-
-		fileMenu = new JMenu(I18n.getMessage("thaw.menu.file"));
-		fileMenuList = new Vector<JMenuItem>();
-
-		reconnectionFileMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.reconnect"),
-							 IconBox.minReconnectAction);
-		optionsFileMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.options"),
-						    IconBox.minSettings);
-		quitFileMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.quit"),
-						 IconBox.minQuitAction);
-
-		fileMenuList.add(reconnectionFileMenuItem);
-		fileMenuList.add(optionsFileMenuItem);
-		fileMenuList.add(quitFileMenuItem);
-
-		reconnectionFileMenuItem.addActionListener(this);
-		optionsFileMenuItem.addActionListener(this);
-		quitFileMenuItem.addActionListener(this);
-
-		fileMenu.add(reconnectionFileMenuItem);
-		fileMenu.add(optionsFileMenuItem);
-		fileMenu.add(quitFileMenuItem);
-
-		menuBar.add(fileMenu);
-		menuList.add(fileMenu);
-
-		JMenu helpMenu = new JMenu(I18n.getMessage("thaw.menu.help"));
-
-		aboutHelpMenuItem = new JMenuItem(I18n.getMessage("thaw.menu.item.about"),
-						  IconBox.minHelp);
-		aboutHelpMenuItem.addActionListener(this);
-
-		helpMenu.add(aboutHelpMenuItem);
-
-		//menuBar.add(Box.createHorizontalGlue());
-		menuBar.add(helpMenu);
-		menuList.add(helpMenu);
+		menuBar = new MenuBar(core);
 
 		// TOOLBAR
-		connectButton = new JButton(IconBox.connectAction);
-		connectButton.setBorderPainted(false);
-		connectButton.setToolTipText(I18n.getMessage("thaw.toolbar.button.connect"));
-
-		disconnectButton = new JButton(IconBox.disconnectAction);
-		disconnectButton.setBorderPainted(false);
-		disconnectButton.setToolTipText(I18n.getMessage("thaw.toolbar.button.disconnect"));
-
-		settingsButton = new JButton(IconBox.settings);
-		settingsButton.setBorderPainted(false);
-		settingsButton.setToolTipText(I18n.getMessage("thaw.toolbar.button.settings"));
-
-		quitButton = new JButton(IconBox.quitAction);
-		quitButton.setBorderPainted(false);
-		quitButton.setToolTipText(I18n.getMessage("thaw.toolbar.button.quit"));
-
-		connectButton.addActionListener(this);
-		disconnectButton.addActionListener(this);
-		settingsButton.addActionListener(this);
-		quitButton.addActionListener(this);
-
+		toolBar = new ToolBar(core);
 
 		// TABBED PANE
 
@@ -184,9 +100,11 @@ public class MainWindow implements java.awt.event.ActionListener,
 
 		mainWindow.getContentPane().setLayout(new BorderLayout(5,5));
 
-		mainWindow.setJMenuBar(menuBar);
+		mainWindow.setJMenuBar(menuBar.getMenuBar());
 
-		/* Toolbar adding: */ changeButtonsInTheToolbar(this, null);
+		/* Toolbar adding: */
+		mainWindow.getContentPane().add(toolBar.getToolBar(), BorderLayout.NORTH);
+		changeButtonsInTheToolbar(this, null);
 		mainWindow.getContentPane().add(tabbedPane, BorderLayout.CENTER);
 		mainWindow.getContentPane().add(statusBar, BorderLayout.SOUTH);
 
@@ -197,7 +115,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		core.getConnectionManager().addObserver(this);
 
 		if (core.getConfig().getValue("mainWindowSizeX") != null
-		    && core.getConfig().getValue("mainWindowSizeY") != null) {		    
+		    && core.getConfig().getValue("mainWindowSizeY") != null) {
 			try {
 				mainWindow.setSize(Integer.parseInt(core.getConfig().getValue("mainWindowSizeX")),
 						   Integer.parseInt(core.getConfig().getValue("mainWindowSizeY")));
@@ -205,7 +123,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 				Logger.warning(this, "Exception while setting the main window size");
 			}
 		}
-		
+
 		if (core.getConfig().getValue("mainWindowState") != null) {
 			mainWindow.setExtendedState(Integer.parseInt(core.getConfig().getValue("mainWindowState")));
 		}
@@ -236,7 +154,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 		if (!v || !core.isStopping()) {
 			mainWindow.setVisible(v);
 		}
-		
+
 		if (!v && core.isStopping())
 			mainWindow.dispose();
 	}
@@ -278,7 +196,7 @@ public class MainWindow implements java.awt.event.ActionListener,
 	}
 
 	public Object getLastToolbarModifier() {
-		return lastToolBarModifier;
+		return toolBar.getLastToolbarModifier();
 	}
 
 	/**
@@ -286,55 +204,11 @@ public class MainWindow implements java.awt.event.ActionListener,
 	 * @param newButtons JButton vector : if null, then it means to remove the buttons from the toolbar. Only the object having currently its buttons displayed will be able to remove them, other will simply be ignored.
 	 */
 	public void changeButtonsInTheToolbar(final Object modifier, final Collection<JButton> newButtons) {
-		JToolBar newToolBar;
-
-		Logger.debug(this, "changeButtonsInTheToolbar() : Called by "+modifier.getClass().getName());
-		Logger.debug(this, newButtons == null ? "-> no button" : Integer.toString(newButtons.size()) + " buttons");
-
-		if ((lastToolBarModifier == null) || (newButtons != null) || (lastToolBarModifier == modifier)) {
-			lastToolBarModifier = modifier;
-		} else
-			/* Only the modifier who added the buttons can remove them */
-			return;
-
-		if (newButtons == null)
-			lastToolBarModifier = null;
-
-		newToolBar = new JToolBar(I18n.getMessage("thaw.toolbar.title"));
-		newToolBar.setBorderPainted(false);
-		newToolBar.add(connectButton);
-		newToolBar.add(disconnectButton);
-		newToolBar.addSeparator();
-		newToolBar.add(settingsButton);
-		newToolBar.addSeparator();
-
-		if (newButtons != null) {
-			for(final JButton button : newButtons) {
-				if (button != null) {
-					button.setBorderPainted(false);
-					newToolBar.add(button);
-				} else
-					newToolBar.addSeparator();
-			}
-			newToolBar.addSeparator();
-		}
-
-		newToolBar.add(quitButton);
-		newToolBar.setFloatable(false);
-
-		if (toolBar != null) {
-			mainWindow.getContentPane().remove(toolBar);
-		}
-
-		toolBar = newToolBar;
-
-		mainWindow.getContentPane().add(toolBar, BorderLayout.NORTH);
-		updateToolBar();
-		mainWindow.getContentPane().validate();
+		toolBar.changeButtonsInTheToolbar(modifier,newButtons);
 	}
 
 	public void resetLastKnowToolBarModifier() {
-		lastToolBarModifier = null;
+		toolBar.resetLastKnowToolBarModifier();
 	}
 
 
@@ -379,111 +253,22 @@ public class MainWindow implements java.awt.event.ActionListener,
 	 * Used by plugins to add their own menu.
 	 */
 	public void insertMenuAt(JMenu menu, int position) {
-		menuList.add(position, menu);
-		refreshMenuBar();
+		menuBar.insertMenuAt(menu, position);
 	}
 
 	public void removeMenu(JMenu menu) {
-		menuList.remove(menu);
-		refreshMenuBar();
+		menuBar.removeMenu(menu);
 	}
-
-	protected void refreshMenuBar() {
-		Logger.info(this, "Display "+
-			    Integer.toString(menuList.size())+
-			    " menus in the main window");
-
-		/* rebuilding menubar */
-		JMenuBar bar = new JMenuBar();
-
-		for(JMenu menu : menuList) {
-			bar.add(menu);
-		}
-
-		mainWindow.setJMenuBar(bar);
-		menuBar = bar;
-		mainWindow.validate(); /* no getContentPane() ! else it won't work ! */
-	}
-
 
 	/**
 	 * Used by plugins to add their own menu / menuItem to the menu 'file'.
 	 */
 	public void insertInFileMenuAt(JMenuItem newItem, int position) {
-		fileMenuList.add(position, newItem);
-		refreshFileMenu();
+		menuBar.insertInFileMenuAt(newItem, position);
 	}
 
 	public void removeFromFileMenu(JMenuItem item) {
-		fileMenuList.remove(item);
-		refreshFileMenu();
-	}
-
-	protected void refreshFileMenu() {
-		/* rebuilding menubar */
-		JMenu m = new JMenu(I18n.getMessage("thaw.menu.file"));
-
-		for(JMenuItem menuItem : fileMenuList) {
-			m.add(menuItem);
-		}
-
-		menuList.remove(fileMenu);
-		fileMenu = m;
-		menuList.add(0, fileMenu);
-
-		refreshMenuBar();
-	}
-
-
-	/**
-	 * Called when an element from the menu is called.
-	 */
-	public void actionPerformed(final ActionEvent e) {
-		if(e.getSource() == connectButton) {
-			core.reconnect(false);
-		}
-
-		if(e.getSource() == disconnectButton) {
-			if(!core.canDisconnect()) {
-				if(!core.askDeconnectionConfirmation())
-					return;
-			}
-
-			core.getPluginManager().stopPlugins();
-			core.disconnect();
-			core.getPluginManager().loadAndRunPlugins();
-		}
-
-		if(e.getSource() == settingsButton) {
-			setEnabled(false);
-			core.getConfigWindow().setVisible(true);
-		}
-
-		if(e.getSource() == quitButton) {
-			endOfTheWorld();
-		}
-
-		if(e.getSource() == reconnectionFileMenuItem) {
-
-			if(!core.canDisconnect()) {
-				if(!core.askDeconnectionConfirmation())
-					return;
-			}
-
-			core.reconnect(false);
-		}
-
-		if(e.getSource() == optionsFileMenuItem) {
-			core.getConfigWindow().setVisible(true);
-		}
-
-		if(e.getSource() == quitFileMenuItem) {
-			endOfTheWorld();
-		}
-
-		if(e.getSource() == aboutHelpMenuItem) {
-			showDialogAbout();
-		}
+		menuBar.removeFromFileMenu(item);
 	}
 
 	/**
@@ -501,18 +286,11 @@ public class MainWindow implements java.awt.event.ActionListener,
 
 
 	public void updateToolBar() {
-		if( core.getConnectionManager() != null &&
-		   (core.getConnectionManager().isConnected() || core.isReconnecting())) {
-			connectButton.setEnabled(false);
-			disconnectButton.setEnabled(true);
-		} else {
-			connectButton.setEnabled(true);
-			disconnectButton.setEnabled(false);
-		}
+		toolBar.updateToolBar();
 	}
 
 	/**
-	 * Called when window is closed or 'quit' is choosed is the menu.
+	 * Called when window is closed or 'quit' is chosen is the menu.
 	 */
 	public void endOfTheWorld() {
 		if (mainWindow != null) {
@@ -574,40 +352,6 @@ public class MainWindow implements java.awt.event.ActionListener,
 	 */
 	public void removeComponent(java.awt.Component c) {
 		mainWindow.getContentPane().remove(c);
-	}
-
-
-	public void showDialogAbout() {
-		final JComponent[] labels = new JComponent[] {
-			new JTextField("Thaw "+Main.VERSION),
-			new JLabel(I18n.getMessage("thaw.about.l02")),
-			new JLabel(I18n.getMessage("thaw.about.l03")),
-			new JLabel(I18n.getMessage("thaw.about.l04")),
-			new JLabel(""),
-			new JLabel(I18n.getMessage("thaw.about.l06")),
-			new JLabel(""),
-			new JLabel(I18n.getMessage("thaw.about.l07")),
-			new JLabel(I18n.getMessage("thaw.about.l08")),
-			new JLabel(I18n.getMessage("thaw.about.l09")),
-			new JLabel(I18n.getMessage("thaw.about.l10")),
-			new JLabel(I18n.getMessage("thaw.about.l11")),
-			new JLabel(I18n.getMessage("thaw.about.l12")),
-			new JLabel(I18n.getMessage("thaw.about.l13")),
-			new JLabel(I18n.getMessage("thaw.about.l14")),
-			new JLabel(I18n.getMessage("thaw.about.l15"))
-		};
-
-		for(JComponent label : labels ) {
-			if (label instanceof JTextField) {
-				((JTextField)label).setEditable(false);
-			}
-		}
-
-
-		((JTextField)labels[0]).setFont(new Font("Dialog", Font.BOLD, 30));
-
-		JOptionPane.showMessageDialog(null, labels, I18n.getMessage("thaw.about.title"),
-					      JOptionPane.INFORMATION_MESSAGE);
 	}
 
 

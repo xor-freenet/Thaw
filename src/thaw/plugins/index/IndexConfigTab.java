@@ -15,7 +15,7 @@ import java.util.Observer;
 import java.util.Observable;
 
 import thaw.core.Config;
-import thaw.core.ConfigWindow;
+import thaw.gui.ConfigWindow;
 import thaw.core.I18n;
 import thaw.core.Logger;
 

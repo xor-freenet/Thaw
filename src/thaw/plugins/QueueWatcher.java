@@ -16,7 +16,7 @@ import thaw.core.Core;
 import thaw.core.I18n;
 import thaw.gui.IconBox;
 import thaw.core.Logger;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 import thaw.fcp.FCPTransferQuery;
 import thaw.plugins.queueWatcher.DetailPanel;
 import thaw.plugins.queueWatcher.QueuePanel;

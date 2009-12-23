@@ -23,7 +23,7 @@ import java.io.File;
 
 
 import thaw.core.I18n;
-import thaw.core.ConfigWindow;
+import thaw.gui.ConfigWindow;
 import thaw.core.Config;
 import thaw.core.Logger;
 import thaw.core.ThawThread;

@@ -1,4 +1,4 @@
-package thaw.core;
+package thaw.gui;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
@@ -11,8 +11,8 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import thaw.gui.TabbedPane;
-import thaw.gui.IconBox;
+
+import thaw.core.*;
 
 
 /**

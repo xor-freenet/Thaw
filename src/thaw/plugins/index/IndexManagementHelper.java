@@ -47,7 +47,7 @@ import thaw.core.PleaseWaitDialog;
 import thaw.core.ThawThread;
 import thaw.core.ThawRunnable;
 import thaw.gui.FileChooser;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 import thaw.fcp.FreenetURIHelper;
 import thaw.core.I18n;
 import thaw.core.Logger;

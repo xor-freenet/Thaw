@@ -19,7 +19,9 @@ import thaw.fcp.FCPQueueManager;
 import thaw.fcp.FCPWatchGlobal;
 import thaw.fcp.FCPMessage;
 
+import thaw.gui.ConfigWindow;
 import thaw.gui.IconBox;
+import thaw.gui.MainWindow;
 
 
 /**
@@ -58,7 +60,7 @@ public class Core implements Observer {
 	public Core() {
 		isStopping = false;
 		Logger.info(this, "Thaw, version "+Main.VERSION, true);
-		Logger.info(this, "2006-2008(c) Freenet project", true);
+		Logger.info(this, "2006-2009(c) Freenet project", true);
 		Logger.info(this, "Released under GPL license version 2 or later (see http://www.fsf.org/licensing/licenses/gpl.html)", true);
 	}
 

@@ -2,6 +2,7 @@ package thaw.plugins.miniFrost;
 
 import java.util.Vector;
 import thaw.core.Logger;
+import thaw.gui.MainWindow;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.MiniFrost;
 import thaw.plugins.WebOfTrust;
@@ -66,7 +67,7 @@ public class SpecialBoardFactory
 	 * display the dialog asking for a name, etc.
 	 * the tree will be reloaded after that
 	 */
-	public void createBoard(thaw.core.MainWindow mainWindow /*BoardFolder parent*/) {
+	public void createBoard(MainWindow mainWindow /*BoardFolder parent*/) {
 		Logger.warning(this, "NI !");
 	}
 

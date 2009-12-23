@@ -18,7 +18,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 import thaw.core.Config;
-import thaw.core.ConfigWindow;
+import thaw.gui.ConfigWindow;
 import thaw.core.I18n;
 import thaw.core.Logger;
 import thaw.gui.IconBox;

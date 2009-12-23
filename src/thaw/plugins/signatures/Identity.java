@@ -14,6 +14,7 @@ import org.w3c.dom.*;
 import java.io.File;
 import thaw.core.Logger;
 import thaw.core.I18n;
+import thaw.gui.MainWindow;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.Signatures;
 import thaw.core.Config;
@@ -564,7 +565,7 @@ public class Identity {
 		} catch(SQLException e) {
 			Logger.warning(this, "Exception while deleting the identity from the bdd: "+e.toString());
 			e.printStackTrace();
-			new thaw.gui.WarningWindow((thaw.core.MainWindow)null,
+			new thaw.gui.WarningWindow((MainWindow)null,
 						   I18n.getMessage("thaw.plugin.signature.delete.cant"));
 		}
 

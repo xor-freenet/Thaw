@@ -19,7 +19,7 @@ import javax.swing.AbstractButton;
 
 
 import thaw.fcp.*; /* I'm lazy */
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 import thaw.core.I18n;
 
 public class PeerHelper {

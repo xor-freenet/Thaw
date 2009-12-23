@@ -6,7 +6,7 @@ import java.util.Vector;
 import javax.swing.JOptionPane;
 
 import thaw.core.Core;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 import thaw.core.I18n;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.MiniFrost;

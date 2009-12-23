@@ -15,12 +15,13 @@ import javax.swing.JComboBox;
 import thaw.core.Config;
 import thaw.core.I18n;
 import thaw.core.Logger;
+import thaw.gui.ConfigWindow;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.Signatures;
 import thaw.plugins.signatures.Identity;
 
 public class WebOfTrustConfigTab implements Observer, ActionListener, Signatures.SignaturesObserver {
-	private thaw.core.ConfigWindow configWindow;
+	private ConfigWindow configWindow;
 	private Config config;
 	private Hsqldb db;
 	
@@ -29,7 +30,7 @@ public class WebOfTrustConfigTab implements Observer, ActionListener, Signatures
 	private JComboBox identityUsed;
 	private JComboBox numberOfRefresh;
 	
-	public WebOfTrustConfigTab(thaw.core.ConfigWindow configWindow,
+	public WebOfTrustConfigTab(ConfigWindow configWindow,
 							Config config, Hsqldb db) {
 		this.configWindow = configWindow;
 		this.config = config;
