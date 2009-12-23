@@ -17,11 +17,11 @@ public class TabbedPane extends JTabbedPane implements ChangeListener {
 	 * 
 	 */
 	private static final long serialVersionUID = 8453293567552928389L;
-	private Vector tabNames;
+	private Vector<String> tabNames;
 
 	public TabbedPane() {
 		super();
-		tabNames = new Vector();
+		tabNames = new Vector<String>();
 		super.addChangeListener(this);
 	}
 
@@ -70,7 +70,7 @@ public class TabbedPane extends JTabbedPane implements ChangeListener {
 
 		for (int i = 0 ; i < tabCount ; i++) {
 			if (i == x)
-				super.setTitleAt(i, (String)tabNames.get(i));
+				super.setTitleAt(i, tabNames.get(i));
 			else
 				super.setTitleAt(i, "");
 		}
