@@ -9,7 +9,7 @@ import thaw.core.Core;
 import thaw.core.Config;
 import thaw.core.I18n;
 import thaw.core.Logger;
-import thaw.core.MainWindow;
+import thaw.gui.MainWindow;
 
 import thaw.fcp.FCPQueueManager;
 import thaw.plugins.Hsqldb;

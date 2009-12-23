@@ -14,6 +14,7 @@ import thaw.core.Core;
 import thaw.core.Logger;
 import thaw.core.I18n;
 
+import thaw.gui.MainWindow;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.MiniFrost;
 import thaw.plugins.WebOfTrust;

@@ -27,6 +27,7 @@ import thaw.fcp.FCPGenerateSSK;
 import thaw.core.Logger;
 import thaw.core.Core;
 import thaw.core.I18n;
+import thaw.gui.MainWindow;
 import thaw.plugins.Hsqldb;
 import thaw.plugins.MiniFrost;
 import thaw.plugins.WebOfTrust;
@@ -156,7 +157,7 @@ public class SSKBoardFactory extends KSKBoardFactory {
 		private JButton ok;
 		private JButton cancel;
 
-		public NewBoardDialog(thaw.core.MainWindow mainWindow) {
+		public NewBoardDialog(MainWindow mainWindow) {
 			dialog = new JDialog(mainWindow.getMainFrame(),
 					     I18n.getMessage("thaw.plugin.miniFrost.FrostSSK"));
 
@@ -221,7 +222,7 @@ public class SSKBoardFactory extends KSKBoardFactory {
 	}
 
 
-	public void createBoard(thaw.core.MainWindow mainWindow) {
+	public void createBoard(MainWindow mainWindow) {
 		NewBoardDialog dialog = new NewBoardDialog(mainWindow);
 
 		synchronized(dialog) {

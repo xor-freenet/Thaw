@@ -64,7 +64,7 @@ import java.sql.SQLException;
 
 import thaw.core.Config;
 import thaw.core.Logger;
-import thaw.core.MainWindow; /* used for warning popups */
+import thaw.gui.MainWindow; /* used for warning popups */
 import thaw.core.I18n;
 
 import thaw.fcp.FreenetURIHelper;

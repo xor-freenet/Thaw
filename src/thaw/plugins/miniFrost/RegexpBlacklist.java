@@ -22,7 +22,7 @@ import java.sql.*;
 import thaw.plugins.Hsqldb;
 import thaw.core.Logger;
 import thaw.core.I18n;
-import thaw.core.ConfigWindow;
+import thaw.gui.ConfigWindow;
 
 
 /**
