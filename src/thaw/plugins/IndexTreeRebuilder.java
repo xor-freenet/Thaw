@@ -210,9 +210,9 @@ public class IndexTreeRebuilder implements Plugin {
 	public boolean run(Core core) {
 		this.core = core;
 
-		ThawThread th = new ThawThread(new Rebuilder(this),
-					       "Index tree rebuilder",
-					       this);
+		Thread th = new Thread(new ThawThread(new Rebuilder(this),
+				"Index tree rebuilder",
+				this));
 		th.start();
 
 		return true;

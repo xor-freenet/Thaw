@@ -41,7 +41,7 @@ public class BoardManagementHelper {
 		}
 
 		public void actionPerformed(ActionEvent e) {
-			Thread th = new ThawThread(this, "Action replier", this);
+			Thread th = new Thread(new ThawThread(this, "Action replier", this));
 			th.start();
 		}
 

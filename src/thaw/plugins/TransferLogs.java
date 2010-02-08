@@ -417,13 +417,13 @@ public class TransferLogs implements Plugin, ActionListener, Observer {
 
 
 		if (e.getSource() == importKeys) {
-			Thread th = new ThawThread(new KeyImporter(), "Key importer", this);
+			Thread th = new Thread(new ThawThread(new KeyImporter(), "Key importer", this));
 			th.start();
 			return;
 		}
 
 		if (e.getSource() == exportKeys) {
-			Thread th = new ThawThread(new KeyExporter(), "Key exporter", this);
+			Thread th = new Thread(new ThawThread(new KeyExporter(), "Key exporter", this));
 			th.start();
 			return;
 		}

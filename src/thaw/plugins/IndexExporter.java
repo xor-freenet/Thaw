@@ -120,7 +120,7 @@ public class IndexExporter implements Plugin, ActionListener {
 
 
 		Worker k = new Worker(in, content, file);
-		Thread th = new ThawThread(k, "Index exporter", this);
+		Thread th = new Thread(new ThawThread(k, "Index exporter", this));
 		th.start();
 
 	}

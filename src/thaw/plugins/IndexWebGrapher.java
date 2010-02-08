@@ -149,7 +149,7 @@ public class IndexWebGrapher implements thaw.core.Plugin, ActionListener {
 				compute.setText(I18n.getMessage("thaw.plugin.indexWebGrapher.faster"));
 
 				lastBuilder = new GraphBuilder(this, graphPanel, db);
-				Thread th = new ThawThread(lastBuilder, "Web graph optimizer", this);
+				Thread th = new Thread(new ThawThread(lastBuilder, "Web graph optimizer", this));
 				th.start();
 			} else {
 				if (!lastBuilder.fasterFlag()) {

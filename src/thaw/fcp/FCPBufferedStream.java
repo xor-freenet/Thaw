@@ -143,7 +143,7 @@ public class FCPBufferedStream implements ThawRunnable {
 		}
 
 		if(tractopelle == null) {
-			tractopelle = new ThawThread(this, "Upload limiter", this);
+			tractopelle = new Thread(new ThawThread(this, "Upload limiter", this));
 			tractopelle.start();
 			return true;
 		} else {

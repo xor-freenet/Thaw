@@ -119,13 +119,13 @@ public class PeerMonitor implements thaw.core.Plugin, Observer, ActionListener
 						  BorderLayout.EAST);
 
 		running = true;
-		Thread th = new ThawThread(new DisplayRefresher(),
-					   "Peer monitor refresh",
-					   this);
+		Thread th = new Thread(new ThawThread(new DisplayRefresher(),
+				"Peer monitor refresh",
+				this));
 		th.start();
 
 		if (core.getConfig().getValue("peerMonitorFolded") != null) {
-			boolean f = (new Boolean(core.getConfig().getValue("peerMonitorFolded"))).booleanValue();
+			boolean f = Boolean.valueOf(core.getConfig().getValue("peerMonitorFolded"));
 			if (f) foldPanel();
 		}
 

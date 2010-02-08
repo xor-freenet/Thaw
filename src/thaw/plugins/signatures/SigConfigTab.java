@@ -336,20 +336,20 @@ public class SigConfigTab implements ActionListener, Observer {
 
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == addIdentity) {
-				Thread th = new ThawThread(new IdentityAdder(), "Identity adder", this);
+				Thread th = new Thread(new ThawThread(new IdentityAdder(), "Identity adder", this));
 				th.start();
 			}
 
 			if (e.getSource() == removeIdentity) {
 				Identity i = (Identity)list.getSelectedValue();
 				if (i != null) {
-					Thread th = new ThawThread(new IdentityDeleter(i), "Identity deleter", this);
+					Thread th = new Thread(new ThawThread(new IdentityDeleter(i), "Identity deleter", this));
 					th.start();
 				}
 			}
 
 			if (e.getSource() == importIdentity) {
-				Thread th = new ThawThread(new IdentityImporter(), "Identity importer", this);
+				Thread th = new Thread(new ThawThread(new IdentityImporter(), "Identity importer", this));
 				th.start();
 			}
 
@@ -357,7 +357,7 @@ public class SigConfigTab implements ActionListener, Observer {
 				Identity i = (Identity)list.getSelectedValue();
 
 				if (i != null) {
-					Thread th = new ThawThread(new IdentityExporter(i), "Identity exporter", this);
+					Thread th = new Thread(new ThawThread(new IdentityExporter(i), "Identity exporter", this));
 					th.start();
 				}
 			}

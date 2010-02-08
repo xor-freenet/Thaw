@@ -71,7 +71,7 @@ public class MDns implements thaw.core.Plugin, ActionListener, MDNSDiscoveryPane
 				isMDNSPanerShown = true;
 			}
 			core.getConfigWindow().getNodeConfigPanel().getAutodetectButton().setEnabled(false);
-			new ThawThread(mdnsPanel, "MDns host list refresher", this).start();
+			new Thread(new ThawThread(mdnsPanel, "MDns host list refresher", this)).start();
 
 		}
 	}

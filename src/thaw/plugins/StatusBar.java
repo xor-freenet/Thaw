@@ -44,10 +44,10 @@ public class StatusBar implements ThawRunnable, Plugin, LogListener {
 	public boolean run(final Core core) {
 		this.core = core;
 
-		advancedMode = Boolean.valueOf(core.getConfig().getValue("advancedMode")).booleanValue();
+		advancedMode = Boolean.valueOf(core.getConfig().getValue("advancedMode"));
 
 		running = true;
-		refresher = new ThawThread(this, "Status bar refresh", this);
+		refresher = new Thread(new ThawThread(this, "Status bar refresh", this));
 
 		refresher.start();
 

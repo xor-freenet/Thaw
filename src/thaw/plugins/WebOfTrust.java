@@ -122,7 +122,7 @@ public class WebOfTrust extends thaw.core.LibraryPlugin {
 		trustListDownloader.init();
 
 		thread = new TrucMucheThread();
-		new ThawThread(thread, "WoT refresher", this).start();
+		new Thread(new ThawThread(thread, "WoT refresher", this)).start();
 	}
 	
 	private void process() {

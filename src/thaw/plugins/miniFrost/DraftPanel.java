@@ -448,7 +448,7 @@ public class DraftPanel implements ActionListener, MouseListener {
 
 			Logger.info(this, "BoardAdder");
 
-			(new ThawThread(new BoardAdder(), "Board attachment adder", this)).start();
+			new Thread((new ThawThread(new BoardAdder(), "Board attachment adder", this))).start();
 
 			return;
 
@@ -456,7 +456,7 @@ public class DraftPanel implements ActionListener, MouseListener {
 
 			Logger.info(this, "FileAdder");
 
-			(new ThawThread(new FileAdder(), "File attachment adder", this)).start();
+			new Thread((new ThawThread(new FileAdder(), "File attachment adder", this))).start();
 
 			return;
 
@@ -464,8 +464,8 @@ public class DraftPanel implements ActionListener, MouseListener {
 
 			Object[] selection = attachmentList.getSelectedValues();
 
-			for (int i = 0 ; i < selection.length ; i++) {
-				draft.removeAttachment((Attachment)selection[i]);
+			for (Object attachment : selection) {
+				draft.removeAttachment((Attachment)attachment);
 			}
 
 			refreshAttachmentList();

@@ -82,7 +82,7 @@ public class Restarter implements Observer, ThawRunnable, Plugin {
 		core.getConfigWindow().addObserver(this);
 
 		running = true;
-		restarter = new ThawThread(this, "Restarter", this);
+		restarter = new Thread(new ThawThread(this, "Restarter", this));
 		restarter.start();
 
 		return true;

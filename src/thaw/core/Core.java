@@ -322,7 +322,7 @@ public class Core implements Observer {
 
 
 				connectionProcess = new ConnectionProcess(this);
-				Thread th = new ThawThread(connectionProcess, "Connection process", this);
+				Thread th = new Thread(new ThawThread(connectionProcess, "Connection process", this));
 				th.start();
 			}
 
@@ -567,13 +567,14 @@ public class Core implements Observer {
 			Logger.error(this, "Config was not saved correctly !");
 		}
 
-		ThawThread.setAllowFullStop(true);
+		ThawThreadManager thawThreadManager = ThawThread.getThawThreadManager();
+		thawThreadManager.setAllowFullStop(true);
 
 		Logger.info(this, "Threads remaining:");
-		ThawThread.listThreads();
+		thawThreadManager.listThreads();
 
 		Logger.info(this, "Stopping all the remaining threads ...");
-		ThawThread.stopAll();
+		thawThreadManager.stopAll();
 	}
 
 
@@ -662,8 +663,8 @@ public class Core implements Observer {
 		synchronized(this) {
 			if (reconnectionManager == null) {
 				reconnectionManager = new ReconnectionManager(withInitialWait);
-				final Thread th = new ThawThread(reconnectionManager,
-								 "Reconnection manager", this);
+				final Thread th = new Thread(new ThawThread(reconnectionManager,
+								 "Reconnection manager", this));
 				th.start();
 			} else {
 				Logger.warning(this, "Already trying to reconnect !");

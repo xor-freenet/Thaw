@@ -155,7 +155,7 @@ public class FileTable implements MouseListener, KeyListener, ActionListener {
 		updateRightClickMenu(null);
 
 		refresher = new TransferRefresher();
-		Thread th = new ThawThread(refresher, "File list refresher", this);
+		Thread th = new Thread(new ThawThread(refresher, "File list refresher", this));
 		th.start();
 	}
 

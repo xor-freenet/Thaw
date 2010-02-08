@@ -136,7 +136,7 @@ public class FCPQueryManager extends Observable implements ThawRunnable {
 		}
 
 		public void run() {
-			Thread th = new ThawThread(runnable, "FCP message processing", this);
+			Thread th = new Thread(new ThawThread(runnable, "FCP message processing", this));
 			th.start();
 
 			for (int i = 0 ; i < TIMEOUT && isRunning(th) ; i += 300) {
@@ -190,9 +190,9 @@ public class FCPQueryManager extends Observable implements ThawRunnable {
 				 * can't multithread if data are waiting
 				 */
 				if (MULTITHREADED && latestMessage.getAmountOfDataWaiting() == 0) {
-					Thread notifierTh = new ThawThread(new WatchDog(new Notifier(latestMessage)),
-								       "FCP message processing watchdog",
-								       this);
+					Thread notifierTh = new Thread(new ThawThread(new WatchDog(new Notifier(latestMessage)),
+							"FCP message processing watchdog",
+							this));
 					notifierTh.start();
 				} else {
 					try {
@@ -226,7 +226,7 @@ public class FCPQueryManager extends Observable implements ThawRunnable {
 	 */
 	public void startListening() {
 		if(connection.isConnected()) {
-			me = new ThawThread(this, "FCP socket listener", this);
+			me = new Thread(new ThawThread(this, "FCP socket listener", this));
 			me.start();
 		} else {
 			Logger.warning(this, "Not connected, so not listening on the socket");

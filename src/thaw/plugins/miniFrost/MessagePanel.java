@@ -412,8 +412,8 @@ public class MessagePanel
 		Runnable doScroll = new Runnable() {
 				public void run() {
 
-					Thread th = new ThawThread(new ScrollBarSetter(),
-								   "Scrollbar setter", this);
+					Thread th = new Thread(new ThawThread(new ScrollBarSetter(),
+							"Scrollbar setter", this));
 					th.start();
 				}
 			};

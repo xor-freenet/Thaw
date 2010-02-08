@@ -39,7 +39,7 @@ public class AutoRefresh implements ThawRunnable {
 		if (config.getValue("miniFrostAutoRefreshInterval") != null)
 			interval = Integer.parseInt(config.getValue("miniFrostAutoRefreshInterval"));
 
-		Thread th = new ThawThread(this, "Board autorefresh", this);
+		Thread th = new Thread(new ThawThread(this, "Board autorefresh", this));
 		th.start();
 	}
 

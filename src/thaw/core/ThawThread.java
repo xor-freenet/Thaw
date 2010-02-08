@@ -1,13 +1,7 @@
 package thaw.core;
 
-import java.util.Vector;
-import java.util.Iterator;
-
-
-public class ThawThread extends Thread {
-	private static ThreadGroup threadGroup = new ThreadGroup("Thaw");
-	private final static Vector<ThawThread> threads = new Vector<ThawThread>();
-	private static boolean allowFullStop = false;
+public class ThawThread implements ThawRunnable {
+	private final static ThawThreadManager threads = new ThawThreadManager();
 
 	private Object parent;
 	private ThawRunnable target;
@@ -19,8 +13,6 @@ public class ThawThread extends Thread {
 	}
 
 	public ThawThread(ThawRunnable target, String name, Object parent) {
-		super(threadGroup, name);
-
 		this.target = target;
 		this.name = name;
 		this.parent = parent;
@@ -41,7 +33,7 @@ public class ThawThread extends Thread {
 
 		Logger.info(this, "Thread '"+name+"' finished");
 
-		if (threads.size() == 0) {
+		if (threads.count() == 0) {
 			Logger.notice(this, "All Thaw threads are stopped");
 		}
 	}
@@ -54,49 +46,15 @@ public class ThawThread extends Thread {
 		return parent;
 	}
 
-
-	public static void setAllowFullStop(boolean a) {
-		allowFullStop = a;
-
-		synchronized(threads) {
-			if (allowFullStop) {
-				if (threads.size() == 0) {
-					Logger.notice(null, "All Thaw threads are stopped.");
-				}
-			}
-		}
+	public Object getName() {
+		return parent;
 	}
 
+	public void stop() {
 
-	public static void listThreads() {
-		synchronized(threads) {
-			Logger.info(null,
-				    Integer.toString(threadGroup.activeCount())+" threads "+
-				    "("+Integer.toString(threads.size())+" known)");
-
-			for (ThawThread th : threads){
-				if (th != null) {
-					if (th.getParent() != null) {
-						Logger.info(null,
-								"'"+th.getName()+"' "+
-								"(parent: '"+th.getParent().getClass().getName()+"')");
-					} else {
-						Logger.info(null,
-								"'"+th.getName()+"' "+
-								"(parent: unknown)");
-					}
-				}
-			}
-		}
 	}
 
-	public static void stopAll() {
-		synchronized(threads) {
-			for (ThawThread th : threads) {
-				if( (th != null) && (th.getTarget() != null) ){
-					th.getTarget().stop();
-				}
-			}
-		}
+	public static ThawThreadManager getThawThreadManager() {
+		return threads;
 	}
 }

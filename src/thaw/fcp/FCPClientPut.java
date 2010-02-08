@@ -212,7 +212,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			sha = new SHA256Computer(salt, localFile.getPath());
 			sha.addObserver(this);
 
-			Thread th = new ThawThread(sha, "Hash computer", this);
+			Thread th = new Thread(new ThawThread(sha, "Hash computer", this));
 			th.start();
 		} else {
 			return startProcess();
@@ -312,9 +312,9 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 		UnlockWaiter uw = new UnlockWaiter(this, connection);
 
-		final Thread fork = new ThawThread(uw,
-						   "Unlock waiter",
-						   this);
+		final Thread fork = new Thread(new ThawThread(uw,
+				"Unlock waiter",
+				this));
 		uw.setThread(fork);
 		fork.start();
 

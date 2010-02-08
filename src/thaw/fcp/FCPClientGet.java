@@ -729,9 +729,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		
 		UnlockWaiter uw = new UnlockWaiter(this, duplicatedQueryManager.getConnection(), dir);
 
-		final Thread fork = new ThawThread(uw,
-						   "Unlock waiter",
-						   this);
+		final Thread fork = new Thread(new ThawThread(uw,
+				"Unlock waiter",
+				this));
 		uw.setThread(fork);
 
 		fork.start();

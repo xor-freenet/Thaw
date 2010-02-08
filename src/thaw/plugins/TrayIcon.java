@@ -390,7 +390,7 @@ public class TrayIcon implements thaw.core.Plugin,
 
 			/* progressBars vector is generated at the same time than the panels */
 			refresher = new ProgressBarRefresher(progressBars);
-			Thread th = new ThawThread(refresher, "Trayicon transfer list refresher", this);
+			Thread th = new Thread(new ThawThread(refresher, "Trayicon transfer list refresher", this));
 			th.start();
 		}
 	}

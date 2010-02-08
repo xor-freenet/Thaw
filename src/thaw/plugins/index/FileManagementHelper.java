@@ -45,7 +45,7 @@ public class FileManagementHelper {
 
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == src) {
-				Thread th = new ThawThread(this, "Action replier", this);
+				Thread th = new Thread(new ThawThread(this, "Action replier", this));
 				th.start();
 			}
 		}
@@ -259,9 +259,6 @@ public class FileManagementHelper {
 		private AbstractButton actionSource;
 		private Vector target;
 
-		/**
-		 * @param queueManager is used to stop transfers if needed
-		 */
 		public FileRemover(final IndexBrowserPanel indexBrowser, final AbstractButton actionSource) {
 			super(actionSource);
 			this.indexBrowser = indexBrowser;

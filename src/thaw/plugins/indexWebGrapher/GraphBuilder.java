@@ -222,7 +222,7 @@ public class GraphBuilder implements ThawRunnable {
 				refresher.run(false);
 			else {
 				if (refresherTh == null) {
-					refresherTh = new ThawThread(refresher, "Index web display refresh", this);
+					refresherTh = new Thread(new ThawThread(refresher, "Index web display refresh", this));
 					refresherTh.start();
 				}
 			}

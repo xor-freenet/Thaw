@@ -103,7 +103,7 @@ public class LogConsole implements Plugin, LogListener, ActionListener, ThawRunn
 
 		Logger.addLogListener(this);
 
-		Thread dispThread = new ThawThread(this, "Log console refresh", this);
+		Thread dispThread = new Thread(new ThawThread(this, "Log console refresh", this));
 		dispThread.start();
 
 		return true;

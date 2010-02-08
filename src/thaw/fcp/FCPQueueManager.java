@@ -495,7 +495,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	}
 
 	public void startScheduler() {
-		scheduler = new ThawThread(this, "FCP queue scheduler", this);
+		scheduler = new Thread(new ThawThread(this, "FCP queue scheduler", this));
 		stopThread = false;
 		scheduler.start();
 	}

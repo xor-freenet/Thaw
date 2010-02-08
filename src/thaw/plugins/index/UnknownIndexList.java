@@ -202,7 +202,7 @@ public class UnknownIndexList implements MouseListener, ActionListener {
 			lastLinkAdder.stop();
 
 		lastLinkAdder = new LinkAdder(index);
-		Thread th = new ThawThread(lastLinkAdder, "Unknown index list computer", this);
+		Thread th = new Thread(new ThawThread(lastLinkAdder, "Unknown index list computer", this));
 		th.start();
 	}
 

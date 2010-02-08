@@ -77,7 +77,7 @@ public class AutoRefresh implements ThawRunnable, java.util.Observer {
 	public void start() {
 		if (!threadRunning) {
 			threadRunning = true;
-			Thread th = new ThawThread(this, "Index tree auto-refresher", this);
+			Thread th = new Thread(new ThawThread(this, "Index tree auto-refresher", this));
 			th.start();
 		}
 	}

@@ -206,7 +206,7 @@ public class ConfigWindow extends Observable implements ActionListener, java.awt
 
 			synchronized(PluginManager.pluginLock) {
 				Reloader reloader = new Reloader(needConnectionReset);
-				Thread reload = new ThawThread(reloader, "Config reloader", this);
+				Thread reload = new Thread(new ThawThread(reloader, "Config reloader", this));
 				reload.start();
 			}
 

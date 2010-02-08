@@ -315,7 +315,7 @@ public class Table extends JTable implements TableColumnModelListener, ThawRunna
 		hasChanged = true;
 
 		if (savingThread == null) {
-			savingThread = new ThawThread(this, "Table state saver", this);
+			savingThread = new Thread(new ThawThread(this, "Table state saver", this));
 			savingThread.start();
 		}
 	}

@@ -36,7 +36,7 @@ public class LinkManagementHelper {
 
 		public void actionPerformed(ActionEvent e) {
 			if (e.getSource() == src) {
-				Thread th = new ThawThread(this, "Action replier", this);
+				Thread th = new Thread(new ThawThread(this, "Action replier", this));
 				th.start();
 			}
 		}

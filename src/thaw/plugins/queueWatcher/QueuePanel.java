@@ -446,15 +446,15 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 
 	public void removeSelectedTransfers() {
 		reloadSelections();
-		Thread th = new ThawThread(new ActionReplier(ACTION_REMOVE_SELECTED, -1),
-					   "Action replier : Remove selected", this);
+		Thread th = new Thread(new ThawThread(new ActionReplier(ACTION_REMOVE_SELECTED, -1),
+				"Action replier : Remove selected", this));
 		th.start();
 	}
 
 	public void removeAllFinishedTransfers() {
 		reloadSelections();
-		Thread th = new ThawThread(new ActionReplier(ACTION_REMOVE_FINISHED, -1),
-					   "Action replier : Remove finished", this);
+		Thread th = new Thread(new ThawThread(new ActionReplier(ACTION_REMOVE_FINISHED, -1),
+				"Action replier : Remove finished", this));
 		th.start();
 	}
 
@@ -489,9 +489,9 @@ public class QueuePanel implements MouseListener, ActionListener, KeyListener {
 			}
 		}
 
-		final Thread actionTh = new ThawThread(new ActionReplier(action, prioritySelected),
-						       "Action replier : "+Integer.toString(action),
-						       this);
+		final Thread actionTh = new Thread(new ThawThread(new ActionReplier(action, prioritySelected),
+				"Action replier : " + Integer.toString(action),
+				this));
 		actionTh.start();
 	}
 

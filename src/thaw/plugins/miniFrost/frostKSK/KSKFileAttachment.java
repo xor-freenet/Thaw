@@ -217,7 +217,7 @@ public class KSKFileAttachment
 			keysToDownload = new Vector();
 			keysToDownload.add(key);
 
-			Thread th = new ThawThread(this, "File downloading : path asker", this);
+			Thread th = new Thread(new ThawThread(this, "File downloading : path asker", this));
 			th.start();
 
 		} else if (action.equals(I18n.getMessage("thaw.plugin.miniFrost.downloadAll"))) {
@@ -234,7 +234,7 @@ public class KSKFileAttachment
 					keysToDownload.add(((KSKFileAttachment)o).getValue("key"));
 			}
 
-			Thread th = new ThawThread(this, "File downloading : path asker", this);
+			Thread th = new Thread(new ThawThread(this, "File downloading : path asker", this));
 			th.start();
 
 		}

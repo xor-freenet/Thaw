@@ -74,7 +74,7 @@ public class IndexManagementHelper {
 
 		/**
 		 * Can disable the abstract button if required
-		 * @param node can be null
+		 * @param nodes can be null
 		 */
 		public void setTargets(Vector nodes);
 	}
@@ -132,7 +132,7 @@ public class IndexManagementHelper {
 
 
 		protected void startThread() {
-			Thread th = new ThawThread(this, "Action replier", this);
+			Thread th = new Thread(new ThawThread(this, "Action replier", this));
 			th.start();
 		}
 
@@ -699,7 +699,7 @@ public class IndexManagementHelper {
 		v.add(target);
 		downloader.setTargets(v);
 
-		Thread th = new ThawThread(downloader, "Index downloader");
+		Thread th = new Thread(new ThawThread(downloader, "Index downloader"));
 		th.start();
 
 		return true;
@@ -907,7 +907,7 @@ public class IndexManagementHelper {
 		v.add(target);
 		uploader.setTargets(v);
 
-		Thread th = new ThawThread(uploader, "Index inserter");
+		Thread th = new Thread(new ThawThread(uploader, "Index inserter"));
 		th.start();
 
 		return true;

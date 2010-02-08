@@ -790,7 +790,7 @@ public class KSKBoard
 
 		notifyChange();
 
-		Thread th = new ThawThread(this, "Board refreshment", this);
+		Thread th = new Thread(new ThawThread(this, "Board refreshment", this));
 		th.start();
 	}
 
