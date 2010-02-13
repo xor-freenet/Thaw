@@ -588,5 +588,4 @@ public class InsertPanel extends JDialog implements ItemListener, Observer {
 		selectedFilesListModel = new DefaultListModel();
 		selectedFiles = new JList(selectedFilesListModel);
 	}
-
 }
