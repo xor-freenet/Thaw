@@ -257,7 +257,7 @@ public class KSKDraft
 							  2, /* priority */
 							  false,
 							  FCPClientPut.PERSISTENCE_FOREVER,
-							  queueManager);
+							  queueManager,true);
 		clientPut.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(clientPut);
 	}

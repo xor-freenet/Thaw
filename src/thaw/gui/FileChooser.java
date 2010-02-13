@@ -89,7 +89,7 @@ public class FileChooser {
 	}
 
 
-	protected void expandRecursivly(final File file, final Vector vec) {
+	protected void expandRecursivly(final File file, final Vector<File> vec) {
 		if (file.isFile()) {
 			vec.add(file);
 			return;
@@ -102,21 +102,21 @@ public class FileChooser {
 			return;
 		}
 
-		for (int i=0; i < files.length; i++) {
-			if (files[i].isFile())
-				vec.add(files[i]);
+		for(File currentFile : files) {
+			if (currentFile.isFile())
+				vec.add(currentFile);
 			else
-				this.expandRecursivly(files[i],vec);
+				this.expandRecursivly(currentFile,vec);
 		}
 
 	}
 
-	protected Vector expandRecursivly(final File[] selectedFiles)
+	protected Vector<File> expandRecursivly(final File[] selectedFiles)
 	{
-		final Vector files= new Vector();
+		final Vector<File> files = new Vector<File>();
 
-		for (int i = 0 ; i < selectedFiles.length ; i++) {
-			this.expandRecursivly(selectedFiles[i], files);
+		for (File selectedFile : selectedFiles) {
+			this.expandRecursivly(selectedFile, files);
 		}
 
 		return files;
@@ -125,7 +125,7 @@ public class FileChooser {
 	/**
 	 * @return null if nothing choosed.
 	 */
-	public Vector askManyFiles() {
+	public Vector<File> askManyFiles() {
 		File[] files;
 
 		fileChooser.setMultiSelectionEnabled(true);

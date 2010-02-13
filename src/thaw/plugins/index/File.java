@@ -348,7 +348,7 @@ public class File implements Observer, FileContainer {
 								FCPClientPut.DEFAULT_PRIORITY,
 								true, /* global queue */
 								FCPClientPut.PERSISTENCE_FOREVER,
-								queueManager);
+								queueManager,true);
 		queueManager.addQueryToThePendingQueue(clientPut);
 
 		clientPut.addObserver(this);

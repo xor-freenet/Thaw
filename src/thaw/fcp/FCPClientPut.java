@@ -27,6 +27,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	private int priority = DEFAULT_PRIORITY;
 	private boolean global = true;
 	private int persistence = PERSISTENCE_FOREVER;
+	private boolean compressFile = true;
 	private boolean getCHKOnly = false;
 
 	private int toTheNodeProgress = 0;
@@ -70,8 +71,10 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	public FCPClientPut(final File file, final int keyType,
 			    final int rev, final String name,
 			    final String privateKey, final int priority,
-			    final boolean global, final int persistence, FCPQueueManager queueManager) {
+			    final boolean global, final int persistence,
+			    FCPQueueManager queueManager, final boolean compress) {
 		this(file, keyType, rev, name, privateKey, priority, global, persistence, false, queueManager);
+		compressFile = compress;
 	}
 
 	/**
@@ -372,10 +375,16 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			msg.setValue("ClientToken", localFile.getPath());
 
 		switch(persistence) {
-		case(PERSISTENCE_FOREVER): msg.setValue("Persistence", "forever"); break;
-		case(PERSISTENCE_UNTIL_NODE_REBOOT): msg.setValue("Persistence", "reboot"); break;
-		case(PERSISTENCE_UNTIL_DISCONNECT): msg.setValue("Persistence", "connection"); break;
-		default: Logger.error(this, "Unknow persistence !?"); break;
+			case(PERSISTENCE_FOREVER): msg.setValue("Persistence", "forever"); break;
+			case(PERSISTENCE_UNTIL_NODE_REBOOT): msg.setValue("Persistence", "reboot"); break;
+			case(PERSISTENCE_UNTIL_DISCONNECT): msg.setValue("Persistence", "connection"); break;
+			default: Logger.error(this, "Unknown persistence !?"); break;
+		}
+
+		if(compressFile) {
+			msg.setValue("DontCompress", "false");
+		} else {
+			msg.setValue("DontCompress", "true");
 		}
 
 		if (localFile != null)

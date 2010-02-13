@@ -4,11 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JMenuItem;
-import javax.swing.JScrollPane;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 import thaw.core.Core;
 import thaw.core.I18n;
@@ -23,9 +19,6 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 	private Core core;
 
 	private InsertPanel insertPanel;
-	private JScrollPane scrollPane;
-
-	private JFrame insertionFrame;
 	private JButton buttonInToolBar;
 
 	private JMenuItem menuItem;
@@ -47,21 +40,12 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 
 		insertPanel = new InsertPanel(this,
 					      core.getConfig(), core.getMainWindow(),
-					      Boolean.valueOf(core.getConfig().getValue("advancedMode")).booleanValue());
+					      Boolean.valueOf(core.getConfig().getValue("advancedMode")));
 
-		scrollPane = new JScrollPane(insertPanel.getPanel());
+		insertPanel.setVisible(false);
+		insertPanel.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+		insertPanel.pack();
 
-		insertionFrame = new JFrame(I18n.getMessage("thaw.common.insertion"));
-		insertionFrame.setVisible(false);
-		insertionFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-		insertionFrame.setContentPane(scrollPane);
-
-		if ((core.getConfig().getValue("advancedMode") == null)
-		    || Boolean.valueOf(core.getConfig().getValue("advancedMode")).booleanValue()) {
-			insertionFrame.setSize(750, 450);
-		} else {
-			insertionFrame.setSize(350, 200);
-		}
 
 		buttonInToolBar = new JButton(IconBox.insertions);
 		buttonInToolBar.setToolTipText(I18n.getMessage("thaw.common.insertion"));
@@ -98,9 +82,9 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 		if (queueWatcher != null)
 			queueWatcher.removeButtonFromTheToolbar(buttonInToolBar);
 
-		insertionFrame.setVisible(false);
-		insertionFrame.dispose();
-		insertionFrame = null;
+		insertPanel.setVisible(false);
+		insertPanel.dispose();
+		insertPanel = null;
 	}
 
 
@@ -110,7 +94,7 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 
 
 	public void actionPerformed(final ActionEvent e) {
-		insertionFrame.setVisible(true);
+		insertPanel.setVisible(true);
 	}
 
 
@@ -128,9 +112,9 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 				  final int rev, final String name,
 				  final String privateKey,
 				  final int priority, final boolean global,
-				  final int persistence, final String mimeType) {
+				  final int persistence, final boolean compress, final String mimeType) {
 
-		FCPClientPut clientPut = null;
+		FCPClientPut clientPut;
 		final String[] files = fileList.split(";");
 
 		if((keyType > 0) && (files.length > 1)) {
@@ -138,16 +122,16 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 			return false;
 		}
 
-		for(int i = 0 ; i < files.length ; i++) {
+		for(String fileName : files) {
 
 			if((privateKey != null) && !"".equals( privateKey )) {
-				clientPut = new FCPClientPut(new File(files[i]), keyType, rev, name,
+				clientPut = new FCPClientPut(new File(fileName), keyType, rev, name,
 							     "USK@"+privateKey+"/", priority,
-							     global, persistence,core.getQueueManager());
+							     global, persistence,core.getQueueManager(), compress);
 			} else {
-				clientPut = new FCPClientPut(new File(files[i]), keyType, rev, name,
+				clientPut = new FCPClientPut(new File(fileName), keyType, rev, name,
 							     null, priority,
-							     global, persistence, core.getQueueManager());
+							     global, persistence, core.getQueueManager(), compress);
 			}
 
 			if(mimeType != null) {
@@ -162,7 +146,7 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 
 		}
 
-		insertionFrame.setVisible(false);
+		insertPanel.setVisible(false);
 
 		return true;
 	}

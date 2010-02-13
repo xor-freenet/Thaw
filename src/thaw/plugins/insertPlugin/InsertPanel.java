@@ -1,79 +1,61 @@
 package thaw.plugins.insertPlugin;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import com.jgoodies.forms.layout.CellConstraints;
+import com.jgoodies.forms.layout.FormLayout;
+import thaw.core.Config;
+import thaw.core.I18n;
+import thaw.core.Logger;
+import thaw.fcp.FCPClientPut;
+import thaw.gui.FileChooser;
+import thaw.gui.MainWindow;
+import thaw.gui.WarningWindow;
+import thaw.plugins.InsertPlugin;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.util.Iterator;
-import java.util.Observable;
-import java.util.Observer;
-import java.util.Vector;
+import java.util.*;
 
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JTextField;
+public class InsertPanel extends JDialog implements ItemListener, Observer {
+	private JPanel panelFilesToInsert;
+	private JList selectedFiles;
+	private DefaultListModel selectedFilesListModel;
+	private JPanel panelAddRemove;
+	private JButton btnAdd;
+	private JButton btnRemove;
+	private JPanel panelOptions;
+	private JComboBox prioritySelecter;
+	private JLabel priorityLabel;
+	private JCheckBox compressSelecter;
+	private JLabel compressLabel;
+	private JCheckBox globalSelecter;
+	private JLabel globalLabel;
+	private JLabel mimeLabel;
+	private JComboBox mimeField;
+	private JPanel panelKeyType;
+	private JRadioButton rbCHK;
+	private JRadioButton rbKSK;
+	private JRadioButton rbSSK_USK;
+	private JButton letsGoButton;
 
-import thaw.core.Config;
-import thaw.gui.FileChooser;
-import thaw.core.I18n;
-import thaw.core.Logger;
-import thaw.gui.WarningWindow;
-import thaw.fcp.FCPClientPut;
-import thaw.plugins.InsertPlugin;
-import thaw.gui.MainWindow;
-
-
-public class InsertPanel implements ActionListener, ItemListener, Observer {
 	private final static int MIN_PRIORITY = 6;
-
-	private JPanel globalPanel = null;
-
-	private JPanel mainPanel;
-
-	private JPanel subPanel; /* because we won't use the whole space */
-
-	private JLabel browseLabel;
-	private JTextField selectedFiles;
-	private JButton browseButton;
-
-	private JLabel selectKeyLabel;
-	private ButtonGroup keyRadioGroup;
-	private JRadioButton[] keyRadioButtons;
 
 	private JLabel selectRevLabel;
 	private JTextField revField;
 
 	private JLabel selectNameLabel;
 	private JTextField nameField;
+	private ButtonGroup keyRadioGroup;
 
 	private JLabel publicKeyLabel;
 	private JTextField publicKeyField;
 	private JLabel privateKeyLabel;
 	private JTextField privateKeyField;
-
-	private String[] priorities;
-	private JLabel priorityLabel;
-	private JComboBox prioritySelecter;
-
-	private String[] globalStr;
-	private JLabel globalLabel;
-	private JComboBox globalSelecter;
-
-	private JLabel mimeLabel;
-	private JComboBox mimeField;
-
-	private JButton letsGoButton;
-
+	private JPanel panelInsert;
+	private ButtonGroup keyRadioButtons;
 
 	private InsertPlugin insertPlugin;
 	private int keyType;
@@ -83,242 +65,291 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 	private MainWindow mainWindow;
 
 	public InsertPanel(final InsertPlugin insertPlugin,
-			   final Config config, final MainWindow mainWindow,
-			   final boolean advancedMode) {
+	                   final Config config, final MainWindow mainWindow,
+	                   final boolean advancedMode) {
 
 		this.insertPlugin = insertPlugin;
 		this.config = config;
 		this.mainWindow = mainWindow;
 
-		globalPanel = new JPanel();
-
-		mainPanel = new JPanel();
-		mainPanel.setLayout(new BorderLayout(10, 10));
-
-		if(advancedMode) {
-			subPanel = new JPanel();
-			subPanel.setLayout(new GridLayout(3,2, 20, 20));
-		}
-
+		// JGoodie component creation code
+		$$$setupUI$$$();
 
 		// FILE SELECTION
+		setContentPane(panelInsert);
+		setModal(true);
 
-		JPanel subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(3, 1));
-		browseLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.filesToInsert"));
-		subSubPanel.add(browseLabel);
-		selectedFiles = new JTextField(20);
-		selectedFiles.setEditable(true);
-		subSubPanel.add(selectedFiles);
-		browseButton = new JButton(I18n.getMessage("thaw.common.selectFiles"));
-		browseButton.addActionListener(this);
-		subSubPanel.add(browseButton);
+		btnAdd.addActionListener(new AddFileActionPerformed());
+		btnRemove.addActionListener(new RemoveFileActionPerformed());
 
-		if(advancedMode)
-			subPanel.add(subSubPanel);
-		else
-			mainPanel.add(subSubPanel, BorderLayout.CENTER);
-
+		compressLabel.setLabelFor(compressSelecter);
+		globalLabel.setLabelFor(globalSelecter);
 
 		// KEY TYPE SELECTION
-
-		subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(4, 1));
-		selectKeyLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.selectKey"));
-		subSubPanel.add(selectKeyLabel);
-		keyRadioButtons = new JRadioButton[3];
-		keyRadioButtons[0] = new JRadioButton(I18n.getMessage("thaw.plugin.insert.CHK"));
-		keyRadioButtons[0].setSelected(true);
-		keyType = 0;
-		keyRadioButtons[1] = new JRadioButton(I18n.getMessage("thaw.plugin.insert.KSK"));
-		keyRadioButtons[2] = new JRadioButton(I18n.getMessage("thaw.plugin.insert.SSK"));
 		keyRadioGroup = new ButtonGroup();
-		for(int i = 0 ; i < keyRadioButtons.length ; i++) {
-			keyRadioButtons[i].addItemListener(this);
-			keyRadioGroup.add(keyRadioButtons[i]);
-			subSubPanel.add(keyRadioButtons[i]);
-		}
-
-		if(advancedMode)
-			subPanel.add(subSubPanel);
-
-
-		/* GLOBAL */
-
-		subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(4, 1));
-
-		globalStr = new String[] {
-			I18n.getMessage("thaw.common.true"),
-			I18n.getMessage("thaw.common.false"),
-		};
-
-		globalLabel = new JLabel(I18n.getMessage("thaw.common.globalQueue"));
-		subSubPanel.add(globalLabel);
-		globalSelecter = new JComboBox(globalStr);
-		globalSelecter.setSelectedItem(I18n.getMessage("thaw.common.true"));
-		subSubPanel.add(globalSelecter);
-
-		if(advancedMode)
-			subPanel.add(subSubPanel);
-
+		keyRadioGroup.add(rbCHK);
+		keyRadioGroup.add(rbKSK);
+		keyRadioGroup.add(rbSSK_USK);
+		rbCHK.addItemListener(this);
+		rbKSK.addItemListener(this);
+		rbSSK_USK.addItemListener(this);
 
 		// PRIORITY SELECTION
-
-		priorities = new String[] {
-			I18n.getMessage("thaw.plugin.priority.p0"),
-			I18n.getMessage("thaw.plugin.priority.p1"),
-			I18n.getMessage("thaw.plugin.priority.p2"),
-			I18n.getMessage("thaw.plugin.priority.p3"),
-			I18n.getMessage("thaw.plugin.priority.p4"),
-			I18n.getMessage("thaw.plugin.priority.p5"),
-			I18n.getMessage("thaw.plugin.priority.p6")
-		};
-
-		subSubPanel.setLayout(new GridLayout(4, 1));
-		priorityLabel = new JLabel(I18n.getMessage("thaw.common.priority"));
-		subSubPanel.add(priorityLabel);
-		prioritySelecter = new JComboBox(priorities);
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p0"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p1"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p2"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p3"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p4"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p5"));
+		prioritySelecter.addItem(I18n.getMessage("thaw.plugin.priority.p6"));
 		prioritySelecter.setSelectedItem(I18n.getMessage("thaw.plugin.priority.p4"));
-		subSubPanel.add(prioritySelecter);
+		prioritySelecter.repaint();
 
-		if(advancedMode) {
-			subPanel.add(subSubPanel);
-			subPanel.add(subSubPanel);
-		}
-
-		// REVISION SELECTION
-
-		subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(4, 1));
-
-		selectRevLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.selectRev"));
-		subSubPanel.add(selectRevLabel);
-		revField = new JTextField(4);
-		revField.setEditable(true);
-		subSubPanel.add(revField);
-
-		// NAME
-		selectNameLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.selectName"));
-		subSubPanel.add(selectNameLabel);
-		nameField = new JTextField(10);
-		nameField.setEditable(true);
-		subSubPanel.add(nameField);
-
-		if(advancedMode)
-			subPanel.add(subSubPanel);
-
-
-		setRevAndNameVisible(false);
-
+		setRevAndNameEnabled(false);
 
 		// MIME TYPE
+		final Vector<String> mimes = DefaultMIMETypes.getAllMIMETypes();
+		mimes.add(0, I18n.getMessage("thaw.plugin.insert.autodetectMime"));
+		mimeField.removeAllItems();
+		for (Object mime : mimes) {
+			mimeField.addItem(mime);
+		}
+		mimeField.repaint();
 
-		subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(4, 1));
+		setKeysEnabled(false);
 
-		mimeLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.mime"));
+		panelFilesToInsert.setVisible(true);
+		panelOptions.setVisible(advancedMode);
+		panelKeyType.setVisible(advancedMode);
 
-		final Vector mimes = (Vector)DefaultMIMETypes.getAllMIMETypes().clone();
-		mimes.add(0, "");
+		letsGoButton.addActionListener(new InsertActionPerformed());
+	}
 
-		mimeField = new JComboBox(mimes);
-		mimeField.setEditable(true);
-		mimeField.setPreferredSize(new Dimension(75, 20));
+	/**
+	 * Method generated by IntelliJ IDEA GUI Designer
+	 * >>> IMPORTANT!! <<<
+	 * DO NOT edit this method OR call it in your code!
+	 *
+	 * @noinspection ALL
+	 */
+	private void $$$setupUI$$$() {
+		createUIComponents();
+		panelInsert = new JPanel();
+		panelInsert.setLayout(new FormLayout("fill:max(d;170dlu):noGrow,left:4dlu:noGrow,fill:max(d;170dlu):grow", "center:max(d;4px):noGrow,top:4dlu:noGrow,center:d:grow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:max(d;4px):noGrow"));
+		panelFilesToInsert = new JPanel();
+		panelFilesToInsert.setLayout(new FormLayout("fill:max(d;100px):grow", "center:d:grow,top:4dlu:noGrow,center:d:noGrow"));
+		CellConstraints cc = new CellConstraints();
+		panelInsert.add(panelFilesToInsert, cc.xyw(1, 3, 3, CellConstraints.DEFAULT, CellConstraints.FILL));
+		panelFilesToInsert.setBorder(BorderFactory.createTitledBorder(ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.filesToInsert")));
+		final JScrollPane scrollPane1 = new JScrollPane();
+		panelFilesToInsert.add(scrollPane1, cc.xy(1, 1, CellConstraints.DEFAULT, CellConstraints.FILL));
+		scrollPane1.setViewportView(selectedFiles);
+		panelAddRemove = new JPanel();
+		panelAddRemove.setLayout(new FormLayout("fill:d:noGrow,left:4dlu:noGrow,fill:max(d;4px):noGrow", "center:p:grow"));
+		panelFilesToInsert.add(panelAddRemove, cc.xy(1, 3, CellConstraints.DEFAULT, CellConstraints.FILL));
+		btnAdd = new JButton();
+		this.$$$loadButtonText$$$(btnAdd, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.addFiles"));
+		panelAddRemove.add(btnAdd, cc.xy(1, 1));
+		btnRemove = new JButton();
+		this.$$$loadButtonText$$$(btnRemove, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.removeFiles"));
+		panelAddRemove.add(btnRemove, cc.xy(3, 1));
+		panelOptions = new JPanel();
+		panelOptions.setLayout(new FormLayout("fill:max(d;4px):noGrow,left:4dlu:noGrow,fill:d:noGrow,left:4dlu:noGrow,fill:d:noGrow", "center:d:noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow"));
+		panelInsert.add(panelOptions, cc.xy(1, 5, CellConstraints.DEFAULT, CellConstraints.FILL));
+		panelOptions.setBorder(BorderFactory.createTitledBorder(ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.options")));
+		prioritySelecter = new JComboBox();
+		panelOptions.add(prioritySelecter, cc.xy(5, 1));
+		priorityLabel = new JLabel();
+		this.$$$loadLabelText$$$(priorityLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.common.priority"));
+		panelOptions.add(priorityLabel, cc.xy(3, 1));
+		compressLabel = new JLabel();
+		this.$$$loadLabelText$$$(compressLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.common.compressInsert"));
+		panelOptions.add(compressLabel, cc.xy(3, 3));
+		compressSelecter = new JCheckBox();
+		compressSelecter.setSelected(true);
+		panelOptions.add(compressSelecter, cc.xy(5, 3));
+		globalLabel = new JLabel();
+		this.$$$loadLabelText$$$(globalLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.common.globalQueue"));
+		panelOptions.add(globalLabel, cc.xy(3, 5));
+		globalSelecter = new JCheckBox();
+		globalSelecter.setSelected(true);
+		globalSelecter.setText("");
+		panelOptions.add(globalSelecter, cc.xy(5, 5));
+		mimeLabel = new JLabel();
+		this.$$$loadLabelText$$$(mimeLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.mimeType"));
+		panelOptions.add(mimeLabel, cc.xy(3, 7));
+		mimeField = new JComboBox();
+		panelOptions.add(mimeField, cc.xy(5, 7));
+		panelKeyType = new JPanel();
+		panelKeyType.setLayout(new FormLayout("fill:d:noGrow,left:4dlu:noGrow,fill:max(d;100dlu):grow", "center:d:noGrow,center:d:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow,top:4dlu:noGrow,center:d:noGrow"));
+		panelInsert.add(panelKeyType, cc.xy(3, 5, CellConstraints.DEFAULT, CellConstraints.FILL));
+		panelKeyType.setBorder(BorderFactory.createTitledBorder(ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.keyType")));
+		rbCHK = new JRadioButton();
+		rbCHK.setSelected(true);
+		this.$$$loadButtonText$$$(rbCHK, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.CHK"));
+		panelKeyType.add(rbCHK, cc.xyw(1, 1, 3));
+		rbKSK = new JRadioButton();
+		this.$$$loadButtonText$$$(rbKSK, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.KSK"));
+		panelKeyType.add(rbKSK, cc.xyw(1, 2, 3));
+		rbSSK_USK = new JRadioButton();
+		this.$$$loadButtonText$$$(rbSSK_USK, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.SSK"));
+		panelKeyType.add(rbSSK_USK, cc.xyw(1, 3, 3));
+		selectRevLabel = new JLabel();
+		selectRevLabel.setEnabled(false);
+		this.$$$loadLabelText$$$(selectRevLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.selectRev"));
+		panelKeyType.add(selectRevLabel, cc.xy(1, 5));
+		revField = new JTextField();
+		revField.setEnabled(false);
+		revField.setText("0");
+		panelKeyType.add(revField, cc.xy(3, 5, CellConstraints.FILL, CellConstraints.DEFAULT));
+		selectNameLabel = new JLabel();
+		selectNameLabel.setEnabled(false);
+		this.$$$loadLabelText$$$(selectNameLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.selectName"));
+		panelKeyType.add(selectNameLabel, cc.xy(1, 7));
+		publicKeyLabel = new JLabel();
+		publicKeyLabel.setEnabled(false);
+		this.$$$loadLabelText$$$(publicKeyLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.publicKey"));
+		panelKeyType.add(publicKeyLabel, cc.xy(1, 9));
+		privateKeyLabel = new JLabel();
+		privateKeyLabel.setEnabled(false);
+		this.$$$loadLabelText$$$(privateKeyLabel, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.privateKey"));
+		panelKeyType.add(privateKeyLabel, cc.xy(1, 11));
+		nameField = new JTextField();
+		nameField.setEnabled(false);
+		panelKeyType.add(nameField, cc.xy(3, 7, CellConstraints.FILL, CellConstraints.DEFAULT));
+		publicKeyField = new JTextField();
+		publicKeyField.setEnabled(false);
+		panelKeyType.add(publicKeyField, cc.xy(3, 9, CellConstraints.FILL, CellConstraints.DEFAULT));
+		privateKeyField = new JTextField();
+		privateKeyField.setEnabled(false);
+		panelKeyType.add(privateKeyField, cc.xy(3, 11, CellConstraints.FILL, CellConstraints.DEFAULT));
+		letsGoButton = new JButton();
+		this.$$$loadButtonText$$$(letsGoButton, ResourceBundle.getBundle("thaw/i18n/thaw").getString("thaw.plugin.insert.insertAction"));
+		panelInsert.add(letsGoButton, cc.xyw(1, 7, 3));
+		priorityLabel.setLabelFor(prioritySelecter);
+		globalLabel.setLabelFor(globalSelecter);
+		mimeLabel.setLabelFor(mimeField);
+		selectRevLabel.setLabelFor(revField);
+		selectNameLabel.setLabelFor(nameField);
+		publicKeyLabel.setLabelFor(publicKeyField);
+		privateKeyLabel.setLabelFor(privateKeyField);
+		keyRadioButtons = new ButtonGroup();
+		keyRadioButtons.add(rbCHK);
+		keyRadioButtons.add(rbKSK);
+		keyRadioButtons.add(rbSSK_USK);
+	}
 
-		subSubPanel.add(mimeLabel);
-		subSubPanel.add(mimeField);
+	/**
+	 * @noinspection ALL
+	 */
+	private void $$$loadLabelText$$$(JLabel component, String text) {
+		StringBuffer result = new StringBuffer();
+		boolean haveMnemonic = false;
+		char mnemonic = '\0';
+		int mnemonicIndex = -1;
+		for (int i = 0; i < text.length(); i++) {
+			if (text.charAt(i) == '&') {
+				i++;
+				if (i == text.length()) {
+					break;
+				}
+				if (!haveMnemonic && text.charAt(i) != '&') {
+					haveMnemonic = true;
+					mnemonic = text.charAt(i);
+					mnemonicIndex = result.length();
+				}
+			}
+			result.append(text.charAt(i));
+		}
+		component.setText(result.toString());
+		if (haveMnemonic) {
+			component.setDisplayedMnemonic(mnemonic);
+			component.setDisplayedMnemonicIndex(mnemonicIndex);
+		}
+	}
 
-		if(advancedMode)
-			subPanel.add(subSubPanel);
+	/**
+	 * @noinspection ALL
+	 */
+	private void $$$loadButtonText$$$(AbstractButton component, String text) {
+		StringBuffer result = new StringBuffer();
+		boolean haveMnemonic = false;
+		char mnemonic = '\0';
+		int mnemonicIndex = -1;
+		for (int i = 0; i < text.length(); i++) {
+			if (text.charAt(i) == '&') {
+				i++;
+				if (i == text.length()) {
+					break;
+				}
+				if (!haveMnemonic && text.charAt(i) != '&') {
+					haveMnemonic = true;
+					mnemonic = text.charAt(i);
+					mnemonicIndex = result.length();
+				}
+			}
+			result.append(text.charAt(i));
+		}
+		component.setText(result.toString());
+		if (haveMnemonic) {
+			component.setMnemonic(mnemonic);
+			component.setDisplayedMnemonicIndex(mnemonicIndex);
+		}
+	}
 
-
-		// PUBLIC / PRIVATE KEY
-
-		subSubPanel = new JPanel();
-		subSubPanel.setLayout(new GridLayout(4, 1));
-
-		publicKeyLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.publicKey"));
-		subSubPanel.add(publicKeyLabel);
-		publicKeyField = new JTextField(20);
-		publicKeyField.setEditable(true);
-		subSubPanel.add(publicKeyField);
-
-		privateKeyLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.privateKey"));
-		subSubPanel.add(privateKeyLabel);
-		privateKeyField = new JTextField(20);
-		privateKeyField.setEditable(true);
-		subSubPanel.add(privateKeyField);
-
-		if(advancedMode)
-			subPanel.add(subSubPanel);
-
-		setKeysVisible(false);
-
-		if(advancedMode)
-			mainPanel.add(subPanel, BorderLayout.CENTER);
-
-		letsGoButton = new JButton(I18n.getMessage("thaw.plugin.insert.insertAction"));
-		letsGoButton.setPreferredSize(new Dimension(200, 40));
-
-		letsGoButton.addActionListener(this);
-
-		mainPanel.add(letsGoButton, BorderLayout.SOUTH);
-
-		if(advancedMode)
-			mainPanel.setSize(400, 400);
-		else
-			mainPanel.setSize(150, 250);
-
-		globalPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
-
-		globalPanel.add(mainPanel);
+	/**
+	 * @noinspection ALL
+	 */
+	public JComponent $$$getRootComponent$$$() {
+		return panelInsert;
 	}
 
 
-	public JPanel getPanel() {
-		return globalPanel;
-	}
-
-
-	public void actionPerformed(final ActionEvent e) {
-		if(e.getSource() == letsGoButton) {
+	private class InsertActionPerformed implements ActionListener {
+		public void actionPerformed(ActionEvent actionEvent) {
 			int rev = -1;
 			String name = null;
 			String privateKey = null;
 			int priority = 6;
-			boolean global = true;
+			boolean global;
+			boolean compress;
 			//int persistence = 0;
 
-			if((selectedFiles.getText() == null)
-			   || "".equals( selectedFiles.getText() )) {
+			String filenames = "";
+			for (Object file : selectedFilesListModel.toArray()) {
+				if (file instanceof File) {
+					filenames += ((File) file).getAbsolutePath() + ";";
+				} else {
+					Logger.warning(this, "Non-file entry received.");
+				}
+			}
+
+			if (filenames.isEmpty()) {
 				new WarningWindow(mainWindow,
-						  I18n.getMessage("thaw.plugin.insert.specifyFile"));
+						I18n.getMessage("thaw.plugin.insert.specifyFile"));
 				return;
 			}
 
-			if((keyType == FCPClientPut.KEY_TYPE_KSK) || (keyType == FCPClientPut.KEY_TYPE_SSK)) {
-				if((nameField.getText() == null)
-				   || "".equals( nameField.getText() )) {
+			if ((keyType == FCPClientPut.KEY_TYPE_KSK) || (keyType == FCPClientPut.KEY_TYPE_SSK)) {
+				if ((nameField.getText() == null) || "".equals(nameField.getText())) {
 					new WarningWindow(mainWindow,
-							  I18n.getMessage("thaw.plugin.insert.specifyNameAndRev"));
+							I18n.getMessage("thaw.plugin.insert.specifyNameAndRev"));
 					return;
 				}
 
-				if (revField.getText() != null && !revField.getText().equals(""))
+				if (revField.getText() != null && !revField.getText().equals("")) {
 					rev = Integer.parseInt(revField.getText());
-				else
+				} else {
 					rev = -1;
+				}
 				name = nameField.getText();
 			}
 
-			if(keyType == FCPClientPut.KEY_TYPE_SSK) {
-				if((privateKeyField.getText() != null)
-				   && !"".equals( privateKeyField.getText() )) {
+			if (keyType == FCPClientPut.KEY_TYPE_SSK) {
+				if ((privateKeyField.getText() != null) && !"".equals(privateKeyField.getText())) {
 					privateKey = privateKeyField.getText();
 
-					if((privateKey != null)
-					   && !"".equals( privateKey )) {
+					if ((privateKey != null) && !"".equals(privateKey)) {
 						privateKey = privateKey.replaceFirst("SSK@", "");
 						privateKey = privateKey.replaceFirst("USK@", "");
 						final String[] split = privateKey.split("/");
@@ -329,47 +360,49 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 				}
 			}
 
-			for(int i = 0 ; i <= InsertPanel.MIN_PRIORITY ; i++) {
-				if(I18n.getMessage("thaw.plugin.priority.p"+ Integer.toString(i)).equals(prioritySelecter.getSelectedItem())) {
+			for (int i = 0; i <= MIN_PRIORITY; i++) {
+				if (I18n.getMessage("thaw.plugin.priority.p" + Integer.toString(i)).equals(prioritySelecter.getSelectedItem())) {
 					priority = i;
 				}
 			}
 
-			if(((String)globalSelecter.getSelectedItem()).equals(I18n.getMessage("thaw.common.true")))
-				global = true;
-			if(((String)globalSelecter.getSelectedItem()).equals(I18n.getMessage("thaw.common.false")))
-				global = false;
+			global = globalSelecter.isSelected();
+			compress = compressSelecter.isSelected();
 
 			String mimeType = null;
 
-			if((mimeField.getSelectedItem() != null) && !((String)mimeField.getSelectedItem()).equals(""))
-				mimeType = (String)mimeField.getSelectedItem();
+			if ((mimeField.getSelectedItem() != null) && !(mimeField.getSelectedItem()).equals("")) {
+				mimeType = (String) mimeField.getSelectedItem();
+			}
 
-			insertPlugin.insertFile(selectedFiles.getText(),
-						keyType, rev, name, privateKey, priority,
-						global, FCPClientPut.PERSISTENCE_FOREVER, mimeType);
-
-			selectedFiles.setText("");
+			selectedFilesListModel.removeAllElements();
+			insertPlugin.insertFile(filenames,
+					keyType, rev, name, privateKey, priority,
+					global, FCPClientPut.PERSISTENCE_FOREVER, compress, mimeType);
 		}
+	}
 
-		if(e.getSource() == browseButton) {
+
+	private class AddFileActionPerformed implements ActionListener {
+		public void actionPerformed(ActionEvent actionEvent) {
 			final FileChooser fileChooser;
-			Vector files;
-
+			Vector<File> files;
 			String lastDir = null;
 
-			if (config.getValue("lastSourceDirectory") != null)
+			if (config.getValue("lastSourceDirectory") != null) {
 				lastDir = config.getValue("lastSourceDirectory");
+			}
 
-			if (lastDir == null)
+			if (lastDir == null) {
 				fileChooser = new FileChooser();
-			else
+			} else {
 				fileChooser = new FileChooser(lastDir);
+			}
 
 			fileChooser.setTitle(I18n.getMessage("thaw.common.selectFile"));
 			fileChooser.setDirectoryOnly(false);
 			fileChooser.setDialogType(JFileChooser.OPEN_DIALOG);
-			if( (files = fileChooser.askManyFiles()) == null) {
+			if ((files = fileChooser.askManyFiles()) == null) {
 				Logger.info(this, "Nothing selected");
 				return;
 			}
@@ -378,73 +411,94 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 				config.setValue("lastSourceDirectory", fileChooser.getFinalDirectory());
 			}
 
-			String fileList = "";
-
-			int i;
-
-			i = 0;
-
-			for(final Iterator it = files.iterator();
-			    it.hasNext(); ) {
-				final File file = (File)it.next();
-
-				if(i >= 1)
-					fileList = fileList + ";";
-				fileList = fileList + file.getPath();
-
-				i++;
+			for (File file : files) {
+				if (!selectedFilesListModel.contains(file)) {
+					selectedFilesListModel.addElement(file);
+				}
 			}
 
-			selectedFiles.setText(fileList);
+			updateNameField();
 
-			if(keyType != FCPClientPut.KEY_TYPE_CHK)
-				nameField.setText(getFileNameFromPath());
 		}
 	}
 
+	private class RemoveFileActionPerformed implements ActionListener {
+		public void actionPerformed(ActionEvent actionEvent) {
+			for (Object file : selectedFiles.getSelectedValues()) {
+				if (selectedFilesListModel.contains(file)) {
+					selectedFilesListModel.removeElement(file);
+				}
+			}
 
-	public String getFileNameFromPath() {
-		if((selectedFiles.getText() == null) || "".equals( selectedFiles.getText() ))
+			updateNameField();
+		}
+	}
+
+	private Vector<File> getSelectedFiles() {
+		Vector<File> files = new Vector<File>();
+
+		if (selectedFilesListModel != null) {
+			for (Object object : selectedFilesListModel.toArray()) {
+				if (object instanceof File) {
+					files.add((File) object);
+				}
+			}
+		}
+
+		return files;
+	}
+
+	/**
+	 * Returns a semicolon-separated string of file names.  If one or fewer
+	 * File objects are present, no semicolon is appended.
+	 *
+	 * @param files Collection of File objects.
+	 * @return Empty string, a single file name, or a semicolon-separated
+	 *         string of file names.
+	 */
+	public String getFileNamesStringFromPath(Collection<File> files) {
+		if (files == null) {
 			return "";
+		}
 
-		final String[] cutcut = selectedFiles.getText().split(File.separator.replaceAll("\\\\", "\\\\\\\\"));
+		StringBuilder fileNames = new StringBuilder();
+		boolean appendSemicolon = false;
+		for (File file : files) {
+			if (file != null) {
+				if (appendSemicolon) {
+					fileNames.append(";");
+				} else {
+					appendSemicolon = true;
+				}
+				fileNames.append(file.getName());
+			}
+		}
 
-		return cutcut[cutcut.length - 1];
+		return fileNames.toString();
 	}
 
 	public void itemStateChanged(final ItemEvent e) {
-		if((e.getItem() == keyRadioButtons[0])
-		   && (e.getStateChange() == ItemEvent.SELECTED)) { /* CHK */
-			setKeysVisible(false);
-			setRevAndNameVisible(false);
-
+		if (e.getStateChange() == ItemEvent.SELECTED) {
+			UpdateKeyType();
 			resetOptionalFields();
+		}
+	}
 
+	private void UpdateKeyType() {
+		if (rbCHK.isSelected()) {
 			keyType = FCPClientPut.KEY_TYPE_CHK;
-
-			return;
-		}
-
-		if((e.getItem() == keyRadioButtons[1])
-		   && (e.getStateChange() == ItemEvent.SELECTED)) { /* KSK */
-			setKeysVisible(false);
-			setRevAndNameVisible(true);
-
-			resetOptionalFields();
-
+			setKeysEnabled(false);
+			setRevAndNameEnabled(false);
+		} else if (rbKSK.isSelected()) {
 			keyType = FCPClientPut.KEY_TYPE_KSK;
-			return;
-		}
-
-		if((e.getItem() == keyRadioButtons[2])
-		   && (e.getStateChange() == ItemEvent.SELECTED)) { /* SSK */
-			setRevAndNameVisible(true);
-			setKeysVisible(true);
-
-			resetOptionalFields();
-
+			setKeysEnabled(false);
+			setRevAndNameEnabled(true);
+		} else if (rbSSK_USK.isSelected()) {
 			keyType = FCPClientPut.KEY_TYPE_SSK;
-			return;
+			setRevAndNameEnabled(true);
+			setKeysEnabled(true);
+		} else {
+			Logger.warning(this, "Invalid insert key type selection.");
 		}
 	}
 
@@ -453,35 +507,52 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 		lastInsert = lastInserted;
 	}
 
-	private void setRevAndNameVisible(final boolean v) {
-		selectRevLabel.setVisible(v);
-		revField.setVisible(v);
-		selectNameLabel.setVisible(v);
-		nameField.setVisible(v);
+	private void setRevAndNameEnabled(final boolean v) {
+		selectRevLabel.setEnabled(v);
+		revField.setEnabled(v);
+		selectNameLabel.setEnabled(v);
+		nameField.setEnabled(v);
 	}
 
-	private void setKeysVisible(final boolean v) {
-		publicKeyLabel.setVisible(v);
-		publicKeyField.setVisible(v);
-		privateKeyLabel.setVisible(v);
-		privateKeyField.setVisible(v);
+	private void setKeysEnabled(final boolean v) {
+		publicKeyLabel.setEnabled(v);
+		publicKeyField.setEnabled(v);
+		privateKeyLabel.setEnabled(v);
+		privateKeyField.setEnabled(v);
 	}
 
 	private void resetOptionalFields() {
-		revField.setText("0");
-		nameField.setText(getFileNameFromPath());
-		privateKeyField.setText("");
-		publicKeyField.setText("");
+		updateNameField();
+
+		if (!revField.isEnabled()) {
+			revField.setText("0");
+		}
+
+		if (!privateKeyField.isEnabled()) {
+			privateKeyField.setText("");
+		}
+
+		if (!publicKeyField.isEnabled()) {
+			publicKeyField.setText("");
+		}
+	}
+
+	private void updateNameField() {
+		if (nameField.isEnabled()) {
+			nameField.setText(getFileNamesStringFromPath(getSelectedFiles()));
+		} else {
+			nameField.setText("");
+		}
 	}
 
 	public void update(final Observable o, final Object param) {
-		if(o == lastInsert) {
-			final FCPClientPut clientPut = (FCPClientPut)o;
+		if (o == lastInsert) {
+			final FCPClientPut clientPut = (FCPClientPut) o;
 
-			if(clientPut.getKeyType() == 2) {
+			if (clientPut.getKeyType() == 2) {
 				Logger.info(this, "Updating display");
 
-				if(clientPut.getPublicKey() != null) {
+				if (clientPut.getPublicKey() != null) {
 					String publicKey = clientPut.getPublicKey();
 					publicKey = publicKey.replaceFirst("SSK@", "");
 					publicKey = publicKey.replaceFirst("USK@", "");
@@ -491,7 +562,7 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 					publicKeyField.setText("");
 				}
 
-				if(clientPut.getPrivateKey() != null) {
+				if (clientPut.getPrivateKey() != null) {
 					String privateKey = clientPut.getPrivateKey();
 					privateKey = privateKey.replaceFirst("SSK@", "");
 					privateKey = privateKey.replaceFirst("USK@", "");
@@ -511,5 +582,11 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 			o.deleteObserver(this);
 		}
 	}
-}
 
+	private void createUIComponents() {
+		// TODO: place custom component creation code here
+		selectedFilesListModel = new DefaultListModel();
+		selectedFiles = new JList(selectedFilesListModel);
+	}
+
+}

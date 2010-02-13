@@ -455,7 +455,7 @@ public class Comment extends Observable implements Observer, ActionListener {
 						    2, /* priority */
 						    false, /* global */
 						    FCPClientPut.PERSISTENCE_FOREVER /* persistence */,
-						    queueManager);
+						    queueManager,true);
                 put.addObserver(this);
 
 		return queueManager.addQueryToTheRunningQueue(put);

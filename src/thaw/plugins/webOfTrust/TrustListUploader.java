@@ -265,7 +265,7 @@ public class TrustListUploader implements Signatures.SignaturesObserver, Observe
 											2, /* priority */
 										    false, /* global */
 										    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT,  /* persistence */
-											queueManager);
+											queueManager,true);
 				upload.addObserver(this);
 
 				queueManager.addQueryToTheRunningQueue(upload);
