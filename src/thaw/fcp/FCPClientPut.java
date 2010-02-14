@@ -16,19 +16,19 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 	private final FCPQueueManager queueManager;
 	private final FCPQueryManager queryManager;
+	private final File localFile;
+	private final long fileSize;
+	private final int keyType;
+	private final int rev;
+	private final String name;
+	private final boolean global;
+	private final int persistence;
+	private final boolean compressFile;
+	private final boolean getCHKOnly;
 
-	private File localFile;
-	private long fileSize = 0;
-	private int keyType = KEY_TYPE_CHK;
-	private int rev = 0;
-	private String name;
 	private String privateKey; /* must finish by '/' (cf SSKKeypair) */
 	private String publicKey; /* publicKey contains the filename etc */
 	private int priority = DEFAULT_PRIORITY;
-	private boolean global = true;
-	private int persistence = PERSISTENCE_FOREVER;
-	private boolean compressFile = true;
-	private boolean getCHKOnly = false;
 
 	private int toTheNodeProgress = 0;
 	private String status;
@@ -49,133 +49,234 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 	private int putFailedCode = -1;
 
-	/**
-	 * To resume query from file. (see thaw.core.QueueKeeper)
-	 */
-	public FCPClientPut(final FCPQueueManager queueManager, final HashMap parameters) {
-		super((String)parameters.get("identifier"), true);
 
-		this.queueManager = queueManager;
-		this.queryManager = queueManager.getQueryManager();
-		setParameters(parameters);
-	}
+	public static class Builder {
+		/* Required parameters */
 
-	/**
-	 * To start a new insertion.
-	 * @param keyType : KEY_TYPE_CHK ; KEY_TYPE_KSK ; KEY_TYPE_SSK
-	 * @param rev  : ignored if key == CHK || rev == -1
-	 * @param name : ignored if key == CHK
-	 * @param privateKey : ignored if key == CHK/KSK ; can be null if it has to be generated ; USK@[...]/ (must ends with a '/'
-	 * @param persistence PERSISTENCE_FOREVER ; PERSISTENCE_UNTIL_NODE_REBOOT ; PERSISTENCE_UNTIL_DISCONNEC
-	 */
-	public FCPClientPut(final File file, final int keyType,
-			    final int rev, final String name,
-			    final String privateKey, final int priority,
-			    final boolean global, final int persistence,
-			    FCPQueueManager queueManager, final boolean compress) {
-		this(file, keyType, rev, name, privateKey, priority, global, persistence, false, queueManager);
-		compressFile = compress;
-	}
+		private final FCPQueueManager queueManager;
 
-	/**
-	 * To start a new insertion.
-	 */
-	public FCPClientPut(final File file, final int keyType,
-			    final int rev, final String name,
-			    final String privateKey, final int priority,
-			    final boolean global, final int persistence,
-			    final boolean getCHKOnly,
-			    FCPQueueManager queueManager) {
-		super(null, true);
+		/* Optional parameters */
+		private int keyType = KEY_TYPE_CHK;
+		private int rev = 0;
+		private String name;
+		private String privateKey;
+		private int priority = DEFAULT_PRIORITY;
+		private boolean global = true;
+		private int persistence = PERSISTENCE_FOREVER;
+		private boolean getCHKOnly;
+		private String identifier;
+		private boolean compress = true;
+		private String publicKey;
+		private String fileName;
+		private String status;
+		private long fileSize = 0;
+		private File localFile;
+		private TransferStatus transferStatus;
 
-		this.queueManager = queueManager;
-		this.queryManager = queueManager.getQueryManager();
-
-		this.getCHKOnly = getCHKOnly;
-		localFile = file;
-
-		if (file != null) {
-			this.name = file.getName();
-			fileSize = file.length();
-		} else {
-			this.name = name;
-			fileSize = 0;
+		public Builder(FCPQueueManager queueManager) {
+			this.queueManager = queueManager;
 		}
 
-		this.keyType = keyType;
-		this.rev = rev;
+		public FCPClientPut build() {
+			return new FCPClientPut(this);
+		}
 
-		if(keyType == 0) {
-			this.name = file.getName();
-			this.privateKey = null;
-		} else {
+		public Builder Parameters(HashMap<String,String> parameters) {
+			LocalFile(new File(parameters.get("localFile")));
+			fileSize = localFile.length();
+
+			keyType = Integer.parseInt(parameters.get("keyType"));
+			rev = Integer.parseInt(parameters.get("Revision"));
+			name = parameters.get("name");
+
+			privateKey = parameters.get("privateKey");
+			if((privateKey == null) || privateKey.equals("")) {
+				privateKey = null;
+			}
+
+			publicKey = parameters.get("publicKey");
+			if((privateKey == null) || (publicKey == null) || publicKey.equals("")) {
+				publicKey = null;
+			}
+
+			priority = Integer.parseInt(parameters.get("priority"));
+			global = Boolean.valueOf(parameters.get("global"));
+			identifier = parameters.get("identifier");
+
+			boolean running = Boolean.valueOf(parameters.get("running"));
+			boolean successful = Boolean.valueOf(parameters.get("successful"));
+			boolean finished = Boolean.valueOf(parameters.get("finished"));
+			this.transferStatus = TransferStatus.getTransferStatus(running,finished,successful);
+			persistence = Integer.parseInt(parameters.get("persistence"));
+
+			if ((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !transferStatus.isFinished()) {
+				this.transferStatus = TransferStatus.NOT_RUNNING;
+				status = "Waiting";
+			} else {
+				status = parameters.get("status");
+			}
+
+			return this;
+		}
+
+		public Builder KeyType(int keyType) {
+			this.keyType = keyType;
+			return this;
+		}
+
+		public Builder Rev(int rev) {
+			this.rev = rev;
+			return this;
+		}
+
+		public Builder Name(String name) {
 			this.name = name;
+			return this;
+		}
+
+		public Builder PrivateKey(String privateKey) {
 			this.privateKey = privateKey;
+			return this;
 		}
 
-		publicKey = null;
+		public Builder Priority(int priority) {
+			this.priority = priority;
+			return this;
+		}
 
-		this.priority = priority;
-		this.global = global;
-		this.persistence = persistence;
-		status = "Waiting";
-		setStatus(TransferStatus.NOT_RUNNING);
-		setBlockNumbers(-1, -1, -1, true);
+		public Builder Global(boolean global) {
+			this.global = global;
+			return this;
+		}
+
+		public Builder Persistence(int persistence) {
+			this.persistence = persistence;
+			return this;
+		}
+
+		public Builder GetCHKOnly(boolean getCHKOnly) {
+			this.getCHKOnly = getCHKOnly;
+			return this;
+		}
+
+		public Builder Identifier(String identifier) {
+			this.identifier = identifier;
+			return this;
+		}
+
+		public Builder Compress(boolean compress) {
+			this.compress = compress;
+			return this;
+		}
+
+		public Builder PublicKey(String publicKey) {
+			this.publicKey = publicKey;
+			return this;
+		}
+
+		public Builder FileName(String fileName) {
+			this.fileName = fileName;
+			return this;
+		}
+
+		public Builder Status(String status) {
+			this.status = status;
+			return this;
+		}
+
+		public Builder FileSize(long fileSize) {
+			this.fileSize = fileSize;
+			return this;
+		}
+		
+		public Builder TransferStatus(TransferStatus transferStatus) {
+			this.transferStatus = transferStatus;
+			return this;
+		}
+
+		public Builder LocalFile(File localFile) {
+			this.localFile = localFile;
+			return this;
+		}
+	}
+
+
+
+	private FCPClientPut(Builder builder) {
+		super(builder.identifier, true);
+
+		this.queueManager = builder.queueManager;
+		this.queryManager = this.queueManager.getQueryManager();
+		this.compressFile = builder.compress;
+		this.priority = builder.priority;
+		this.global = builder.global;
+		this.persistence = builder.persistence;
+		this.getCHKOnly = builder.getCHKOnly;
+		this.rev = builder.rev;
+
+		fatal = true;
 		attempt = 0;
 
-		setIdentifier(null);
-		fatal = true;
+		if(builder.publicKey == null || builder.publicKey.equals("")) {
+			/* New insert */
+			localFile = builder.localFile;
 
-	}
+			this.keyType = builder.keyType;
+			if(keyType == 0) {
+				if(localFile != null) {
+					this.name = localFile.getName();
+					this.privateKey = null;
+				} else {
+					throw(new IllegalStateException("localFile is not allowed to be null for CHK keys."));
+				}
+			} else {
+				this.name = builder.name;
+				this.privateKey = builder.privateKey;
+			}
 
-	/**
-	 * Used for resuming from a PersistentPut.
-	 * @param publicKey : Complete key (with filename, etc)
-	 */
-	protected FCPClientPut(final String identifier, final String publicKey,
-			    final int priority, final int persistence, final boolean global,
-			    final String filePath, final String fileName, final String status, final int progress,
-			    final long fileSize, final FCPQueueManager queueManager) {
-		super(identifier, true);
+			if(localFile != null) {
+				fileSize = localFile.length();
+			} else {
+				fileSize = 0;
+			}
 
-		if(fileSize > 0)
-			this.fileSize = fileSize;
+			status = "Waiting";
+			setStatus(TransferStatus.NOT_RUNNING);
+		} else {
+			/* Resuming */
+			localFile = null;
+			name = builder.fileName;
 
-		toTheNodeProgress = 100;
+			if(builder.fileSize > 0) {
+				this.fileSize = builder.fileSize;
+			} else {
+				this.fileSize = 0;
+			}
 
-		this.queueManager = queueManager;
-		this.queryManager = queueManager.getQueryManager();
+			toTheNodeProgress = 100;
 
-		if(publicKey.startsWith("CHK"))
-			keyType = KEY_TYPE_CHK;
-		else if(publicKey.startsWith("KSK"))
-			keyType = KEY_TYPE_KSK;
-		else if(publicKey.startsWith("SSK"))
-			keyType = KEY_TYPE_SSK;
-		else if(publicKey.startsWith("USK"))
-			keyType = KEY_TYPE_SSK;
+			if(builder.publicKey.startsWith("CHK")) {
+				keyType = KEY_TYPE_CHK;
+			} else if(builder.publicKey.startsWith("KSK")) {
+				keyType = KEY_TYPE_KSK;
+			} else if(builder.publicKey.startsWith("SSK")) {
+				keyType = KEY_TYPE_SSK;
+			} else if(builder.publicKey.startsWith("USK")) {
+				keyType = KEY_TYPE_SSK;
+			} else {
+				throw(new IllegalStateException("Unknown publicKey state."));
+			}
 
+			this.status = builder.status;
+			setStatus(TransferStatus.RUNNING);
+		}
 
-		this.publicKey = publicKey;
-
-		if (fileName != null)
-			name = fileName;
-
-		this.publicKey = null;
-
-		this.priority = priority;
-		this.global = global;
-
-		this.persistence = persistence;
-		
+		/* TODO: Why isn't publicKey stored? */
+		publicKey = null;
 		setBlockNumbers(-1, -1, -1, true);
-		setStatus(TransferStatus.RUNNING);
-		
-		this.status = status;
-		fatal = true;
 	}
 
-
+	
 	public boolean start() {
 		putFailedCode = -1;
 		setIdentifier(null);
@@ -985,45 +1086,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 
 	public boolean setParameters(final HashMap parameters) {
-
-		localFile = new File((String)parameters.get("localFile"));
-
-		fileSize = localFile.length();
-
-		keyType = Integer.parseInt((String)parameters.get("keyType"));
-		rev = Integer.parseInt((String)parameters.get("Revision"));
-		name = (String)parameters.get("name");
-
-		privateKey = (String)parameters.get("privateKey");
-		if((privateKey == null) || privateKey.equals(""))
-			privateKey = null;
-
-		publicKey = (String)parameters.get("publicKey");
-		if((privateKey == null) || (publicKey == null) || publicKey.equals(""))
-			publicKey = null;
-
-		priority = Integer.parseInt((String)parameters.get("priority"));
-
-		global = Boolean.valueOf((String)parameters.get("global")).booleanValue();
-
-		persistence = Integer.parseInt((String)parameters.get("persistence"));
-		status = (String)parameters.get("status");
-		attempt = Integer.parseInt((String)parameters.get("attempt"));
-
-		setIdentifier((String)parameters.get("identifier"));
-
-		boolean running = Boolean.valueOf((String)parameters.get("running")).booleanValue();
-		boolean successful = Boolean.valueOf((String)parameters.get("successful")).booleanValue();
-		boolean finished = Boolean.valueOf((String)parameters.get("finished")).booleanValue();
-		
-		setStatus(running, finished, successful);
-
-		if ((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !isFinished()) {
-			setStatus(TransferStatus.NOT_RUNNING);
-			status = "Waiting";
-		}
-
-		return true;
+		throw(new IllegalAccessError("Depreciated"));
 	}
 
 

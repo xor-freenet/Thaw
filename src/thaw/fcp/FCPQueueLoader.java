@@ -120,18 +120,16 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 				   return;
 			}
 
-			final FCPClientPut clientPut = new FCPClientPut(msg.getValue("Identifier"),
-									msg.getValue("URI"), // key
-									priority,
-									persistence,
-									global,
-									filePath,
-									fileName,
-									"Inserting",
-									0, /* progress */
-									fileSize,
-									queueManager);
-
+			final FCPClientPut clientPut = new FCPClientPut.Builder(queueManager)
+												.Identifier(msg.getValue("Identifier"))
+												.PublicKey(msg.getValue("URI"))
+												.Priority(priority)
+					                            .Persistence(persistence)
+												.Global(global)
+												.FileName(fileName)
+												.Status("Inserting")
+												.FileSize(fileSize)
+												.build();
 
 			if(queueManager.addQueryToTheRunningQueue(clientPut, false))
 				queryManager.addObserver(clientPut);

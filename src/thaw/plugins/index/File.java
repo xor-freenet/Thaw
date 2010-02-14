@@ -271,17 +271,17 @@ public class File implements Observer, FileContainer {
 			return null;
 		}
 
-		final FCPClientPut insertion = new FCPClientPut(localPath,
-								FCPClientPut.KEY_TYPE_CHK,
-								0 /* rev */,
-								null /* name */,
-								null /* private key */,
-								FCPClientPut.DEFAULT_PRIORITY,
-								true /* global */, FCPClientPut.PERSISTENCE_FOREVER,
-								true /* getCHKOnly */,
-								queueManager);
-
-
+		final FCPClientPut insertion = new FCPClientPut.Builder(queueManager)
+											.LocalFile(localPath)
+											.KeyType(FCPClientPut.KEY_TYPE_CHK)
+											.Rev(0)
+											.Name(null)
+											.PrivateKey(null)
+											.Priority(FCPClientPut.DEFAULT_PRIORITY)
+											.Global(true)
+											.Persistence(FCPClientPut.PERSISTENCE_FOREVER)
+											.GetCHKOnly(true)
+											.build();
 		this.queueManager = queueManager; /* so the transfer will be removed when finished */
 		queueManager.addQueryToTheRunningQueue(insertion);
 
@@ -340,15 +340,17 @@ public class File implements Observer, FileContainer {
 			return null;
 		}
 
-		final FCPClientPut clientPut = new FCPClientPut(new java.io.File(localPath),
-								FCPClientPut.KEY_TYPE_CHK,
-								0,    /* rev        : EDONTCARE */
-								null, /* name       : EDONTCARE */
-								null, /* privateKey : EDONTCARE */
-								FCPClientPut.DEFAULT_PRIORITY,
-								true, /* global queue */
-								FCPClientPut.PERSISTENCE_FOREVER,
-								queueManager,true);
+
+		FCPClientPut clientPut = new FCPClientPut.Builder(queueManager)
+												.LocalFile(new java.io.File(localPath))
+						                        .KeyType(FCPClientPut.KEY_TYPE_CHK)
+												.Rev(0) /* EDONTCARE */
+												.Priority(FCPClientPut.DEFAULT_PRIORITY)
+												.Global(true)
+						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
+						                        .Compress(true)
+												.build();
+
 		queueManager.addQueryToThePendingQueue(clientPut);
 
 		clientPut.addObserver(this);

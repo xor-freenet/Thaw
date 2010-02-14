@@ -58,16 +58,18 @@ public class KSKFileAttachment
 	public void computeKey(FCPQueueManager queueManager, java.io.File file) {
 		this.queueManager = queueManager;     /* CAB TODO: Should this be finalized? */
 
-		FCPClientPut put = new FCPClientPut(file,
-						    FCPClientPut.KEY_TYPE_CHK,
-						    0 /* rev */,
-						    null /* name */,
-						    null /* private key */,
-						    FCPClientPut.DEFAULT_PRIORITY,
-						    false /* global */,
-						    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT,
-						    true /* getCHKOnly */,
-						    queueManager);
+
+		FCPClientPut put = new FCPClientPut.Builder(queueManager)
+											.LocalFile(file)
+											.KeyType(FCPClientPut.KEY_TYPE_CHK)
+											.Rev(0)
+											.Name(null)
+											.PrivateKey(null)
+											.Priority(FCPClientPut.DEFAULT_PRIORITY)
+											.Global(false)
+											.Persistence(FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT)
+											.GetCHKOnly(true)
+											.build();
 		put.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(put);
 	}

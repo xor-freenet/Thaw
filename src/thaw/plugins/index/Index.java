@@ -768,11 +768,19 @@ public class Index extends Observable implements MutableTreeNode,
 
 			rev++;
 
-			put = new FCPClientPut(targetFile, FCPClientPut.KEY_TYPE_SSK,
-					       rev, realName, privateKey, 2 /*priority*/,
-					       true /* global queue */,
-					       FCPClientPut.PERSISTENCE_FOREVER,
-					       queueManager,true);
+
+			put = new FCPClientPut.Builder(queueManager)
+												.LocalFile(targetFile)
+						                        .KeyType(FCPClientPut.KEY_TYPE_SSK)
+												.Rev(rev)
+												.Name(realName)
+                                                .PrivateKey(privateKey)
+												.Priority(2)
+												.Global(true)
+						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
+						                        .Compress(true)
+												.build();
+
 			put.setMetadata("ContentType", "application/x-freenet-index");
 
 			if (indexBrowser != null && indexBrowser.getIndexTree() != null)

@@ -27,4 +27,20 @@ public enum TransferStatus {
 	public boolean isSuccessful() {
 		return successful;
 	}
+
+	public static TransferStatus getTransferStatus(boolean running, boolean finished, boolean successful) {
+		if(running) {
+			return RUNNING;
+		} else {
+			if(finished) {
+				if(successful) {
+					return SUCCESSFUL;
+				} else {
+					return FINISHED;
+				}
+			} else {
+				return NOT_RUNNING;
+			}
+		}
+	}
 }

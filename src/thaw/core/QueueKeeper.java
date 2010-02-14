@@ -60,7 +60,7 @@ public class QueueKeeper {
 		   || "1".equals( queryEl.getAttribute("type") )) {
 			newQuery = new FCPClientGet(queueManager, params);
 		} else {
-			newQuery = new FCPClientPut(queueManager, params);
+			newQuery = new FCPClientPut.Builder(queueManager).Parameters(params).build();
 		}
 
 		if(runningQueue)

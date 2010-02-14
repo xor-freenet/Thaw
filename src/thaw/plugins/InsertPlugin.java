@@ -124,15 +124,24 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 
 		for(String fileName : files) {
 
+			String fullPrivateKey;
 			if((privateKey != null) && !"".equals( privateKey )) {
-				clientPut = new FCPClientPut(new File(fileName), keyType, rev, name,
-							     "USK@"+privateKey+"/", priority,
-							     global, persistence,core.getQueueManager(), compress);
+				fullPrivateKey = "USK@"+privateKey+"/";
 			} else {
-				clientPut = new FCPClientPut(new File(fileName), keyType, rev, name,
-							     null, priority,
-							     global, persistence, core.getQueueManager(), compress);
+				fullPrivateKey = null;
 			}
+
+			clientPut = new FCPClientPut.Builder(core.getQueueManager())
+											.LocalFile(new File(fileName))
+											.KeyType(keyType)
+											.Rev(rev)
+											.Name(name)
+											.PrivateKey(fullPrivateKey)
+											.Priority(priority)
+											.Global(global)
+											.Persistence(persistence)
+											.Compress(compress)
+											.build();
 
 			if(mimeType != null) {
 				Logger.notice(this, "Mime type forced to "+mimeType);

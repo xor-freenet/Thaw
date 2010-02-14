@@ -259,13 +259,18 @@ public class TrustListUploader implements Signatures.SignaturesObserver, Observe
 
 				if (!exportTrustList(ids, file))
 					return;
-				
-				upload = new FCPClientPut(file, FCPClientPut.KEY_TYPE_SSK, 0,
-											"trustList", FreenetURIHelper.convertSSKtoUSK(privateKey)+"/", /* the convertion fonction forget the '/' */
-											2, /* priority */
-										    false, /* global */
-										    FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT,  /* persistence */
-											queueManager,true);
+
+				FCPClientPut upload = new FCPClientPut.Builder(queueManager)
+												.LocalFile(file)
+						                        .KeyType(FCPClientPut.KEY_TYPE_SSK)
+												.Rev(0)
+												.Name("trustList")
+                                                .PrivateKey(FreenetURIHelper.convertSSKtoUSK(privateKey)+"/")
+												.Priority(2)
+												.Global(false)
+						                        .Persistence(FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT)
+						                        .Compress(true)
+												.build();
 				upload.addObserver(this);
 
 				queueManager.addQueryToTheRunningQueue(upload);
