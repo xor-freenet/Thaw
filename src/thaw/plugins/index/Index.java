@@ -914,15 +914,16 @@ public class Index extends Observable implements MutableTreeNode,
 		Logger.debug(this, "Key asked: "+key);
 
 
-		clientGet = new FCPClientGet(key,
-					     2, /* <= priority */
-					     FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT,
-					     false, /* <= globalQueue */
-					     10, /* maxRetries */
-					     System.getProperty("java.io.tmpdir"), /* destination directory */
-					     MAX_SIZE, /* max size */
-					     true /* <= noDDA */,
-					     queueManager);
+		clientGet = new FCPClientGet.Builder(queueManager)
+													.Key(key)
+													.Priority(2)
+													.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+													.GlobalQueue(false)
+													.MaxRetries(10)
+													.DestinationDir(System.getProperty("java.io.tmpdir"))
+													.MaxSize(MAX_SIZE)
+													.NoDDA(true)
+													.build();
 
 		/*
 		 * These requests are usually quite fast, and don't consume too much

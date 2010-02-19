@@ -71,15 +71,16 @@ public class TrustListDownloader implements Observer, Signatures.SignaturesObser
 			key = FreenetURIHelper.changeUSKRevision(key, 0, 1);
 		}
 		
-		FCPClientGet get = new FCPClientGet(key,
-			     			CLIENTGET_PRIORITY, /* <= priority */
-			     			FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT,
-			     			false, /* <= globalQueue */
-			     			-1, /* maxRetries => -1 => ULPR */
-			     			System.getProperty("java.io.tmpdir"), /* destination directory */
-			     			MAX_SIZE, /* max size */
-			     			true /* <= noDDA */,
-			     			queueManager);
+		FCPClientGet get = new FCPClientGet.Builder(queueManager)
+													.Key(key)
+													.Priority(CLIENTGET_PRIORITY)
+													.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+													.GlobalQueue(false)
+													.MaxRetries(-1)
+													.DestinationDir(System.getProperty("java.io.tmpdir"))
+													.MaxSize(MAX_SIZE)
+													.NoDDA(true)
+													.build();
 		ulprs.put(FreenetURIHelper.getComparablePart(key), get);
 		metaQuery.start(get);
 		

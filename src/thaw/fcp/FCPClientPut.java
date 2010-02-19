@@ -71,7 +71,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		private String status;
 		private long fileSize = 0;
 		private File localFile;
-		private TransferStatus transferStatus;
+		private TransferStatus transferStatus = TransferStatus.NOT_RUNNING;
 
 		public Builder(FCPQueueManager queueManager) {
 			this.queueManager = queueManager;
@@ -1083,12 +1083,6 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 		return result;
 	}
-
-
-	public boolean setParameters(final HashMap parameters) {
-		throw(new IllegalAccessError("Depreciated"));
-	}
-
 
 	public boolean isPersistent() {
 		return persistence < 2;

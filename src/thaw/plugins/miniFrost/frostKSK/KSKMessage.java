@@ -73,16 +73,18 @@ public class KSKMessage
 
 		key = board.getDownloadKey(date, rev);
 
-		Logger.info(this, "Fetching : "+key.toString());
+		Logger.info(this, "Fetching : "+key);
 
-		FCPClientGet get = new FCPClientGet(key, FCP_PRIORITY,
-						    FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT,
-						    false /* globalQueue */,
-						    FCP_MAX_RETRIES,
-						    System.getProperty("java.io.tmpdir"),
-						    FCP_MAX_SIZE,
-						    true /* noDDA */,
-						    queueManager);
+		FCPClientGet get = new FCPClientGet.Builder(queueManager)
+													.Key(key)
+													.Priority(FCP_PRIORITY)
+													.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+													.GlobalQueue(false)
+													.MaxRetries(FCP_MAX_RETRIES)
+													.DestinationDir(System.getProperty("java.io.tmpdir"))
+													.MaxSize(FCP_MAX_SIZE)
+													.NoDDA(true)
+													.build();
 		get.setNoRedirectionFlag(true);
 		get.addObserver(this);
 

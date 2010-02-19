@@ -124,12 +124,14 @@ public class FetchPlugin implements thaw.core.Plugin, ActionListener {
 					continue;
 			}
 
-			core.getQueueManager().addQueryToThePendingQueue(new FCPClientGet(key,
-											  priority,
-											  persistence,
-											  globalQueue, -1,
-											  destination,
-											  core.getQueueManager()));
+			core.getQueueManager().addQueryToThePendingQueue(new FCPClientGet.Builder(core.getQueueManager())
+															.Key(key)
+															.Priority(priority)
+															.Persistence(persistence)
+															.GlobalQueue(globalQueue)
+															.MaxRetries(-1)
+															.DestinationDir(destination)
+															.build());
 			somethingStarted = true;
 		}
 

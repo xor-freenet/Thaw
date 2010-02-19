@@ -21,21 +21,22 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private FCPQueryManager duplicatedQueryManager;           /* TODO: Necessary? */
 
 	private final FCPQueryManager queryManager;
+	private final int persistence;
+	private final boolean globalQueue;
+	private final long maxSize;
 
-	private String key = null;
-	private String filename = null; /* Extract from the key */
-	private int priority = DEFAULT_PRIORITY;
-	private int persistence = PERSISTENCE_FOREVER;
-	private boolean globalQueue = true;
-	private String destinationDir = null;
-	private String finalPath = null;
+	private String key;
+	private String filename; /* Extract from the key */
+	private int priority;
 
-	private int attempt = -1;
+	private String destinationDir;
+	private String finalPath;
+
+	private int attempt;
 	private String status;
 
-	private int fromTheNodeProgress = 0;
+	private int fromTheNodeProgress;
 	private long fileSize;
-	private long maxSize = 0;
 
 	private boolean writingSuccessful = true;
 	private boolean fatal = true;
@@ -43,7 +44,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	private boolean alreadySaved = false;
 
-	private boolean noDDA = false;
+	private boolean noDDA;
 	private boolean noRedir = false;
 
 	private FCPTestDDA testDDA = null;
@@ -54,60 +55,171 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private int protocolErrorCode = -1;
 	private int getFailedCode = -1;
 
+	public static class Builder {
+		/* Required parameters */
+		private final FCPQueueManager queueManager;
 
-	/**
-	 * See setParameters().
-	 */
-	public FCPClientGet(final FCPQueueManager queueManager, final HashMap parameters) {
-		super((String)parameters.get("Identifier"), false);
-		
-		this.queueManager = queueManager;
-		this.queryManager = queueManager.getQueryManager();
+		/* Optional parameters */
+		private String key;
+		private int priority = DEFAULT_PRIORITY;
+		private int persistence = PERSISTENCE_FOREVER;
+		private boolean globalQueue = true;
+		private int maxRetries = -1;
+		private String destinationDir;
+		private long maxSize = 0;
+		private boolean noDDA = false;
+		private String status = "Waiting";
+		private String identifier;
+		private int attempt = -1;
+		private long fileSize;
+		private String filename;
+		private TransferStatus transferStatus = TransferStatus.NOT_RUNNING;
+		private boolean isNewRequest = true;
 
-		setParameters(parameters);
-
-		fromTheNodeProgress = 0;
-
-		/* If isPersistent(), then start() won't be called, so must relisten the
-		   queryManager by ourself */
-		if(isPersistent() && (getIdentifier() != null)) {
-			queryManager.deleteObserver(this);
-			queryManager.addObserver(this);
+		public Builder(FCPQueueManager queueManager) {
+			this.queueManager = queueManager;
 		}
 
+		public FCPClientGet build() {
+			return new FCPClientGet(this);
+		}
+
+		public Builder Parameters(HashMap<String,String> parameters) {
+			key = parameters.get("URI");
+ 			Logger.debug(this, "Resuming key : "+key);
+
+			filename       = parameters.get("Filename");
+			priority       = Integer.parseInt(parameters.get("Priority"));
+			persistence    = Integer.parseInt(parameters.get("Persistence"));
+			globalQueue    = Boolean.valueOf(parameters.get("Global"));
+			maxRetries     = Integer.parseInt(parameters.get("MaxRetries"));
+			destinationDir = parameters.get("ClientToken");
+			attempt        = Integer.parseInt(parameters.get("Attempt"));
+			status         = parameters.get("Status");
+			identifier     = parameters.get("Identifier");
+			Logger.info(this, "Resuming id : "+identifier);
+
+
+			fileSize       = Long.parseLong(parameters.get("FileSize"));
+
+			boolean running        = Boolean.valueOf(parameters.get("Running"));
+			boolean successful     = Boolean.valueOf(parameters.get("Successful"));
+			transferStatus = TransferStatus.getTransferStatus(running, !running, successful);
+
+			if((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !transferStatus.isFinished()) {
+				transferStatus = TransferStatus.NOT_RUNNING;
+				status = "Waiting";
+			}
+
+			return this;
+		}
+
+		public Builder Key(String key) {
+			this.key = key;
+			return this;
+		}
+
+		public Builder Priority(int priority) {
+			this.priority = priority;
+			return this;
+		}
+
+		public Builder Persistence(int persistence) {
+			this.persistence = persistence;
+			return this;
+		}
+
+		public Builder GlobalQueue(boolean globalQueue) {
+			this.globalQueue = globalQueue;
+			return this;
+		}
+
+		public Builder MaxRetries(int maxRetries) {
+			this.maxRetries = maxRetries;
+			return this;
+		}
+
+		public Builder DestinationDir(String destinationDir) {
+			this.destinationDir = destinationDir;
+			return this;
+		}
+
+		public Builder MaxSize(long maxSize) {
+			this.maxSize = maxSize;
+			return this;
+		}
+
+		public Builder NoDDA(boolean noDDA) {
+			this.noDDA = noDDA;
+			return this;
+		}
+
+		public Builder Status(String status) {
+			this.status = status;
+			return this;
+		}
+
+		public Builder IsNewRequest(boolean isNew) {
+			this.isNewRequest = isNew;
+			return this;
+		}
+
+		public Builder Identifier(String identifier) {
+			this.identifier = identifier;
+			return this;
+		}
+
+		public Builder TransferStatus(TransferStatus transferStatus) {
+			this.transferStatus = transferStatus;
+			return this;
+		}
 	}
 
 
-	/**
-	 * Used to resume query from persistent queue of the node.
-	 * Think of adding this FCPClientGet as a queryManager observer.
-	 * @param destinationDir if null, then a temporary file will be create
-	 *                       (path determined only when the file is available ;
-	 *                       this file will be deleted on jvm exit)
-	 */
-	protected FCPClientGet(final String id, final String key, final int priority,
-			    			final int persistence, final boolean globalQueue,
-			    			final String destinationDir, String status,
-			    			final int maxRetries,
-			    			final FCPQueueManager queueManager) {
+	private FCPClientGet(final Builder builder) {
+        super(builder.identifier, false);
+		this.queueManager = builder.queueManager;
+		this.queryManager = queueManager.getQueryManager();
+		fromTheNodeProgress = 0;
 
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
+		this.maxRetries = builder.maxRetries;
+		this.key = builder.key;
+		this.persistence = builder.persistence;
+		this.destinationDir = builder.destinationDir;
+		this.setPriority(builder.priority);
+		this.filename = builder.filename;
+		this.attempt = builder.attempt;
+		this.fileSize = builder.fileSize;
+		this.noDDA = builder.noDDA;
+		this.maxSize = builder.maxSize;
+		setStatus(builder.transferStatus);
 
-		this.status = status;
-
-		if(status == null) {
-			Logger.warning(this, "status == null ?!");
+		if(builder.status == null) {
 			this.status = "(null)";
+		} else {
+			this.status = builder.status;
 		}
 
-		setIdentifier(id);
+		if (builder.globalQueue && (persistence >= PERSISTENCE_UNTIL_DISCONNECT)) {
+			globalQueue = false; /* else protocol error */
+		} else {
+			globalQueue = builder.globalQueue;
+		}
 
+		if(filename == null) {
+			filename = FreenetURIHelper.getFilenameFromKey(key);
+		}
+
+		if (filename == null) {
+			Logger.warning(this, "Nameless key !!");
+		}
 
 		/* FIX : This is a fix for the files inserted by Frost */
 		/* To remove when bback will do his work correctly */
-		if (filename == null && id != null) {
+		if (filename == null && builder.identifier != null) {
 			Logger.notice(this, "Fixing Frost key filename");
-			String[] split = id.split("-");
+			Logger.notice(this, builder.identifier);
+			String[] split = builder.identifier.split("-");
 
 			if (split.length >= 2) {
 				filename = "";
@@ -117,94 +229,17 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		}
 		/* /FIX */
 
-		setStatus(TransferStatus.RUNNING);
-	}
-
-
-	/**
-	 * See the other entry point
-	 * @param noDDA refuse the use of DDA (if true, request must be *NOT* *PERSISTENT*)
-	 */
-	public FCPClientGet(final String key, final int priority,
-			    final int persistence, boolean globalQueue,
-			    final int maxRetries,
-			    String destinationDir,
-			    boolean noDDA,
-			    FCPQueueManager queueManager) {
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
-		this.noDDA = noDDA;
-	}
-
-
-	/**
-	 * Entry point: Only for initial queries
-	 * @param destinationDir if null => temporary file
-	 * @param persistence PERSISTENCE_FOREVER ; PERSISTENCE_UNTIL_NODE_REBOOT ; PERSISTENCE_UNTIL_DISCONNECT
-	 */
-	public FCPClientGet(final String key, final int priority,
-			    final int persistence, boolean globalQueue,
-			    final int maxRetries,
-			    String destinationDir,
-			    FCPQueueManager queueManager) {
-		super(null, false);
-
-		if (globalQueue && (persistence >= PERSISTENCE_UNTIL_DISCONNECT))
-			globalQueue = false; /* else protocol error */
-
-		fromTheNodeProgress = 0;
-
-		this.maxRetries = maxRetries;
-		this.key = key;
-		this.setPriority(priority);
-		this.persistence = persistence;
-		this.globalQueue = globalQueue;
-		this.destinationDir = destinationDir;
-		this.queueManager = queueManager;
-		this.queryManager = queueManager.getQueryManager();
-
-		fileSize = 0;
-		attempt  = 0;
-
-		status = "Waiting";
-
-		filename = FreenetURIHelper.getFilenameFromKey(key);
-
-		if (filename == null) {
-			Logger.warning(this, "Nameless key !!");
+		if(builder.isNewRequest) {
+			Logger.debug(this, "Query for getting "+key+" created");
+		} else {
+			Logger.debug(this, "Resuming key : "+key);
+			Logger.info(this, "Resuming id : "+getIdentifier());
 		}
 
-		Logger.debug(this, "Query for getting "+key+" created");
-
+		queryManager.addObserver(this);
 	}
 
 
-	/**
-	 * See the other entry point
-	 * @param noDDA refuse the use of DDA (if true, request must be *NOT* *PERSISTENT*)
-	 */
-	public FCPClientGet(final String key, final int priority,
-			    final int persistence, boolean globalQueue,
-			    final int maxRetries,
-			    String destinationDir,
-			    long maxSize,
-			    boolean noDDA,
-			    FCPQueueManager queueManager) {
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, maxSize, queueManager);
-		this.noDDA = noDDA;
-	}
-
-	/**
-	 * Another entry point allowing to specify a max size
-	 */
-	public FCPClientGet(final String key, final int priority,
-			    final int persistence, boolean globalQueue,
-			    final int maxRetries,
-			    String destinationDir,
-			    long maxSize,
-			    FCPQueueManager queueManager) {
-		this(key, priority, persistence, globalQueue, maxRetries, destinationDir, queueManager);
-		this.maxSize = maxSize;
-	}
 
 	/**
 	 * won't follow the redirections
@@ -278,9 +313,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			}
 		}
 
-		queryManager.deleteObserver(this);
 		queryManager.addObserver(this);
-
 		return queryManager.writeMessage(queryMessage);
 	}
 
@@ -381,7 +414,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 							status = "Available";
 							setStatus(TransferStatus.SUCCESSFUL);
 							writingSuccessful = true;
-							Logger.notice(this, "Download finished => File already existing. Not rewrited");
+							Logger.notice(this, "Download finished => File already existing. Not rewritten");
 						}
 
 					} else {
@@ -565,8 +598,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		fileSize = message.getAmountOfDataWaiting();
 
 		setStatus(TransferStatus.RUNNING);
-		setStartupTime(Long.valueOf(message.getValue("StartupTime")).longValue());
-		setCompletionTime(Long.valueOf(message.getValue("CompletionTime")).longValue());
+		setStartupTime(Long.valueOf(message.getValue("StartupTime")));
+		setCompletionTime(Long.valueOf(message.getValue("CompletionTime")));
 
 		status = "Writing to disk";
 		Logger.info(this, "Receiving file ...");
@@ -1197,39 +1230,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		return result;
 	}
-
-	public boolean setParameters(final HashMap parameters) {
-
-		key            = (String)parameters.get("URI");
-
-		Logger.debug(this, "Resuming key : "+key);
-
-		filename       = (String)parameters.get("Filename");
-		setPriority(Integer.parseInt((String)parameters.get("Priority")));
-		persistence    = Integer.parseInt((String)parameters.get("Persistence"));
-		globalQueue    = Boolean.valueOf((String)parameters.get("Global")).booleanValue();
-		destinationDir = (String)parameters.get("ClientToken");
-		attempt        = Integer.parseInt((String)parameters.get("Attempt"));
-		status         = (String)parameters.get("Status");
-		setIdentifier(   (String)parameters.get("Identifier"));
-
-		Logger.info(this, "Resuming id : "+getIdentifier());
-		fileSize       = Long.parseLong((String)parameters.get("FileSize"));
-		boolean running        = Boolean.valueOf((String)parameters.get("Running")).booleanValue();
-		boolean successful     = Boolean.valueOf((String)parameters.get("Successful")).booleanValue();
-		maxRetries     = Integer.parseInt((String)parameters.get("MaxRetries"));
-
-		setStatus(running, !running, successful);
-
-		if((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !isFinished()) {
-			setStatus(TransferStatus.NOT_RUNNING);
-			setBlockNumbers(-1, -1, -1, false);
-			status = "Waiting";
-		}
-
-		return true;
-	}
-
 
 	public boolean isPersistent() {
 		return (persistence < PERSISTENCE_UNTIL_DISCONNECT);

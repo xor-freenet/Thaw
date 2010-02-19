@@ -264,12 +264,14 @@ public class KSKFileAttachment
 		     it.hasNext();) {
 			String key = (String)it.next();
 
-			FCPClientGet get = new FCPClientGet(key, FCPClientGet.DEFAULT_PRIORITY,
-							    FCPClientGet.PERSISTENCE_FOREVER,
-							    true, /* globale queue */
-							    FCPClientGet.DEFAULT_MAX_RETRIES,
-							    dir.getPath(),
-							    queueManager);
+			FCPClientGet get = new FCPClientGet.Builder(queueManager)
+															.Key(key)
+															.Priority(FCPClientGet.DEFAULT_PRIORITY)
+															.Persistence(FCPClientGet.PERSISTENCE_FOREVER)
+															.GlobalQueue(true)
+															.MaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
+															.DestinationDir(dir.getPath())
+															.build();
 			queueManager.addQueryToThePendingQueue(get);
 		}
 	}

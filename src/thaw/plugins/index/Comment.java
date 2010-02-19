@@ -792,13 +792,16 @@ public class Comment extends Observable implements Observer, ActionListener {
 
 		publicKey += "comment-"+Integer.toString(rev)+"/comment.xml";
 
-		FCPClientGet get = new FCPClientGet(publicKey, 2 /* priority */,
-						    FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT /* persistence */,
-						    false /* global queue */, 0 /* maxretries */,
-						    System.getProperty("java.io.tmpdir"),
-						    MAX_SIZE, true /* no DDA */,
-						    queueManager);
-
+		FCPClientGet get = new FCPClientGet.Builder(queueManager)
+															.Key(publicKey)
+															.Priority(2)
+															.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+															.GlobalQueue(false)
+															.MaxRetries(0)
+															.DestinationDir(System.getProperty("java.io.tmpdir"))
+															.MaxSize(MAX_SIZE)
+				                                            .NoDDA(true)
+															.build();
 		get.addObserver(this);
 
 		return get.start();

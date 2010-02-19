@@ -34,6 +34,7 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 	private final String thawId;
 
 	private boolean queueCompleted;
+	private final Object lastIDLock = new Object();
 
 	/**
 	 * Calls setQueryManager() and then resetQueues().
@@ -191,8 +192,10 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 				subId = subId[0].split("_");
 				final int id = Integer.parseInt(subId[subId.length-1]);
 
-				if(id > lastId) {
-					lastId = id;
+				synchronized(lastIDLock) {
+					if(id > lastId) {
+						lastId = id;
+					}
 				}
 			} catch(final Exception e) {
 				Logger.notice(this, "Exception while parsing previous Id (Not really a problem)");
@@ -506,13 +509,15 @@ public class FCPQueueManager extends java.util.Observable implements ThawRunnabl
 
 
 	public String getAnID() {
-		if (lastId < Integer.MAX_VALUE) {
-			lastId++;
-		} else {
-			lastId = 0;
-		}
+		synchronized(lastIDLock) {
+			if (lastId < Integer.MAX_VALUE) {
+				lastId++;
+			} else {
+				lastId = 0;
+			}
 
-		return (thawId+"_"+ Integer.toString(lastId));
+			return (thawId+"_"+ Integer.toString(lastId));
+		}
 	}
 
 	public boolean isOur(String queryId) {

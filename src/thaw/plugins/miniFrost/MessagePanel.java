@@ -607,13 +607,14 @@ public class MessagePanel
 		public void download(String key, java.io.File destDir) {
 			FCPQueueManager queueManager = messagePanel.getMainPanel().getPluginCore().getCore().getQueueManager();
 
-			FCPClientGet get = new FCPClientGet(key, FCPClientGet.DEFAULT_PRIORITY,
-							    FCPClientGet.PERSISTENCE_FOREVER,
-							    true /* global queue */,
-							    FCPClientGet.DEFAULT_MAX_RETRIES /* max retries */,
-							    destDir.getPath(),
-							    queueManager);
-
+			FCPClientGet get = new FCPClientGet.Builder(queueManager)
+															.Key(key)
+															.Priority(FCPClientGet.DEFAULT_PRIORITY)
+															.Persistence(FCPClientGet.PERSISTENCE_FOREVER)
+															.GlobalQueue(true)
+															.MaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
+															.DestinationDir(destDir.getPath())
+															.build();
 			queueManager.addQueryToThePendingQueue(get);
 		}
 

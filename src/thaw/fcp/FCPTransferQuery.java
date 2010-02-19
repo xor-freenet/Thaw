@@ -307,15 +307,17 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 		notifyObservers(o);
 	}
 	
-	public boolean equals(Object o) {
-		if (o == this) return true;
-		if (!(o instanceof FCPTransferQuery)) return false;
-		if (getIdentifier() == null) return false;
-		if (((FCPTransferQuery)o).getIdentifier() == null) return false;
-		if (((FCPTransferQuery)o).getIdentifier() == getIdentifier()) return true;
-		
-		return getIdentifier().equals(((FCPTransferQuery)o).getIdentifier());
-	}
+	/* Overriding "equals" causes issues since FCPTransferQuery is also observable. */
+	/* This did weird things when adding and removing from collections.             */
+//	public boolean equals(Object o) {
+//		if (o == this) return true;
+//		if (!(o instanceof FCPTransferQuery)) return false;
+//		if (getIdentifier() == null) return false;
+//		if (((FCPTransferQuery)o).getIdentifier() == null) return false;
+//		if (((FCPTransferQuery)o).getIdentifier() == getIdentifier()) return true;
+//
+//		return getIdentifier().equals(((FCPTransferQuery)o).getIdentifier());
+//	}
 	
 	/**** To implement to implement a FCPTransferQuery: ****/
 	
@@ -425,13 +427,6 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	 * @return A HashMap : String (parameter name) -> String (parameter value) or null.
 	 */
 	public abstract HashMap<String,String> getParameters();
-
-	/**
-	 * Opposite of getParameters().
-	 * @return true if successful (or ignored) ; false if not.
-	 */
-	public abstract boolean setParameters(HashMap parameters);
-
 
 	public abstract boolean isGlobal();
 	public abstract boolean isPersistent();

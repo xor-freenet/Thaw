@@ -310,13 +310,14 @@ public class File implements Observer, FileContainer {
 			return null;
 		}
 
-		final FCPClientGet clientGet = new FCPClientGet(publicKey,
-								FCPClientGet.DEFAULT_PRIORITY,
-								FCPClientGet.PERSISTENCE_FOREVER,
-								true, /* <= global queue */
-								-1, /* <= max retries */
-								targetPath,
-								queueManager);
+		final FCPClientGet clientGet = new FCPClientGet.Builder(queueManager)
+															.Key(publicKey)
+															.Priority(FCPClientGet.DEFAULT_PRIORITY)
+															.Persistence(FCPClientGet.PERSISTENCE_FOREVER)
+															.GlobalQueue(true)
+															.MaxRetries(-1)
+															.DestinationDir(targetPath)
+															.build();
 
 		queueManager.addQueryToThePendingQueue(clientGet);
 
