@@ -275,7 +275,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		this.persistence = persistence;
 
 		setBlockNumbers(-1, -1, -1, true);
-		setStatus(true, false, false);
+		setStatus(TransferStatus.RUNNING);
 
 		this.status = status;
 		fatal = true;
@@ -290,7 +290,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			Logger.warning(this, "Empty or unreachable file:"+localFile.getPath());
 
 			status = "EMPTY OR UNREACHABLE FILE";
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 
 			fatal = true;
 
@@ -540,7 +540,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			return true;
 		} else {
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 			Logger.warning(this, "Unable to send the file to the node");
 			status = "Unable to send the file to the node";
 
@@ -633,7 +633,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			status = "Stopped";
 
 			if (wasFinished || !isSuccessful())
-				setStatus(TransferStatus.FINISHED);
+				setStatus(TransferStatus.FAILED);
 			else
 				setStatus(TransferStatus.SUCCESSFUL);
 
@@ -753,7 +753,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 			if ("PersistentRequestRemoved".equals(msg.getMessageName())) {
 				if (!isFinished()) {
-					setStatus(TransferStatus.FINISHED);
+					setStatus(TransferStatus.FAILED);
 					fatal = true;
 					status = "Removed";
 				}
@@ -768,7 +768,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 
 
 			if ("PutFailed".equals( msg.getMessageName() )) {
-				setStatus(TransferStatus.FINISHED);
+				setStatus(TransferStatus.FAILED);
 				fatal = true;
 
 				putFailedCode = Integer.parseInt(msg.getValue("Code"));
@@ -792,7 +792,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			}
 
 			if("ProtocolError".equals( msg.getMessageName() )) {
-				setStatus(TransferStatus.FINISHED);
+				setStatus(TransferStatus.FAILED);
 				fatal = true;
 
 				if(lockOwner) {
@@ -1136,10 +1136,10 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		boolean successful = Boolean.valueOf((String)parameters.get("successful")).booleanValue();
 		boolean finished = Boolean.valueOf((String)parameters.get("finished")).booleanValue();
 
-		setStatus(running, finished, successful);
+		setStatus(TransferStatus.getTransferStatus(running, finished, successful));
 
 		if ((persistence == PERSISTENCE_UNTIL_DISCONNECT) && !isFinished()) {
-			setStatus(false, false, false);
+			setStatus(TransferStatus.NOT_RUNNING);
 			status = "Waiting";
 		}
 

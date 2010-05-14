@@ -470,7 +470,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 			status = "Protocol Error ("+message.getValue("CodeDescription")+")";
 
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 
 			fatal = true;
 
@@ -497,7 +497,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		status = "Removed";
 
 		if (!isFinished()) {
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 			fatal = true;
 		}
 
@@ -538,7 +538,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			getFailedCode = Integer.parseInt(message.getValue("Code"));
 
 			status = "Failed ("+message.getValue("CodeDescription")+")";
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 
 			fatal = true;
 
@@ -622,7 +622,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		if(writingSuccessful) {
 			setStatus(TransferStatus.SUCCESSFUL);
 		} else {
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 		}
 
 		queryManager.deleteObserver(this);
@@ -899,7 +899,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		} else {
 			Logger.info(this, "File is supposed already written. Not rewriting.");
 			status = "File already exists";
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 			
 			/* Clear the data from the socket to prevent socket problems */
 			dummyDataGet(connection, size);
@@ -952,7 +952,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 					Logger.error(this, "Unable to write file on disk ... out of space ? : "+e.toString());
 					status = "Unable to fetch / disk probably full !";
 					writingSuccessful = false;
-					setStatus(TransferStatus.FINISHED);
+					setStatus(TransferStatus.FAILED);
 					try {
 						outputStream.close();
 					} catch(java.io.IOException ex) {
@@ -967,7 +967,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				Logger.error(this, "Socket closed, damn !");
 				status = "Unable to read data from the node";
 				writingSuccessful = false;
-				setStatus(TransferStatus.FINISHED);
+				setStatus(TransferStatus.FAILED);
 				try {
 					outputStream.close();
 				} catch(java.io.IOException ex) {
@@ -1000,7 +1000,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	}
 
 
-
 	public boolean removeRequest() {
 		final FCPMessage stopMessage = new FCPMessage();
 
@@ -1026,7 +1025,10 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		queryManager.writeMessage(stopMessage);
 
-		setStatus(false, isFinished(), isSuccessful());
+		if ( isSuccessful() )
+			setStatus(TransferStatus.SUCCESSFUL);
+		else
+			setStatus(TransferStatus.FAILED);
 
 		return true;
 	}
@@ -1066,7 +1068,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		if(wasFinished && isSuccessful()) {
 			setStatus(TransferStatus.SUCCESSFUL);
 		} else {
-			setStatus(TransferStatus.FINISHED);
+			setStatus(TransferStatus.FAILED);
 		}
 
 		fatal = true;

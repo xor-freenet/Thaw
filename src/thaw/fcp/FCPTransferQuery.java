@@ -85,22 +85,6 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 		transferStatus = status;
 	}
 
-	protected void setStatus(boolean running, boolean finished, boolean successful) {
-		if(running) {
-			setStatus(TransferStatus.RUNNING);
-		} else {
-			if(finished) {
-				if(successful) {
-					setStatus(TransferStatus.SUCCESSFUL);
-				} else {
-					setStatus(TransferStatus.FINISHED);
-				}
-			} else {
-				setStatus(TransferStatus.NOT_RUNNING);
-			}
-		}
-	}
-	
 	/**
 	 * Called about each second by the queueManager. Used to make the average speed and the ETA
 	 * as precise as possible

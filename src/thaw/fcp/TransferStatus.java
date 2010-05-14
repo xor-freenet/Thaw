@@ -3,7 +3,7 @@ package thaw.fcp;
 public enum TransferStatus {
 	NOT_RUNNING(false,false,false),
 	RUNNING(true,false,false),
-	FINISHED(false,true,false),
+	FAILED(false,true,false),
 	SUCCESSFUL(false,true,true);
 
 	private boolean running;
@@ -36,7 +36,7 @@ public enum TransferStatus {
 				if(successful) {
 					return SUCCESSFUL;
 				} else {
-					return FINISHED;
+					return FAILED;
 				}
 			} else {
 				return NOT_RUNNING;
