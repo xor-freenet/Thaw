@@ -89,7 +89,7 @@ public class TrustListDownloader implements Observer, Signatures.SignaturesObser
 	
 	public boolean stopULPR(String key) {
 		FCPClientGet get = (FCPClientGet)ulprs.get(FreenetURIHelper.getComparablePart(key));
-		metaQuery.stop(get);		
+		metaQuery.stop(get);
 		ulprs.remove(FreenetURIHelper.getComparablePart(key));
 		
 		return true;
