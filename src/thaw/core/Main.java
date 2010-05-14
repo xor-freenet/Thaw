@@ -191,7 +191,6 @@ public class Main {
 
 
 	public final static String[] DEPS = new String[] {
-		"jmdns.jar",
 		"hsqldb.jar",
 		"BouncyCastle.jar",
 		"JGoodies_forms.jar"

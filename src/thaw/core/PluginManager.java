@@ -39,7 +39,6 @@ public class PluginManager {
 		//"thaw.plugins.Restarter",
 		"thaw.plugins.TransferLogs",
 		"thaw.plugins.NodeConfigurator",
-		"thaw.plugins.MDns",
 		//"thaw.plugins.IndexWebGrapher",
 		"thaw.plugins.SqlConsole",
 		"thaw.plugins.LogConsole"

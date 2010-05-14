@@ -14,12 +14,6 @@
 
 	<property name="final.dir" value="bin" />
 
-	<!-- JMDNS -->
-	<property name="jmdns.location" value="${lib.dir}/jmdns.jar" />
-	<available file="${jmdns.location}" property="jmdns_available" />
-	<fail unless="jmdns_available" status="1"
-	message="You need to download jmdns.jar from http://sourceforge.net/projects/jmdns/ and to put it in lib/ or set the ant property 'jmdns.location' to the correct path (filename included) " />
-
 	<!-- HSQLDB -->
 	<property name="hsqldb.location" value="${lib.dir}/hsqldb.jar" />
 	<available file="${hsqldb.location}" property="hsqldb_available" />
@@ -51,7 +45,6 @@
 
 			<!-- <compilerarg value="-Xlint" /> -->
 			<classpath>
-				<pathelement location="${jmdns.location}"/>
 				<pathelement location="${hsqldb.location}"/>
 				<pathelement location="${bouncycastle.location}" />
 				<pathelement location="${jgoodiesforms.location}" />
@@ -72,7 +65,7 @@
 
 
 	<target name="run" depends="compile">
-		<java classname="thaw.core.Main" classpath="${jmdns.location}:${bouncycastle.location}:${hsqldb.location}${jgoodiesforms.location}:${bin.dir}" dir="${bin.dir}" fork="true" />
+		<java classname="thaw.core.Main" classpath="${bouncycastle.location}:${hsqldb.location}${jgoodiesforms.location}:${bin.dir}" dir="${bin.dir}" fork="true" />
 	</target>
 
 
@@ -82,7 +75,7 @@
 		<jar jarfile="${final.dir}/Thaw.jar" basedir="${bin.dir}">
 		        <manifest>
 			        <attribute name="Main-Class" value="thaw.core.Main" />
-				<attribute name="Class-Path" value=". Thaw.jar jmdns.jar hsqldb.jar BouncyCastle.jar JGoodies_forms.jar" />
+				<attribute name="Class-Path" value=". Thaw.jar hsqldb.jar BouncyCastle.jar JGoodies_forms.jar" />
 			</manifest>
 
 			<fileset dir="build">
