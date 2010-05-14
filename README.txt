@@ -36,17 +36,10 @@ http://switch.dl.sourceforge.net/sourceforge/hsqldb/hsqldb_1_8_0_4.zip
 
 Extract the zip, and copy "hsqldb/lib/hsqldb.jar" to "Thaw/lib".
 
-You need also BouncyCastle:
-* Download the provider for the JDK 1.4
-* Rename the file to BouncyCastle.jar
-* Put this .jar in lib/
-
-and jmDNS:
-* download the jar and put it in lib/
-* (expected filename : jmdns.jar)
-
 To compile:
   $ ant
+The first time, ant should complain about missing dependencies. Just follow
+the instructions,and everything should be fine.
 
 To build the jar file:
   $ ant jar
