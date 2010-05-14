@@ -29,8 +29,9 @@ import thaw.gui.FileChooser;
 import thaw.core.I18n;
 import thaw.core.Logger;
 import thaw.gui.WarningWindow;
-import thaw.fcp.FCPClientPut;
 import thaw.fcp.FCPClientHello;
+import thaw.fcp.FCPClientPut;
+import thaw.fcp.FCPQueueManager;
 import thaw.plugins.InsertPlugin;
 import thaw.gui.MainWindow;
 
@@ -87,17 +88,19 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
     private int compressionCodec;
 	private FCPClientPut lastInsert = null;
 
-	private Config config; /* keep a ref to the config for the "lastSourceDirectory" option */
-	private MainWindow mainWindow;
+	private final Config config; /* keep a ref to the config for the "lastSourceDirectory" option */
+	private final MainWindow mainWindow;
+	private final FCPQueueManager queueManager; /* actually we just need the ClientHello to get the available compressions */
 
 	public InsertPanel(final InsertPlugin insertPlugin,
 			   final Config config, final MainWindow mainWindow,
-               final FCPClientHello clientHello,
+               final FCPQueueManager queueManager,
 			   final boolean advancedMode) {
 
 		this.insertPlugin = insertPlugin;
 		this.config = config;
 		this.mainWindow = mainWindow;
+		this.queueManager = queueManager;
 
 		globalPanel = new JPanel();
 
@@ -182,12 +185,6 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
         //Allow for some more codecs to be added in the future.
         compressionStr = new Vector<String>(4, 1);
         compressionStr.add(I18n.getMessage("thaw.plugin.insert.best"));
-
-        for(int i=0; i < clientHello.getNmbCompressionCodecs(); i++)
-        {
-            compressionStr.add(clientHello.getCodec(i));
-        }
-
 		compressionLabel = new JLabel(I18n.getMessage("thaw.plugin.insert.compressionType"));
 		subSubPanel.add(compressionLabel);
 		compressionSelecter = new JComboBox(compressionStr);
@@ -279,6 +276,24 @@ public class InsertPanel implements ActionListener, ItemListener, Observer {
 		return globalPanel;
 	}
 
+	public void refresh() {
+		FCPClientHello clientHello;
+
+		compressionSelecter.removeAllItems();
+        compressionSelecter.addItem(I18n.getMessage("thaw.plugin.insert.best"));
+
+		if ( queueManager.getQueryManager().getConnection() == null
+				|| queueManager.getQueryManager().getConnection().getClientHello() == null )
+			return;
+
+		clientHello = queueManager.getQueryManager().getConnection().getClientHello();
+
+        for(int i=0; i < clientHello.getNmbCompressionCodecs(); i++) {
+            compressionSelecter.addItem(clientHello.getCodec(i));
+		}
+
+		compressionSelecter.setSelectedItem(I18n.getMessage("thaw.plugin.insert.best"));
+	}
 
 	public void actionPerformed(final ActionEvent e) {
 		if(e.getSource() == letsGoButton) {

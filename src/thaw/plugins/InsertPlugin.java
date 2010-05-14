@@ -44,16 +44,9 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 		core.getConfig().addListener("advancedMode", this);
 
 		Logger.info(this, "Starting plugin \"InsertPlugin\" ...");
-		while(core.getClientHello() == null) {
-			try {
-				Thread.currentThread().sleep(5000);
-			}
-			catch (InterruptedException e) {}
-		}
-
 		insertPanel = new InsertPanel(this,
 					      core.getConfig(), core.getMainWindow(),
-                          core.getClientHello(),
+                          core.getQueueManager(),
 					      Boolean.valueOf(core.getConfig().getValue("advancedMode")).booleanValue());
 
 		scrollPane = new JScrollPane(insertPanel.getPanel());
@@ -117,6 +110,7 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 
 
 	public void actionPerformed(final ActionEvent e) {
+		insertPanel.refresh();
 		insertionFrame.setVisible(true);
 	}
 

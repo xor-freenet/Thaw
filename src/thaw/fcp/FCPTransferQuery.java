@@ -77,7 +77,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 			requiredBlocks = required;
 			totalBlocks = total;
 			transferedBlocks = transfered;
-			this.reliable = reliable;
+			this.reliable = reliable || this.insertion;
 		}
 	}
 
@@ -121,7 +121,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 			if (transferedBlocks < 0)
 				return;
 
-			if ((reliable || insertion) && (currentReadCursor != currentWriteCursor)) {
+			if (reliable && (currentReadCursor != currentWriteCursor)) {
 				if (transferedBlocksPast[currentReadCursor] < 0)
 					Logger.warning(this, "TransferedBlocksNumber < 0, shouldn't happen !");
 				
@@ -258,7 +258,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 		if (getProgression() == 0)
 			return true;
 
-		return reliable || insertion;
+		return reliable;
 	}
 
 	
