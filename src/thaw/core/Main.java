@@ -28,11 +28,9 @@ public class Main {
 	_major  = 0,
 	_minor  = 8,
 	_update = 5;
-	public final static String
-	_svnBuildNumber = "@custom@";
 
 	public final static String
-	VERSION = Main._major + "." + Main._minor + "." + Main._update + " r"+Main._svnBuildNumber;
+	VERSION = Main._major + "." + Main._minor + "." + Main._update;
 
 
 	/**
