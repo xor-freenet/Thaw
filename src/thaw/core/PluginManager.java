@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Vector;
 
 /**
- * Manages plugins :)
+ * Manages plugins
  */
 public class PluginManager {
 	private final static String[] defaultPlugins = {
@@ -14,10 +14,6 @@ public class PluginManager {
 		"thaw.plugins.InsertPlugin",
 		"thaw.plugins.StatusBar",
 		"thaw.plugins.ThemeSelector",
-		"thaw.plugins.Hsqldb",
-		"thaw.plugins.IndexBrowser",
-		"thaw.plugins.IndexExporter",
-		"thaw.plugins.TransferLogs"
 	};
 
 	private final static String[] knownPlugins = {
@@ -29,13 +25,13 @@ public class PluginManager {
 		"thaw.plugins.TrayIcon",
 		"thaw.plugins.ThemeSelector",
 		"thaw.plugins.Hsqldb",
-		"thaw.plugins.Signatures",
-		"thaw.plugins.WebOfTrust",
-		"thaw.plugins.WebOfTrustViewer",
-		"thaw.plugins.IndexBrowser",
-		"thaw.plugins.IndexExporter",
+		//"thaw.plugins.Signatures",
+		//"thaw.plugins.WebOfTrust",
+		//"thaw.plugins.WebOfTrustViewer",
+		//"thaw.plugins.IndexBrowser",
+		//"thaw.plugins.IndexExporter",
 		//"thaw.plugins.IndexTreeRebuilder",
-		"thaw.plugins.MiniFrost",
+		//"thaw.plugins.MiniFrost",
 		//"thaw.plugins.Restarter",
 		"thaw.plugins.TransferLogs",
 		"thaw.plugins.NodeConfigurator",
