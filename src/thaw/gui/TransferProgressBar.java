@@ -50,6 +50,9 @@ public class TransferProgressBar extends JProgressBar {
 		setStringPainted(true);
 		setBorderPainted(withBorder);
 
+		/* TODO(Jflesch): This way of detecting if we are transfering data with the node is bad
+		 * and unreliable
+		 */
 		if ((query instanceof FCPClientPut && ( progress == 0))
 		    || ((query instanceof FCPClientGet) && (progress == 100)))
 			progress = query.getTransferWithTheNodeProgression();

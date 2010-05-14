@@ -32,7 +32,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	private boolean reliable = false;
 	
 	/* reminder to do the maths */
-	public final static int NMB_REMINDERS = 300; /* one per seconde, so 5 minutes here */
+	public final static int NMB_REMINDERS = 300; /* one per second, so 5 minutes here */
 	private long[] transferedBlocksPast = new long[NMB_REMINDERS];
 	private int currentReadCursor = 0; /* read Cursor in the *past arrays */
 	private int currentWriteCursor = 0; /* write Cursor in the *past arrays */
