@@ -768,7 +768,6 @@ public class Index extends Observable implements MutableTreeNode,
 
 			rev++;
 
-
 			put = new FCPClientPut.Builder(queueManager)
 												.LocalFile(targetFile)
 						                        .KeyType(FCPClientPut.KEY_TYPE_SSK)

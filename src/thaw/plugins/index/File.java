@@ -341,7 +341,6 @@ public class File implements Observer, FileContainer {
 			return null;
 		}
 
-
 		FCPClientPut clientPut = new FCPClientPut.Builder(queueManager)
 												.LocalFile(new java.io.File(localPath))
 						                        .KeyType(FCPClientPut.KEY_TYPE_CHK)
@@ -351,7 +350,6 @@ public class File implements Observer, FileContainer {
 						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
 						                        .Compress(true)
 												.build();
-
 		queueManager.addQueryToThePendingQueue(clientPut);
 
 		clientPut.addObserver(this);

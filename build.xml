@@ -26,18 +26,6 @@
 	<fail unless="bouncycastle_available" status="1"
 	message="You need to download the bouncycastle provider for the JDK 1.4 from http://bouncycastle.org/latest_releases.html and put it in lib/ with the name BouncyCastle.jar. or set the ant property 'bouncycastle.location' to the correct path (filename included)" />
 
-	<!-- JGoodies thingies -->
-	<property name="jgoodiescommon.location" value="${lib.dir}/JGoodies_common.jar" />
-	<available file="${jgoodiescommon.location}" property="jgoodiescommon_available" />
-	<fail unless="jgoodiescommon_available" status="1"
-	message="You need to download the JGoodies Common library from http://www.jgoodies.com/downloads/libraries.html and put it in lib/ with the name JGoodies_common.jar. or set the ant property 'jgoodiescommon.location' to the correct path (filename included)" />
-
-	<property name="jgoodiesforms.location" value="${lib.dir}/JGoodies_forms.jar" />
-	<available file="${jgoodiesforms.location}" property="jgoodiesforms_available" />
-	<fail unless="jgoodiesforms_available" status="1"
-	message="You need to download the JGoodies Forms library from http://www.jgoodies.com/downloads/libraries.html and put it in lib/ with the name JGoodies_forms.jar. or set the ant property 'jgoodiesforms.location' to the correct path (filename included)" />
-
-
 	<target name="compile">
 		<mkdir dir="${bin.dir}" />
 
@@ -52,8 +40,6 @@
 			<classpath>
 				<pathelement location="${hsqldb.location}"/>
 				<pathelement location="${bouncycastle.location}" />
-				<pathelement location="${jgoodiesforms.location}" />
-				<pathelement location="${jgoodiescommon.location}" />
 			</classpath>
 		</javac>
 
@@ -71,7 +57,7 @@
 
 
 	<target name="run" depends="compile">
-		<java classname="thaw.core.Main" classpath="${bouncycastle.location}:${hsqldb.location}:${jgoodiescommon.location}:${jgoodiesforms.location}:${bin.dir}" dir="${bin.dir}" fork="true" />
+		<java classname="thaw.core.Main" classpath="${bouncycastle.location}:${hsqldb.location}:${bin.dir}" dir="${bin.dir}" fork="true" />
 	</target>
 
 
@@ -81,7 +67,7 @@
 		<jar jarfile="${final.dir}/Thaw.jar" basedir="${bin.dir}">
 		    <manifest>
 			    <attribute name="Main-Class" value="thaw.core.Main" />
-				<attribute name="Class-Path" value=". Thaw.jar hsqldb.jar BouncyCastle.jar JGoodies_forms.jar JGoodies_common.jar" />
+				<attribute name="Class-Path" value=". Thaw.jar hsqldb.jar BouncyCastle.jar" />
 			</manifest>
 
 			<fileset dir="build">

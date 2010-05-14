@@ -476,16 +476,10 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			msg.setValue("ClientToken", localFile.getPath());
 
 		switch(persistence) {
-			case(PERSISTENCE_FOREVER): msg.setValue("Persistence", "forever"); break;
-			case(PERSISTENCE_UNTIL_NODE_REBOOT): msg.setValue("Persistence", "reboot"); break;
-			case(PERSISTENCE_UNTIL_DISCONNECT): msg.setValue("Persistence", "connection"); break;
-			default: Logger.error(this, "Unknown persistence !?"); break;
-		}
-
-		if(compressFile) {
-			msg.setValue("DontCompress", "false");
-		} else {
-			msg.setValue("DontCompress", "true");
+		case(PERSISTENCE_FOREVER): msg.setValue("Persistence", "forever"); break;
+		case(PERSISTENCE_UNTIL_NODE_REBOOT): msg.setValue("Persistence", "reboot"); break;
+		case(PERSISTENCE_UNTIL_DISCONNECT): msg.setValue("Persistence", "connection"); break;
+		default: Logger.error(this, "Unknow persistence !?"); break;
 		}
 
 		if (localFile != null)
