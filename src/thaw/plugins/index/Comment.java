@@ -460,7 +460,6 @@ public class Comment extends Observable implements Observer, ActionListener {
 						                        .setCompress(true)
 												.build();
 	    put.addObserver(this);
-
 		return queueManager.addQueryToTheRunningQueue(put);
 	}
 

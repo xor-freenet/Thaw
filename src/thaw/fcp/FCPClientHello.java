@@ -23,6 +23,7 @@ public class FCPClientHello implements FCPQuery, Observer {
 	private String nodeName = null;
 	private boolean testnet = false; /* Hmm, in fact, we shouldn't have to bother about this one */
 	private int nmbCompressionCodecs = -1;
+	private String[] codecs;
 
 	private boolean receiveAnswer = false;
 
@@ -131,7 +132,8 @@ public class FCPClientHello implements FCPQuery, Observer {
 				nodeVersion = answer.getValue("Version");
 				nodeName = answer.getValue("Node");
 				testnet = Boolean.valueOf(answer.getValue("Testnet")).booleanValue();
-				nmbCompressionCodecs = nmbCodecsFromString(answer.getValue("CompressionCodecs"));
+				codecs = answer.getValue("CompressionCodecs").split(" ");
+				nmbCompressionCodecs = Integer.parseInt(codecs[0]);
 
 				queryManager.deleteObserver(this);
 
@@ -174,17 +176,11 @@ public class FCPClientHello implements FCPQuery, Observer {
 		return connectionId;
 	}
 
-
-	protected int nmbCodecsFromString(String compressionCodecs){
-		String[] codec_words = compressionCodecs.split(" ");
-
-		try{
-			/* The first "word" should be the number of codecs */
-			return(Integer.parseInt(codec_words[0]));
-		}
-		catch(final java.lang.NumberFormatException e){
-			Logger.warning(this, "Unrecognized CompressionCodecs format.");
-			return(0);
+	public String getCodec(int i) {
+		if(i < nmbCompressionCodecs) {
+			return codecs[i+2].split("\\(")[0];
+		} else {
+			return "";
 		}
 	}
 }

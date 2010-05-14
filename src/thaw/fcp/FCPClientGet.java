@@ -380,7 +380,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				break;
 
 			case SendingToNetwork:
-				/* TODO: Anything to do here? */
 				break;
 
 			default:
@@ -633,7 +632,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			queryManager.getConnection().disconnect();
 			duplicatedQueryManager = null;
 		}
-
+		
 		notifyChange();
 	}
 
@@ -656,7 +655,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	protected void setPriority(int priority) {
 		this.priority = priority;
 	}
-
 
 	private class UnlockWaiter implements ThawRunnable {
 		FCPClientGet clientGet;
@@ -1151,7 +1149,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			path = destinationDir + File.separator + filename;
 
 		if (path != null)
-			path = path.replaceAll("\\|", "-");
+			path = path.replaceAll("\\|", "_");
 
 		return path;
 	}
@@ -1179,7 +1177,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	public String getFilename() {
 		if (filename != null)
-			return filename.replaceAll("\\|", "-");
+			return filename.replaceAll("[\\/:*?\"<>|]", "_");
 		return key;
 	}
 
