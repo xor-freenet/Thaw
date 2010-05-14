@@ -250,15 +250,15 @@ public class KSKDraft
 			Logger.info(this, "Insertion : SSK@"+privateKey+name);
 
 		FCPClientPut clientPut = new FCPClientPut.Builder(queueManager)
-												.LocalFile(fileToInsert)
-						                        .KeyType(keyType)
-												.Rev(-1) /* rev : we specify it ourselves in the key name */
-												.Name(name)
-                                                .PrivateKey(privateKey)
-												.Priority(2)
-												.Global(false)
-						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
-						                        .Compress(true)
+												.setLocalFile(fileToInsert)
+						                        .setKeyType(keyType)
+												.setRev(-1) /* rev : we specify it ourselves in the key name */
+												.setName(name)
+                                                .setPrivateKey(privateKey)
+												.setPriority(2)
+												.setGlobal(false)
+						                        .setPersistence(FCPClientPut.PERSISTENCE_FOREVER)
+						                        .setCompress(true)
 												.build();
 		clientPut.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(clientPut);

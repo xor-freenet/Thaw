@@ -608,13 +608,13 @@ public class MessagePanel
 			FCPQueueManager queueManager = messagePanel.getMainPanel().getPluginCore().getCore().getQueueManager();
 
 			FCPClientGet get = new FCPClientGet.Builder(queueManager)
-															.Key(key)
-															.Priority(FCPClientGet.DEFAULT_PRIORITY)
-															.Persistence(FCPClientGet.PERSISTENCE_FOREVER)
-															.GlobalQueue(true)
-															.MaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
-															.DestinationDir(destDir.getPath())
-															.build();
+													.setKey(key)
+													.setPriority(FCPClientGet.DEFAULT_PRIORITY)
+													.setPersistence(FCPClientGet.PERSISTENCE_FOREVER)
+													.setGlobalQueue(true)
+													.setMaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
+													.setDestinationDir(destDir.getPath())
+													.build();
 			queueManager.addQueryToThePendingQueue(get);
 		}
 

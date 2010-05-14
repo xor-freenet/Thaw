@@ -148,14 +148,14 @@ public class InsertPlugin implements thaw.core.Plugin, ActionListener {
 			}
 
 			clientPut = new FCPClientPut.Builder(core.getQueueManager())
-											.LocalFile(new File(files[i]))
-											.KeyType(keyType)
-											.Rev(rev)
-											.Name(name)
-											.PrivateKey(fullPrivateKey)
-											.Priority(priority)
-											.Global(global)
-											.Persistence(persistence)
+											.setLocalFile(new File(files[i]))
+											.setKeyType(keyType)
+											.setRev(rev)
+											.setName(name)
+											.setPrivateKey(fullPrivateKey)
+											.setPriority(priority)
+											.setGlobal(global)
+											.setPersistence(persistence)
 											.build();
 
 			if(mimeType != null) {

@@ -76,14 +76,14 @@ public class KSKMessage
 		Logger.info(this, "Fetching : "+key);
 
 		FCPClientGet get = new FCPClientGet.Builder(queueManager)
-													.Key(key)
-													.Priority(FCP_PRIORITY)
-													.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
-													.GlobalQueue(false)
-													.MaxRetries(FCP_MAX_RETRIES)
-													.DestinationDir(System.getProperty("java.io.tmpdir"))
-													.MaxSize(FCP_MAX_SIZE)
-													.NoDDA(true)
+													.setKey(key)
+													.setPriority(FCP_PRIORITY)
+													.setPersistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+													.setGlobalQueue(false)
+													.setMaxRetries(FCP_MAX_RETRIES)
+													.setDestinationDir(System.getProperty("java.io.tmpdir"))
+													.setMaxSize(FCP_MAX_SIZE)
+													.setNoDDA(true)
 													.build();
 		get.setNoRedirectionFlag(true);
 		get.addObserver(this);

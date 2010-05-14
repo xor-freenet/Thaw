@@ -58,17 +58,16 @@ public class KSKFileAttachment
 	public void computeKey(FCPQueueManager queueManager, java.io.File file) {
 		this.queueManager = queueManager;     /* CAB TODO: Should this be finalized? */
 
-
 		FCPClientPut put = new FCPClientPut.Builder(queueManager)
-											.LocalFile(file)
-											.KeyType(FCPClientPut.KEY_TYPE_CHK)
-											.Rev(0)
-											.Name(null)
-											.PrivateKey(null)
-											.Priority(FCPClientPut.DEFAULT_PRIORITY)
-											.Global(false)
-											.Persistence(FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT)
-											.GetCHKOnly(true)
+											.setLocalFile(file)
+											.setKeyType(FCPClientPut.KEY_TYPE_CHK)
+											.setRev(0)
+											.setName(null)
+											.setPrivateKey(null)
+											.setPriority(FCPClientPut.DEFAULT_PRIORITY)
+											.setGlobal(false)
+											.setPersistence(FCPClientPut.PERSISTENCE_UNTIL_DISCONNECT)
+											.setGetCHKOnly(true)
 											.build();
 		put.addObserver(this);
 		queueManager.addQueryToTheRunningQueue(put);
@@ -265,12 +264,12 @@ public class KSKFileAttachment
 			String key = (String)it.next();
 
 			FCPClientGet get = new FCPClientGet.Builder(queueManager)
-															.Key(key)
-															.Priority(FCPClientGet.DEFAULT_PRIORITY)
-															.Persistence(FCPClientGet.PERSISTENCE_FOREVER)
-															.GlobalQueue(true)
-															.MaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
-															.DestinationDir(dir.getPath())
+															.setKey(key)
+															.setPriority(FCPClientGet.DEFAULT_PRIORITY)
+															.setPersistence(FCPClientGet.PERSISTENCE_FOREVER)
+															.setGlobalQueue(true)
+															.setMaxRetries(FCPClientGet.DEFAULT_MAX_RETRIES)
+															.setDestinationDir(dir.getPath())
 															.build();
 			queueManager.addQueryToThePendingQueue(get);
 		}

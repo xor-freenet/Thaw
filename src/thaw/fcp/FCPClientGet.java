@@ -84,7 +84,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			return new FCPClientGet(this);
 		}
 
-		public Builder Parameters(HashMap<String,String> parameters) {
+		public Builder setParameters(HashMap<String,String> parameters) {
 			key = parameters.get("URI");
  			Logger.debug(this, "Resuming key : "+key);
 
@@ -114,67 +114,66 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			return this;
 		}
 
-		public Builder Key(String key) {
+		public Builder setKey(String key) {
 			this.key = key;
 			return this;
 		}
 
-		public Builder Priority(int priority) {
+		public Builder setPriority(int priority) {
 			this.priority = priority;
 			return this;
 		}
 
-		public Builder Persistence(int persistence) {
+		public Builder setPersistence(int persistence) {
 			this.persistence = persistence;
 			return this;
 		}
 
-		public Builder GlobalQueue(boolean globalQueue) {
+		public Builder setGlobalQueue(boolean globalQueue) {
 			this.globalQueue = globalQueue;
 			return this;
 		}
 
-		public Builder MaxRetries(int maxRetries) {
+		public Builder setMaxRetries(int maxRetries) {
 			this.maxRetries = maxRetries;
 			return this;
 		}
 
-		public Builder DestinationDir(String destinationDir) {
+		public Builder setDestinationDir(String destinationDir) {
 			this.destinationDir = destinationDir;
 			return this;
 		}
 
-		public Builder MaxSize(long maxSize) {
+		public Builder setMaxSize(long maxSize) {
 			this.maxSize = maxSize;
 			return this;
 		}
 
-		public Builder NoDDA(boolean noDDA) {
+		public Builder setNoDDA(boolean noDDA) {
 			this.noDDA = noDDA;
 			return this;
 		}
 
-		public Builder Status(String status) {
+		public Builder setStatus(String status) {
 			this.status = status;
 			return this;
 		}
 
-		public Builder IsNewRequest(boolean isNew) {
+		public Builder setIsNewRequest(boolean isNew) {
 			this.isNewRequest = isNew;
 			return this;
 		}
 
-		public Builder Identifier(String identifier) {
+		public Builder setIdentifier(String identifier) {
 			this.identifier = identifier;
 			return this;
 		}
 
-		public Builder TransferStatus(TransferStatus transferStatus) {
+		public Builder setTransferStatus(TransferStatus transferStatus) {
 			this.transferStatus = transferStatus;
 			return this;
 		}
 	}
-
 
 	private FCPClientGet(final Builder builder) {
         super(builder.identifier, false);

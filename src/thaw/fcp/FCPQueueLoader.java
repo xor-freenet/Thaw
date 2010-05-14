@@ -69,16 +69,16 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 			final int priority = Integer.parseInt(msg.getValue("PriorityClass"));
 
 			final FCPClientGet clientGet = new FCPClientGet.Builder(queueManager)
-															.IsNewRequest(false)
-					                                     	.Identifier(msg.getValue("Identifier"))
-															.Key(msg.getValue("URI"))
-															.Priority(priority)
-															.Persistence(persistence)
-															.GlobalQueue(global)
-															.DestinationDir(destinationDir)
-															.Status("Fetching")
-															.TransferStatus(TransferStatus.RUNNING)
-															.MaxRetries(-1)
+															.setIsNewRequest(false)
+					                                     	.setIdentifier(msg.getValue("Identifier"))
+															.setKey(msg.getValue("URI"))
+															.setPriority(priority)
+															.setPersistence(persistence)
+															.setGlobalQueue(global)
+															.setDestinationDir(destinationDir)
+															.setStatus("Fetching")
+															.setTransferStatus(TransferStatus.RUNNING)
+															.setMaxRetries(-1)
 															.build();
 
 			if(queueManager.addQueryToTheRunningQueue(clientGet, false))
@@ -127,14 +127,14 @@ public class FCPQueueLoader implements FCPQuery, Observer {
 			}
 
 			final FCPClientPut clientPut = new FCPClientPut.Builder(queueManager)
-												.Identifier(msg.getValue("Identifier"))
-												.PublicKey(msg.getValue("URI"))
-												.Priority(priority)
-					                            .Persistence(persistence)
-												.Global(global)
-												.FileName(fileName)
-												.Status("Inserting")
-												.FileSize(fileSize)
+												.setIdentifier(msg.getValue("Identifier"))
+												.setPublicKey(msg.getValue("URI"))
+												.setPriority(priority)
+					                            .setPersistence(persistence)
+												.setGlobal(global)
+												.setFileName(fileName)
+												.setStatus("Inserting")
+												.setFileSize(fileSize)
 												.build();
 
 			if(queueManager.addQueryToTheRunningQueue(clientPut, false))

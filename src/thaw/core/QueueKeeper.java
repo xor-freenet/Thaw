@@ -56,12 +56,13 @@ public class QueueKeeper {
 			}
 		}
 
+		FCPClientGet.Builder getBuilder = new FCPClientGet.Builder(queueManager).setParameters(params);
+
 		if((queryEl.getAttribute("type") == null)
-		   || "1".equals( queryEl.getAttribute("type") )) {
-			newQuery = new FCPClientGet.Builder(queueManager).Parameters(params).IsNewRequest(false).build();
-		} else {
-			newQuery = new FCPClientPut.Builder(queueManager).Parameters(params).build();
-		}
+		   || "1".equals( queryEl.getAttribute("type") ))
+			getBuilder = getBuilder.setIsNewRequest(false);
+
+		newQuery = getBuilder.build();
 
 		if(runningQueue)
 			queueManager.addQueryToTheRunningQueue(newQuery, false);

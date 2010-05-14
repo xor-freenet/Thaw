@@ -769,15 +769,15 @@ public class Index extends Observable implements MutableTreeNode,
 			rev++;
 
 			put = new FCPClientPut.Builder(queueManager)
-												.LocalFile(targetFile)
-						                        .KeyType(FCPClientPut.KEY_TYPE_SSK)
-												.Rev(rev)
-												.Name(realName)
-                                                .PrivateKey(privateKey)
-												.Priority(2)
-												.Global(true)
-						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
-						                        .Compress(true)
+												.setLocalFile(targetFile)
+						                        .setKeyType(FCPClientPut.KEY_TYPE_SSK)
+												.setRev(rev)
+												.setName(realName)
+                                                .setPrivateKey(privateKey)
+												.setPriority(2)
+												.setGlobal(true)
+						                        .setPersistence(FCPClientPut.PERSISTENCE_FOREVER)
+						                        .setCompress(true)
 												.build();
 
 			put.setMetadata("ContentType", "application/x-freenet-index");
@@ -791,7 +791,6 @@ public class Index extends Observable implements MutableTreeNode,
 			this.addObserver(o);
 
 			setPublicKey(key, rev);
-
 
 			try {
 				synchronized(db.dbLock) {
@@ -914,15 +913,15 @@ public class Index extends Observable implements MutableTreeNode,
 
 
 		clientGet = new FCPClientGet.Builder(queueManager)
-													.Key(key)
-													.Priority(2)
-													.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
-													.GlobalQueue(false)
-													.MaxRetries(10)
-													.DestinationDir(System.getProperty("java.io.tmpdir"))
-													.MaxSize(MAX_SIZE)
-													.NoDDA(true)
-													.build();
+											.setKey(key)
+											.setPriority(2)
+											.setPersistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+											.setGlobalQueue(false)
+											.setMaxRetries(10)
+											.setDestinationDir(System.getProperty("java.io.tmpdir"))
+											.setMaxSize(MAX_SIZE)
+											.setNoDDA(true)
+											.build();
 
 		/*
 		 * These requests are usually quite fast, and don't consume too much

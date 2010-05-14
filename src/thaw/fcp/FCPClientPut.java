@@ -82,7 +82,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 		}
 
 		public Builder Parameters(HashMap<String,String> parameters) {
-			LocalFile(new File(parameters.get("localFile")));
+			setLocalFile(new File(parameters.get("localFile")));
 			fileSize = localFile.length();
 
 			keyType = Integer.parseInt(parameters.get("keyType"));
@@ -119,88 +119,86 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			return this;
 		}
 
-		public Builder KeyType(int keyType) {
+		public Builder setKeyType(int keyType) {
 			this.keyType = keyType;
 			return this;
 		}
 
-		public Builder Rev(int rev) {
+		public Builder setRev(int rev) {
 			this.rev = rev;
 			return this;
 		}
 
-		public Builder Name(String name) {
+		public Builder setName(String name) {
 			this.name = name;
 			return this;
 		}
 
-		public Builder PrivateKey(String privateKey) {
+		public Builder setPrivateKey(String privateKey) {
 			this.privateKey = privateKey;
 			return this;
 		}
 
-		public Builder Priority(int priority) {
+		public Builder setPriority(int priority) {
 			this.priority = priority;
 			return this;
 		}
 
-		public Builder Global(boolean global) {
+		public Builder setGlobal(boolean global) {
 			this.global = global;
 			return this;
 		}
 
-		public Builder Persistence(int persistence) {
+		public Builder setPersistence(int persistence) {
 			this.persistence = persistence;
 			return this;
 		}
 
-		public Builder GetCHKOnly(boolean getCHKOnly) {
+		public Builder setGetCHKOnly(boolean getCHKOnly) {
 			this.getCHKOnly = getCHKOnly;
 			return this;
 		}
 
-		public Builder Identifier(String identifier) {
+		public Builder setIdentifier(String identifier) {
 			this.identifier = identifier;
 			return this;
 		}
 
-		public Builder Compress(boolean compress) {
+		public Builder setCompress(boolean compress) {
 			this.compress = compress;
 			return this;
 		}
 
-		public Builder PublicKey(String publicKey) {
+		public Builder setPublicKey(String publicKey) {
 			this.publicKey = publicKey;
 			return this;
 		}
 
-		public Builder FileName(String fileName) {
+		public Builder setFileName(String fileName) {
 			this.fileName = fileName;
 			return this;
 		}
 
-		public Builder Status(String status) {
+		public Builder setStatus(String status) {
 			this.status = status;
 			return this;
 		}
 
-		public Builder FileSize(long fileSize) {
+		public Builder setFileSize(long fileSize) {
 			this.fileSize = fileSize;
 			return this;
 		}
 		
-		public Builder TransferStatus(TransferStatus transferStatus) {
+		public Builder setTransferStatus(TransferStatus transferStatus) {
 			this.transferStatus = transferStatus;
 			return this;
 		}
 
-		public Builder LocalFile(File localFile) {
+		public Builder setLocalFile(File localFile) {
 			this.localFile = localFile;
 			return this;
 		}
 	}
-
-
 
 	private FCPClientPut(Builder builder) {
 		super(builder.identifier, true);

@@ -449,15 +449,15 @@ public class Comment extends Observable implements Observer, ActionListener {
 
 		/* Use the builder to build a new insert */
 		FCPClientPut put = new FCPClientPut.Builder(queueManager)
-												.LocalFile(xmlFile)
-						                        .KeyType(FCPClientPut.KEY_TYPE_SSK)
-												.Rev(0) /* rev : as we insert as USK => EDONTCARE */
-												.Name("comment") /* filename (not really used anymore) */
-                                                .PrivateKey(FreenetURIHelper.convertSSKtoUSK(privateKey)+"/") /* the conversion function forgot the '/' */
-												.Priority(2)
-												.Global(false)
-						                        .Persistence(FCPClientPut.PERSISTENCE_FOREVER)
-						                        .Compress(true)
+												.setLocalFile(xmlFile)
+						                        .setKeyType(FCPClientPut.KEY_TYPE_SSK)
+												.setRev(0) /* rev : as we insert as USK => EDONTCARE */
+												.setName("comment") /* filename (not really used anymore) */
+                                                .setPrivateKey(FreenetURIHelper.convertSSKtoUSK(privateKey)+"/") /* the conversion function forgot the '/' */
+												.setPriority(2)
+												.setGlobal(false)
+						                        .setPersistence(FCPClientPut.PERSISTENCE_FOREVER)
+						                        .setCompress(true)
 												.build();
 	    put.addObserver(this);
 
@@ -793,15 +793,15 @@ public class Comment extends Observable implements Observer, ActionListener {
 		publicKey += "comment-"+Integer.toString(rev)+"/comment.xml";
 
 		FCPClientGet get = new FCPClientGet.Builder(queueManager)
-															.Key(publicKey)
-															.Priority(2)
-															.Persistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
-															.GlobalQueue(false)
-															.MaxRetries(0)
-															.DestinationDir(System.getProperty("java.io.tmpdir"))
-															.MaxSize(MAX_SIZE)
-				                                            .NoDDA(true)
-															.build();
+											.setKey(publicKey)
+											.setPriority(2)
+											.setPersistence(FCPClientGet.PERSISTENCE_UNTIL_DISCONNECT)
+											.setGlobalQueue(false)
+											.setMaxRetries(0)
+											.setDestinationDir(System.getProperty("java.io.tmpdir"))
+											.setMaxSize(MAX_SIZE)
+											.setNoDDA(true)
+											.build();
 		get.addObserver(this);
 
 		return get.start();
