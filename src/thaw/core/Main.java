@@ -193,7 +193,8 @@ public class Main {
 	public final static String[] DEPS = new String[] {
 		"hsqldb.jar",
 		"BouncyCastle.jar",
-		"JGoodies_forms.jar"
+		"JGoodies_forms.jar",
+		"JGoodies_common.jar",
 	};
 
 	public static void extractDeps() {
