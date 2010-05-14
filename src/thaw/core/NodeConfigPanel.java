@@ -44,8 +44,6 @@ public class NodeConfigPanel implements Observer, ActionListener {
 		"thawId"
 	};
 
-	private JButton autodetect;
-
 	/**
 	 * a check is done on the first value, be warned
 	 */
@@ -87,20 +85,7 @@ public class NodeConfigPanel implements Observer, ActionListener {
 
 			nodeConfigPanel.add(paramLabels[i]);
 
-			if (i != 0) {
-				nodeConfigPanel.add(paramFields[i]);
-			} else {
-				/* autodetection button ! :) */
-				autodetect = new JButton(I18n.getMessage("thaw.common.autodetect"),
-							 thaw.gui.IconBox.minMDns);
-				autodetect.setEnabled(false);
-
-				JPanel sub = new JPanel(new BorderLayout());
-				sub.add(paramFields[i], BorderLayout.CENTER);
-				sub.add(autodetect, BorderLayout.EAST);
-
-				nodeConfigPanel.add(sub);
-			}
+			nodeConfigPanel.add(paramFields[i]);
 
 			if (i == 0) { /* just after the node address */
 				nodeConfigPanel.add(sameComputer);
@@ -126,12 +111,6 @@ public class NodeConfigPanel implements Observer, ActionListener {
 		return nodeConfigPanel;
 	}
 
-	public JButton getAutodetectButton() {
-		return autodetect;
-	}
-
-
-
 	private void setVisibility(final boolean advancedMode) {
 		for(int i= 2; i < NodeConfigPanel.paramNames.length;i++) {
 			paramLabels[i].setVisible(advancedMode);
@@ -141,7 +120,6 @@ public class NodeConfigPanel implements Observer, ActionListener {
 		downloadLocally.setVisible(advancedMode);
 		multipleSockets.setVisible(advancedMode);
 	}
-
 
 	public boolean hasAValueChanged() {
 		for(int i=0; i < NodeConfigPanel.paramNames.length ; i++) {
@@ -163,7 +141,6 @@ public class NodeConfigPanel implements Observer, ActionListener {
 
 		return false;
 	}
-
 
 	public void update(final Observable o, final Object arg) {
 		if(arg == core.getConfigWindow().getOkButton()) {
