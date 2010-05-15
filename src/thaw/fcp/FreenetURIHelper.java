@@ -187,6 +187,8 @@ public class FreenetURIHelper {
 				filename = java.net.URLDecoder.decode(filename, "UTF-8");
 			} catch (final java.io.UnsupportedEncodingException e) {
 				Logger.warning(filename, "UnsupportedEncodingException (UTF-8): "+e.toString());
+			} catch (final java.lang.IllegalArgumentException e) {
+				Logger.warning(filename, "IllegalArgumentException: " + e.toString());
 			}
 		}
 

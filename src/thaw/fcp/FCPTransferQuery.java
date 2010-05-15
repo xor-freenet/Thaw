@@ -290,24 +290,23 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 		setChanged();
 		notifyObservers(o);
 	}
-	
-	/* Overriding "equals" causes issues since FCPTransferQuery is also observable. */
-	/* This did weird things when adding and removing from collections.             */
-//	public boolean equals(Object o) {
-//		if (o == this) return true;
-//		if (!(o instanceof FCPTransferQuery)) return false;
-//		if (getIdentifier() == null) return false;
-//		if (((FCPTransferQuery)o).getIdentifier() == null) return false;
-//		if (((FCPTransferQuery)o).getIdentifier() == getIdentifier()) return true;
-//
-//		return getIdentifier().equals(((FCPTransferQuery)o).getIdentifier());
-//	}
+
+	/**
+	 * This method is used indirectly by the QueueWatcher plugin (through Vector.contains) to figure out if it
+	 * already knows a query
+	 */
+	public boolean equals(Object o) {
+		if (o == this) return true;
+		if (!(o instanceof FCPTransferQuery)) return false;
+		if (getIdentifier() == null) return false;
+		if (((FCPTransferQuery)o).getIdentifier() == null) return false;
+		if (((FCPTransferQuery)o).getIdentifier() == getIdentifier()) return true;
+
+		return getIdentifier().equals(((FCPTransferQuery)o).getIdentifier());
+	}
 	
 	/**** To implement to implement a FCPTransferQuery: ****/
 	
-	
-	
-
 	/**
 	 * Stop the transfer, but don't consider it as failed.
 	 * @param queueManager QueueManager gives access to QueryManager;

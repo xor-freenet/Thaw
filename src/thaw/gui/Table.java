@@ -4,6 +4,7 @@ package thaw.gui;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableColumnModelListener;
 import javax.swing.event.TableColumnModelEvent;
 import javax.swing.event.ListSelectionEvent;
@@ -263,9 +264,6 @@ public class Table extends JTable implements TableColumnModelListener, ThawRunna
 
 	}
 
-
-
-
 	public void columnAdded(TableColumnModelEvent e) {
 		super.resizeAndRepaint();
 	}
@@ -290,10 +288,10 @@ public class Table extends JTable implements TableColumnModelListener, ThawRunna
 		super.resizeAndRepaint();
 	}
 
-
-
-
-
+	public void tableChanged(TableModelEvent e) {
+		super.tableChanged(e);
+		super.resizeAndRepaint();
+	}
 
 	public void loadColumnSizes() {
 		TableColumnModel m = super.getColumnModel();

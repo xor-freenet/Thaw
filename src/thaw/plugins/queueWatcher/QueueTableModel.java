@@ -220,7 +220,7 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 				query.deleteObserver(this);
 			}
 
-		queries.clear();
+			queries.clear();
 		}
 	}
 
@@ -252,9 +252,11 @@ public class QueueTableModel extends javax.swing.table.AbstractTableModel implem
 
 		synchronized(queries) {
 			if(queries.contains(query)) {
-				Logger.debug(this, "addQuery() : Already known");
+				Logger.info(this, "addQuery(" + query.getIdentifier() + " : " + query.getFilename() + ") : Already known");
 				return;
 			}
+			else
+				Logger.info(this, "addQuery(" + query.getIdentifier() + " : " + query.getFilename() + ") : done");
 		}
 
 		query.addObserver(this);
