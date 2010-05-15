@@ -101,8 +101,7 @@ public class KSKMessage
 
 			int code = get.getGetFailedCode();
 			
-			if (code == 21 /* Too big */
-				|| code == 28 /* All data not found */) {
+			if (code == 21 /* Too big */) {
 
 				Logger.warning(this, "MiniFrost: Invalid key: "+key);
 				successfullyDownloaded = true;

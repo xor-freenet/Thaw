@@ -140,11 +140,6 @@ public class FCPMessage {
 		if("ProtocolError".equals( getMessageName() )
 			&& !"25".equals(getValue("Code")) ) /* code 25 == need to test DDA */
 			Logger.warning(this, "PROTOCOL ERROR:\n"+toString());
-		else if (Logger.getLogLevel() <= 3)
-			Logger.info(this, "Message (Node >> Thaw): "+getMessageName());
-		else
-			Logger.debug(this, "Message (Node >> Thaw): "+toString());
-
 
 		return true;
 	}
@@ -213,8 +208,6 @@ public class FCPMessage {
 	public String toString() {
 		String result = "";
 
-		Logger.info(this, "Message (Node << Thaw): "+getMessageName());
-
 		result = result + getMessageName() + "\n";
 
 		for(final Enumeration fieldNames = fields.keys() ; fieldNames.hasMoreElements();) {
@@ -238,7 +231,7 @@ public class FCPMessage {
 		String messageNameUpper = messageName.toUpperCase();
 
 		/* Client to node */
-		if( "ClientHello".equals(messageNameUpper) ) return MessageType.ClientHello;
+		if( "CLIENTHELLO".equals(messageNameUpper) ) return MessageType.ClientHello;
 		else if("LISTPEER".equals(messageNameUpper)) return MessageType.ListPeer;
 		else if("LISTPEERS".equals(messageNameUpper)) return MessageType.ListPeers;
 		else if("LISTPEERNOTES".equals(messageNameUpper)) return MessageType.ListPeerNotes;
@@ -312,6 +305,6 @@ public class FCPMessage {
 		else if("PLUGININFO".equals(messageNameUpper)) return MessageType.PluginInfo;
 		else if("PLUGINREMOVED".equals(messageNameUpper)) return MessageType.PluginRemoved;
 		else if("FCPPLUGINREPLY".equals(messageNameUpper)) return MessageType.FCPPluginReply;
-		else throw( new IllegalArgumentException());
+		else throw( new IllegalArgumentException("Unknown FCP message: " + messageNameUpper));
 	}
 }

@@ -870,13 +870,17 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	 * @param connection Connection to read the data from.
 	 * @param size The number of bytes to read from the connection.
 	 */
-	protected void dummyDataGet(FCPConnection connection, long size){
+	protected void dummyDataGet(FCPConnection connection, long size) {
 		final int packet = FCPClientGet.PACKET_SIZE;
-		byte[] read = new byte[packet];
+		byte[] read;
 		int amount;
 
+		read = new byte[packet];
+
 		while(size > 0){
-			amount = connection.read(0/*Not used*/, read);
+			if ( size < packet )
+				read = new byte[(int)size]; /* otherwise we would read too much */
+			amount = connection.read(read);
 
 			if(amount >= 0){
 				size -= amount;
@@ -920,14 +924,17 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 		writingSuccessful = true;
 
+		final int packet = FCPClientGet.PACKET_SIZE;
+		byte[] read = new byte[packet];
+
 		while(size > 0) {
 
-			final int packet = FCPClientGet.PACKET_SIZE;
-			byte[] read;
 			int amount;
 
-			read = new byte[packet];
-			amount = connection.read(packet, read);
+			if ( size < packet )
+				read = new byte[(int)size]; /* otherwise we would read too much */
+
+			amount = connection.read(read);
 			size = size - amount;
 
 			if (amount >= 0) {

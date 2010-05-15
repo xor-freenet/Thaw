@@ -356,18 +356,11 @@ public class FCPConnection extends Observable {
 	}
 
 	/**
-	 * @see #read(int, byte[])
-	 */
-	public int read(final byte[] buf) {
-		return read(buf.length, buf);
-	}
-
-	/**
-	 * @param lng Obsolete.
 	 * @return -1 Disconnection.
 	 */
-	public int read(final int lng, final byte[] buf) {
+	public int read(final byte[] buf) {
 		int rdBytes = 0;
+
 		try {
 			rdBytes = reader.read(buf);
 
@@ -414,14 +407,11 @@ public class FCPConnection extends Observable {
 					to_read = (int)rawBytesWaiting;
 
 				final byte[] read = new byte[to_read];
-				this.read(to_read, read);
+				this.read(read); /* TODO(Jflesch): Use BufferInputStream.skip() */
 
 				rawBytesWaiting = rawBytesWaiting - to_read;
 			}
-
 		}
-
-
 
 		String result;
 
