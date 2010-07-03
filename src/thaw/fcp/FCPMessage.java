@@ -1,7 +1,9 @@
 package thaw.fcp;
 
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 import thaw.core.Logger;
 
@@ -94,7 +96,25 @@ public class FCPMessage {
 		SubscribedUSKUpdate,
 		PluginInfo,
 		PluginRemoved,
-		FCPPluginReply
+		FCPPluginReply;
+
+		private static final Map<String,MessageType> messageMap = new HashMap<String,MessageType>();
+
+		static {
+			for(MessageType messageType : MessageType.values()) {
+				messageMap.put(messageType.name().toUpperCase(), messageType);
+			}
+		}
+
+		/**
+		 * Given a message name string, returns the associated message enumeration.
+		 *
+		 * @param message Message name string as defined in http://new-wiki.freenetproject.org/FCPv2.
+		 * @return The associated message enumeration value, if found.  If not found, return null.
+		 */
+		public static MessageType getMessageType(String message) {
+			return messageMap.get(message.trim().toUpperCase());
+		}
 	}
 
 	public FCPMessage() {
@@ -228,87 +248,17 @@ public class FCPMessage {
 		return result;
 	}
 
+	/**
+	 * @return The associated message enumeration value, if found.  If not found, return null. 
+	 */
 	public MessageType getMessageType()
 	{
-		String messageNameUpper = messageName.toUpperCase();
+		MessageType result = MessageType.getMessageType(messageName);
 
-		/* Client to node */
-		if( "CLIENTHELLO".equals(messageNameUpper) ) return MessageType.ClientHello;
-		else if("LISTPEER".equals(messageNameUpper)) return MessageType.ListPeer;
-		else if("LISTPEERS".equals(messageNameUpper)) return MessageType.ListPeers;
-		else if("LISTPEERNOTES".equals(messageNameUpper)) return MessageType.ListPeerNotes;
-		else if("ADDPEER".equals(messageNameUpper)) return MessageType.AddPeer;
-		else if("MODIFYPEER".equals(messageNameUpper)) return MessageType.ModifyPeer;
-		else if("MODIFYPEERNOTE".equals(messageNameUpper)) return MessageType.ModifyPeerNote;
-		else if("REMOVEPEER".equals(messageNameUpper)) return MessageType.RemovePeer;
-		else if("GETNODE".equals(messageNameUpper)) return MessageType.GetNode;
-		else if("GETCONFIG".equals(messageNameUpper)) return MessageType.GetConfig;
-		else if("MODIFYCONFIG".equals(messageNameUpper)) return MessageType.ModifyConfig;
-		else if("TESTDDAREQUEST".equals(messageNameUpper)) return MessageType.TestDDARequest;
-		else if("TESTDDARESPONSE".equals(messageNameUpper)) return MessageType.TestDDAResponse;
-		else if("GENERATESSK".equals(messageNameUpper)) return MessageType.GenerateSSK;
-		else if("CLIENTPUT".equals(messageNameUpper)) return MessageType.ClientPut;
-		else if("CLIENTPUTDISKDIR".equals(messageNameUpper)) return MessageType.ClientPutDiskDir;
-		else if("CLIENTPUTCOMPLEXDIR".equals(messageNameUpper)) return MessageType.ClientPutComplexDir;
-		else if("CLIENTGET".equals(messageNameUpper)) return MessageType.ClientGet;
-		else if("LOADPLUGIN".equals(messageNameUpper)) return MessageType.LoadPlugin;
-		else if("RELOADPLUGIN".equals(messageNameUpper)) return MessageType.ReloadPlugin;
-		else if("REMOVEPLUGIN".equals(messageNameUpper)) return MessageType.RemovePlugin;
-		else if("GETPLUGININFO".equals(messageNameUpper)) return MessageType.GetPluginInfo;
-		else if("FCPPLUGINMESSAGE".equals(messageNameUpper)) return MessageType.FCPPluginMessage;
-		else if("SUBSCRIBEUSK".equals(messageNameUpper)) return MessageType.SubscribeUSK;
-		else if("UNSUBSCRIBEUSK".equals(messageNameUpper)) return MessageType.UnsubscribeUSK;
-		else if("WATCHGLOBAL".equals(messageNameUpper)) return MessageType.WatchGlobal;
-		else if("GETREQUESTSTATUS".equals(messageNameUpper)) return MessageType.GetRequestStatus;
-		else if("LISTPERSISTENTREQUESTS".equals(messageNameUpper)) return MessageType.ListPersistentRequests;
-		else if("REMOVEREQUEST".equals(messageNameUpper)) return MessageType.RemoveRequest;
-		else if("MODIFYPERSISTENTREQUEST".equals(messageNameUpper)) return MessageType.ModifyPersistentRequest;
-		else if("DISCONNECT".equals(messageNameUpper)) return MessageType.Disconnect;
-		else if("SHUTDOWN".equals(messageNameUpper)) return MessageType.Shutdown;
-		else if("VOID".equals(messageNameUpper)) return MessageType.Void;
-
-		/* Node to client */
-		else if("NODEHELLO".equals(messageNameUpper)) return MessageType.NodeHello;
-		else if("CLOSECONNECTIONDUPLICATECLIENTNAME".equals(messageNameUpper)) return MessageType.CloseConnectionDuplicateClientName;
-		else if("PEER".equals(messageNameUpper)) return MessageType.Peer;
-		else if("PEERNOTE".equals(messageNameUpper)) return MessageType.PeerNote;
-		else if("ENDLISTPEERS".equals(messageNameUpper)) return MessageType.EndListPeers;
-		else if("ENDLISTPEERNOTES".equals(messageNameUpper)) return MessageType.EndListPeerNotes;
-		else if("PEERREMOVED".equals(messageNameUpper)) return MessageType.PeerRemoved;
-		else if("NODEDATA".equals(messageNameUpper)) return MessageType.NodeData;
-		else if("CONFIGDATA".equals(messageNameUpper)) return MessageType.ConfigData;
-		else if("TESTDDAREPLY".equals(messageNameUpper)) return MessageType.TestDDAReply;
-		else if("TESTDDACOMPLETE".equals(messageNameUpper)) return MessageType.TestDDAComplete;
-		else if("SSKKEYPAIR".equals(messageNameUpper)) return MessageType.SSKKeypair;
-		else if("PERSISTENTGET".equals(messageNameUpper)) return MessageType.PersistentGet;
-		else if("PERSISTENTPUT".equals(messageNameUpper)) return MessageType.PersistentPut;
-		else if("PERSISTENTPUTDIR".equals(messageNameUpper)) return MessageType.PersistentPutDir;
-		else if("URIGENERATED".equals(messageNameUpper)) return MessageType.URIGenerated;
-		else if("PUTSUCCESSFUL".equals(messageNameUpper)) return MessageType.PutSuccessful;
-		else if("PUTFETCHABLE".equals(messageNameUpper)) return MessageType.PutFetchable;
-		else if("DATAFOUND".equals(messageNameUpper)) return MessageType.DataFound;
-		else if("ALLDATA".equals(messageNameUpper)) return MessageType.AllData;
-		else if("STARTEDCOMPRESSION".equals(messageNameUpper)) return MessageType.StartedCompression;
-		else if("FINISHEDCOMPRESSION".equals(messageNameUpper)) return MessageType.FinishedCompression;
-		else if("SIMPLEPROGRESS".equals(messageNameUpper)) return MessageType.SimpleProgress;
-		else if("EXPECTEDHASHES".equals(messageNameUpper)) return MessageType.ExpectedHashes;
-		else if("COMPATIBILITYMODE".equals(messageNameUpper)) return MessageType.CompatibilityMode;
-		else if("SENDINGTONETWORK".equals(messageNameUpper)) return MessageType.SendingToNetwork;
-		else if("ENDLISTPERSISTENTREQUESTS".equals(messageNameUpper)) return MessageType.EndListPersistentRequests;
-		else if("PERSISTENTREQUESTREMOVED".equals(messageNameUpper)) return MessageType.PersistentRequestRemoved;
-		else if("PERSISTENTREQUESTMODIFIED".equals(messageNameUpper)) return MessageType.PersistentRequestModified;
-		else if("SENDINGTONETWORKMESSAGE".equals(messageNameUpper)) return MessageType.SendingToNetworkMessage;
-		else if("PUTFAILED".equals(messageNameUpper)) return MessageType.PutFailed;
-		else if("GETFAILED".equals(messageNameUpper)) return MessageType.GetFailed;
-		else if("PROTOCOLERROR".equals(messageNameUpper)) return MessageType.ProtocolError;
-		else if("IDENTIFIERCOLLISION".equals(messageNameUpper)) return MessageType.IdentifierCollision;
-		else if("UNKNOWNNODEIDENTIFIER".equals(messageNameUpper)) return MessageType.UnknownNodeIdentifier;
-		else if("UNKNOWNPEERNOTETYPE".equals(messageNameUpper)) return MessageType.UnknownPeerNoteType;
-		else if("SUBSCRIBEDUSK".equals(messageNameUpper)) return MessageType.SubscribedUSK;
-		else if("SUBSCRIBEDUSKUPDATE".equals(messageNameUpper)) return MessageType.SubscribedUSKUpdate;
-		else if("PLUGININFO".equals(messageNameUpper)) return MessageType.PluginInfo;
-		else if("PLUGINREMOVED".equals(messageNameUpper)) return MessageType.PluginRemoved;
-		else if("FCPPLUGINREPLY".equals(messageNameUpper)) return MessageType.FCPPluginReply;
-		else throw( new IllegalArgumentException("Unknown FCP message: " + messageNameUpper));
+		if(result != null) {
+			return result;
+		} else {
+			throw( new IllegalArgumentException("Unknown FCP message: " + messageName));
+		}
 	}
 }
