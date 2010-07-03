@@ -382,6 +382,12 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			case SendingToNetwork:
 				break;
 
+			case ExpectedHashes:
+				break;
+
+			case CompatibilityMode:
+				break;
+
 			default:
 				Logger.warning(this, "Unknown message : " + message.getMessageName() + " !");
 				break;

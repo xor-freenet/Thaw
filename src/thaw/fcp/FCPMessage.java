@@ -14,7 +14,7 @@ import thaw.core.Logger;
 public class FCPMessage {
 
 	private String messageName = null;
-	private Hashtable<String,String> fields = null; /* String (field) -> String (value) ; See http://wiki.freenetproject.org/FreenetFCPSpec2Point0 */
+	private Hashtable<String,String> fields = null; /* String (field) -> String (value) ; See http://new-wiki.freenetproject.org/FCPv2 */
 	private long dataWaiting = 0;
 
 	public enum MessageType{
@@ -77,6 +77,8 @@ public class FCPMessage {
 		StartedCompression,
 		FinishedCompression,
 		SimpleProgress,
+		ExpectedHashes,
+		CompatibilityMode,
 		SendingToNetwork,
 		EndListPersistentRequests,
 		PersistentRequestRemoved,
@@ -289,6 +291,8 @@ public class FCPMessage {
 		else if("STARTEDCOMPRESSION".equals(messageNameUpper)) return MessageType.StartedCompression;
 		else if("FINISHEDCOMPRESSION".equals(messageNameUpper)) return MessageType.FinishedCompression;
 		else if("SIMPLEPROGRESS".equals(messageNameUpper)) return MessageType.SimpleProgress;
+		else if("EXPECTEDHASHES".equals(messageNameUpper)) return MessageType.ExpectedHashes;
+		else if("COMPATIBILITYMODE".equals(messageNameUpper)) return MessageType.CompatibilityMode;
 		else if("SENDINGTONETWORK".equals(messageNameUpper)) return MessageType.SendingToNetwork;
 		else if("ENDLISTPERSISTENTREQUESTS".equals(messageNameUpper)) return MessageType.EndListPersistentRequests;
 		else if("PERSISTENTREQUESTREMOVED".equals(messageNameUpper)) return MessageType.PersistentRequestRemoved;
