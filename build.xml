@@ -123,7 +123,7 @@
 	
 	<target name="unit-build" depends="compile">
 		<fail unless="junit_available" status="1">
-			message="You need to download JUnit 4 from http://www.junit.org and put it in lib/ with the name junit.jar or set the ant property 'junit.location' to the correct path (filename included)" />
+			message="To unit test, you need to download JUnit 4 from http://www.junit.org and put it in lib/ with the name junit.jar or set the ant property 'junit.location' to the correct path (filename included)" />
 		</fail>
 
 		<delete dir="${build-test}"/>
