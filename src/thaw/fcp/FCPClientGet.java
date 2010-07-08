@@ -388,6 +388,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			case CompatibilityMode:
 				break;
 
+			case UNKNOWN_MESSAGE: /* Fall-thru */
 			default:
 				Logger.warning(this, "Unknown message : " + message.getMessageName() + " !");
 				break;
