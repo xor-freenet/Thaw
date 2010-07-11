@@ -12,55 +12,55 @@ public class FCPMessageTest extends TestCase{
 	@Test
 	public void testGetMessageTypeWithNull() {
 		defaultMessage.setMessageName(null);
-		assertEquals(defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
+		assertEquals(FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithEmpty() {
 		defaultMessage.setMessageName("");
-		assertEquals(defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
+		assertEquals(FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithSingleSpace() {
 		defaultMessage.setMessageName(" ");
-		assertEquals(defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
+		assertEquals(FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithUnknownMessageName() {
 		defaultMessage.setMessageName("foo");
-		assertEquals("Unknown message", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
+		assertEquals("Unknown message", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithAllLowerCaseMessageName() {
 		defaultMessage.setMessageName("expectedhashes");
-		assertEquals("Case-insensitivity", defaultMessage.getMessageType(), FCPMessage.MessageType.ExpectedHashes);
+		assertEquals("Case-insensitivity", FCPMessage.MessageType.ExpectedHashes, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithAllUpperCaseMessageName() {
 		defaultMessage.setMessageName("EXPECTEDHASHES");
-		assertEquals("Case-insensitivity", defaultMessage.getMessageType(), FCPMessage.MessageType.ExpectedHashes);
+		assertEquals("Case-insensitivity", FCPMessage.MessageType.ExpectedHashes, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithSurroundingSpaces() {
 		defaultMessage.setMessageName("   expectedhashes ");
-		assertEquals("Surrounding white-space", defaultMessage.getMessageType(), FCPMessage.MessageType.ExpectedHashes);
+		assertEquals("Surrounding white-space", FCPMessage.MessageType.ExpectedHashes, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithExpectedHashes() {
 		defaultMessage.setMessageName("ExpectedHashes");
-		assertEquals("Valid message name", defaultMessage.getMessageType(), FCPMessage.MessageType.ExpectedHashes);
+		assertEquals("Valid message name", FCPMessage.MessageType.ExpectedHashes, defaultMessage.getMessageType());
 	}
 
 	@Test
 	public void testGetMessageTypeWithCompatibilityMode() {
 		defaultMessage.setMessageName("CompatibilityMode");
-		assertEquals("Valid message name", defaultMessage.getMessageType(), FCPMessage.MessageType.CompatibilityMode);
+		assertEquals("Valid message name", FCPMessage.MessageType.CompatibilityMode, defaultMessage.getMessageType());
 	}
 
 	@Test
@@ -70,9 +70,9 @@ public class FCPMessageTest extends TestCase{
 				"Global=true\n" +
 				"DataLength=37261\n" +
 				"EndMessage");
-		assertEquals("Valid message, with payload", defaultMessage.getMessageType(), FCPMessage.MessageType.DataFound);
-		assertEquals("Data payload", defaultMessage.getAmountOfDataWaiting(), 37261);
-		assertEquals("Fields", defaultMessage.getValues().size(), 2);
+		assertEquals("Valid message, with payload", FCPMessage.MessageType.DataFound, defaultMessage.getMessageType());
+		assertEquals("Data payload", 37261, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("Fields", 2, defaultMessage.getValues().size());
 	}
 
 	@Test
@@ -81,33 +81,33 @@ public class FCPMessageTest extends TestCase{
 				"DataFound\n" +
 				"Global=true\n" +
 				"EndMessage");
-		assertEquals("Valid message, without payload", defaultMessage.getMessageType(), FCPMessage.MessageType.DataFound);
-		assertEquals("No data payload", defaultMessage.getAmountOfDataWaiting(), 0);
-		assertEquals("Fields", defaultMessage.getValues().size(), 1);
+		assertEquals("Valid message, without payload", FCPMessage.MessageType.DataFound, defaultMessage.getMessageType());
+		assertEquals("No data payload", 0, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("Fields", 1, defaultMessage.getValues().size());
 	}
 
 	@Test
 	public void testLoadFromRawMessageEmptyMessage(){
 		defaultMessage.loadFromRawMessage("");
-		assertEquals("Blank raw message", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
-		assertEquals("No data payload", defaultMessage.getAmountOfDataWaiting(), 0);
-		assertEquals("No fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Blank raw message", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
+		assertEquals("No data payload", 0, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("No fields", 0, defaultMessage.getValues().size());
 	}
 
 	@Test
 	public void testLoadFromRawMessageNewlines(){
 		defaultMessage.loadFromRawMessage(" \n     \n \n");
-		assertEquals("Blank raw message", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
-		assertEquals("No data payload", defaultMessage.getAmountOfDataWaiting(), 0);
-		assertEquals("No fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Blank raw message", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
+		assertEquals("No data payload", 0, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("No fields", 0, defaultMessage.getValues().size());
 	}
 
 	@Test
 	public void testLoadFromRawMessageNull(){
 		defaultMessage.loadFromRawMessage(null);
-		assertEquals("Null input", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
-		assertEquals("No data payload", defaultMessage.getAmountOfDataWaiting(), 0);
-		assertEquals("No fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Null input", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
+		assertEquals("No data payload", 0, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("No fields", 0, defaultMessage.getValues().size());
 	}
 
 	@Test
@@ -116,8 +116,8 @@ public class FCPMessageTest extends TestCase{
 				"DataFound\n" +
 				"=true\n" +
 				"EndMessage");
-		assertEquals("Malformed message", defaultMessage.getMessageType(), FCPMessage.MessageType.DataFound);
-		assertEquals("Fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Malformed message", FCPMessage.MessageType.DataFound, defaultMessage.getMessageType());
+		assertEquals("Fields", 0, defaultMessage.getValues().size());
 	}
 
 	@Test
@@ -126,8 +126,8 @@ public class FCPMessageTest extends TestCase{
 				"DataFound\n" +
 				"Global=\n" +
 				"EndMessage");
-		assertEquals("Valid message", defaultMessage.getMessageType(), FCPMessage.MessageType.DataFound);
-		assertEquals("Fields", defaultMessage.getValues().size(), 1);
+		assertEquals("Valid message", FCPMessage.MessageType.DataFound, defaultMessage.getMessageType());
+		assertEquals("Fields", 1, defaultMessage.getValues().size());
 	}
 
 	@Test
@@ -136,8 +136,8 @@ public class FCPMessageTest extends TestCase{
 				"Global=true\n" +
 				"DataFound\n" +
                 "EndMessage");
-		assertEquals("Invalid message", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
-		assertEquals("Fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Invalid message", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
+		assertEquals("Fields", 0, defaultMessage.getValues().size());
 	}
 
 	@Test
@@ -149,25 +149,8 @@ public class FCPMessageTest extends TestCase{
 				"DataLength=37261\n" +
 				"EndMessage");
 		message.loadFromRawMessage("");
-		assertEquals("Valid message, with payload", defaultMessage.getMessageType(), FCPMessage.MessageType.UNKNOWN_MESSAGE);
-		assertEquals("Data payload", defaultMessage.getAmountOfDataWaiting(), 0);
-		assertEquals("Fields", defaultMessage.getValues().size(), 0);
+		assertEquals("Valid message, with payload", FCPMessage.MessageType.UNKNOWN_MESSAGE, defaultMessage.getMessageType());
+		assertEquals("Data payload", 0, defaultMessage.getAmountOfDataWaiting());
+		assertEquals("Fields", 0, defaultMessage.getValues().size());
 	}
-
-//	@Test
-//	public void testGetMessageNameUnknownMessage() {
-//		assertEquals(defaultMessage.getMessageName(), FCPMessage.MessageType.UNKNOWN_MESSAGE.name());
-//	}
-
-//	@Test
-//	public void testGetMessageNameKnownMessage() {
-//		defaultMessage.setMessageName("ClientGet");
-//		assertEquals(defaultMessage.getMessageName(), FCPMessage.MessageType.ClientGet.name());
-//	}
-
-//	@Test
-//	public void testGetMessageNameTestCase() {
-//		defaultMessage.setMessageName("CLIENTget");
-//		assertEquals(defaultMessage.getMessageName(), FCPMessage.MessageType.ClientGet.name());
-//	}
 }
