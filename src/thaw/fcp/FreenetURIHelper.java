@@ -2,6 +2,9 @@ package thaw.fcp;
 
 import thaw.core.Logger;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * would be better called "FreenetKeyHelper" ... but too late :p
  */
@@ -79,11 +82,9 @@ public class FreenetURIHelper {
 
 
 	public static String cleanURI(String uri) {
-		if (uri == null)
+		if (uri == null) {
 			return uri;
-
-		uri = uri.trim();
-		uri = uri.replaceFirst("^http://[^/]+/+(freenet:)*","");
+        }
 
 		try {
 			uri = java.net.URLDecoder.decode(uri, "UTF-8");
@@ -91,12 +92,26 @@ public class FreenetURIHelper {
 			Logger.warning(new FreenetURIHelper(), "UnsupportedEncodingException (UTF-8): "+e.toString());
 		}
 
-		if (!isAKey(uri)) {
+        /* Match any of the following key formats (case insensitive):
+         *    SSK, USK, and CHK have two 43 character Base64 components followed by a 7 character
+         *       Base64 component, where each component is separated by a comma.  The base64 character
+         *       set includes the set [A-Za-z0-9-~].  URI keys are not padded.
+         *    KSK just begins with "KSK@" followed by a name.
+         */
+        Pattern regex = Pattern.compile("(?i)((CHK|SSK|USK)@[a-z0-9~-]{43},[a-z0-9~-]{43},[a-z0-9~-]{7}.*)|(KSK@.+)");
+        Matcher regexMatcher = regex.matcher(uri);
+        if (regexMatcher.find()) {
+            uri = regexMatcher.group();
+            if (isAKey(uri)) {
+                return uri;
+            } else {
+                Logger.notice(new FreenetURIHelper(), "Not a valid key: "+uri);
+                return null;
+		    }
+        } else {
 			Logger.notice(new FreenetURIHelper(), "Not a valid key: "+uri);
 			return null;
-		}
-
-		return uri;
+        }
 	}
 
 
@@ -119,6 +134,11 @@ public class FreenetURIHelper {
 
 		{
 			"http://192.168.100.1:1234/CHK%40mmHr8ldkPL-ByTdAKL~IMua0z9nJ~dLnzoRIbbOaf2w,ORl1uXUYnutIayK~0Js5r6dnOBTYerm17OsxFq7jwpo,AAIC--8/Thaw-0.7.10.jar",
+			"CHK@mmHr8ldkPL-ByTdAKL~IMua0z9nJ~dLnzoRIbbOaf2w,ORl1uXUYnutIayK~0Js5r6dnOBTYerm17OsxFq7jwpo,AAIC--8/Thaw-0.7.10.jar"
+		},
+
+        {
+			"Key: http://192.168.100.1:1234/CHK%40mmHr8ldkPL-ByTdAKL~IMua0z9nJ~dLnzoRIbbOaf2w,ORl1uXUYnutIayK~0Js5r6dnOBTYerm17OsxFq7jwpo,AAIC--8/Thaw-0.7.10.jar",
 			"CHK@mmHr8ldkPL-ByTdAKL~IMua0z9nJ~dLnzoRIbbOaf2w,ORl1uXUYnutIayK~0Js5r6dnOBTYerm17OsxFq7jwpo,AAIC--8/Thaw-0.7.10.jar"
 		}
 	};
