@@ -36,7 +36,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private String status;
 
 	private int fromTheNodeProgress;
+
 	private long fileSize;
+	private boolean gotExpectedFileSize = false;
 
 	private boolean writingSuccessful = true;
 	private boolean fatal = true;
@@ -98,7 +100,6 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			status         = parameters.get("Status");
 			identifier     = parameters.get("Identifier");
 			Logger.info(this, "Resuming id : "+identifier);
-
 
 			fileSize       = Long.parseLong(parameters.get("FileSize"));
 
@@ -379,13 +380,14 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				allData(queryManager, message);
 				break;
 
-			case SendingToNetwork:
+			case SendingToNetwork: /* Fall-thru */
+			case ExpectedHashes: /* Fall-thru */
+			case CompatibilityMode: /* Fall-thru */
+			case ExpectedMIME: /* Fall-thru */
 				break;
 
-			case ExpectedHashes:
-				break;
-
-			case CompatibilityMode:
+			case ExpectedDataLength:
+				expectedDataLength(message);
 				break;
 
 			case UNKNOWN_MESSAGE: /* Fall-thru */
@@ -569,7 +571,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 				&& message.getValue("Required") != null
 				&& message.getValue("Succeeded") != null) {
 
-			fileSize = Long.parseLong(message.getValue("Required"))* FCPClientGet.BLOCK_SIZE;
+			if ( !gotExpectedFileSize)
+				fileSize = Long.parseLong(message.getValue("Required"))* FCPClientGet.BLOCK_SIZE;
 
 			final long total = Long.parseLong(message.getValue("Total"));
 			final long required = Long.parseLong(message.getValue("Required"));
@@ -592,6 +595,10 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		notifyChange();
 	}
 
+	protected void expectedDataLength(FCPMessage message) {
+		fileSize = Long.parseLong(message.getValue("DataLength"));
+		gotExpectedFileSize = true;
+	}
 
 	/**
 	 * Handles the allData node message and attempts to write
@@ -600,6 +607,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	protected void allData(FCPQueryManager queryManager, FCPMessage message) {
 		Logger.debug(this, "AllData ! : " + getIdentifier());
 
+		gotExpectedFileSize = true;
 		fileSize = message.getAmountOfDataWaiting();
 
 		setStatus(TransferStatus.RUNNING);

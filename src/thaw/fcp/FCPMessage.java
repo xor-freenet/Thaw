@@ -94,6 +94,8 @@ public class FCPMessage {
 		PluginInfo,
 		PluginRemoved,
 		FCPPluginReply,
+		ExpectedMIME,
+		ExpectedDataLength,
 
 		/* Unrecognised message identifier */
 		UNKNOWN_MESSAGE;
