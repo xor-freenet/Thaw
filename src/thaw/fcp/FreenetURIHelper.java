@@ -32,6 +32,15 @@ public class FreenetURIHelper {
 		return key.startsWith("KSK@");
 	}
 
+	/* Match any of the following key formats (case insensitive):
+	 *    SSK, USK, and CHK have two 43 character Base64 components followed by a 7 character
+	 *       Base64 component, where each component is separated by a comma.  The base64 character
+	 *       set includes the set [A-Za-z0-9-~].  URI keys are not padded.
+	 *    KSK just begins with "KSK@" followed by a name.
+	 */
+	private static final Pattern FREENET_KEY_REGEX
+		= Pattern.compile("(?i)((CHK|SSK|USK)@[a-z0-9~-]{43},[a-z0-9~-]{43},[a-z0-9~-]{7}.*)|(KSK@.+)");
+
 	public static String cleanURI(String uri) {
 		if (uri == null) {
 			return uri;
@@ -43,14 +52,7 @@ public class FreenetURIHelper {
 			Logger.warning(new FreenetURIHelper(), "UnsupportedEncodingException (UTF-8): "+e.toString());
 		}
 
-        /* Match any of the following key formats (case insensitive):
-         *    SSK, USK, and CHK have two 43 character Base64 components followed by a 7 character
-         *       Base64 component, where each component is separated by a comma.  The base64 character
-         *       set includes the set [A-Za-z0-9-~].  URI keys are not padded.
-         *    KSK just begins with "KSK@" followed by a name.
-         */
-        Pattern regex = Pattern.compile("(?i)((CHK|SSK|USK)@[a-z0-9~-]{43},[a-z0-9~-]{43},[a-z0-9~-]{7}.*)|(KSK@.+)");
-        Matcher regexMatcher = regex.matcher(uri);
+        Matcher regexMatcher = FREENET_KEY_REGEX.matcher(uri);
         if (regexMatcher.find()) {
             uri = regexMatcher.group();
             if (isAKey(uri)) {
