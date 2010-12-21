@@ -1,0 +1,7 @@
+*~
+*.javac
+bin/*
+build/*
+build-test/*
+lib/*
+
