@@ -1017,10 +1017,10 @@ public class Index extends Observable implements MutableTreeNode,
 						} else if (indexTree != null)
 							indexTree.removeUpdatingIndex(this);
 					} else
-						Logger.error(this, "No path specified in transfer ?!");
+						Logger.warning(this, "No path specified in transfer ?!");
 				} else { /* if not successful */
+					Logger.warning(this, "Download of index "+this.toString()+" failed");
 					successful = false;
-
 					indexTree.removeUpdatingIndex(this);
 				}
 			}

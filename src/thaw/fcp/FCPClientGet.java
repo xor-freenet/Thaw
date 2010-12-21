@@ -506,6 +506,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		status = "Removed";
 
 		if (!isFinished()) {
+			Logger.warning(this, "Transfer canceled by another client");
 			setStatus(TransferStatus.FAILED);
 			fatal = true;
 		}
@@ -519,23 +520,31 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 
 	protected void getFailed(FCPMessage message) {
-		Logger.debug(this, "GetFailed !");
+		Logger.info(this, "GetFailed for "+key);
 
-		if (message.getValue("RedirectURI") != null && !noRedir) {
-			Logger.debug(this, "Redirected !");
-			key = message.getValue("RedirectURI");
-			status = "Redirected ...";
-			if (queueManager.isOur(message.getValue("Identifier"))) {
-				restartIfFailed = true;
-				stop(queryManager, false);
-			} else {
-				Logger.debug(this, "Not our transfer ; we don't touch");
+		if (message.getValue("RedirectURI") != null ) {
+			Logger.info(this, "Redirected from " + key + " to " + message.getValue("RedirectURI"));
+
+			if ( key.equals(message.getValue("RedirectURI")) ) {
+				Logger.warning(this, "Redirected to the same key we tried to fetch !?");
+			} else if ( !noRedir ) {
+				key = message.getValue("RedirectURI");
+				status = "Redirected ...";
+				if (queueManager.isOur(message.getValue("Identifier"))) {
+					restartIfFailed = true;
+					stop(queryManager, false);
+				} else {
+					Logger.info(this, "Not our transfer ; we don't touch");
+				}
 			}
+			else
+				Logger.notice(this, "Redirected, but noredir flag is set. Ignoring redirection");
 		}
 
 		if (restartIfFailed) {
 			restartIfFailed = false;
 			start();
+			return;
 		}
 		else if (!"13".equals(message.getValue("Code"))){ /* if != of Data Not Found */
 			Logger.notice(this, "GetFailed : "+message.getValue("CodeDescription"));
@@ -547,6 +556,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			getFailedCode = Integer.parseInt(message.getValue("Code"));
 
 			status = "Failed ("+message.getValue("CodeDescription")+")";
+			Logger.warning(this, "Transfer failed: "+message.getValue("CodeDescription"));
 			setStatus(TransferStatus.FAILED);
 
 			fatal = true;
