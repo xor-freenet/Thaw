@@ -134,8 +134,12 @@ public class DetailPanel implements Observer {
 
 	public void refresh() {
 		if(query != null) {
-			withTheNodeProgress.setValue(query.getTransferWithTheNodeProgression());
-			withTheNodeProgress.setString(Integer.toString(query.getTransferWithTheNodeProgression()) + "%");
+			int nodeProgress = query.getTransferWithTheNodeProgression();
+			if(nodeProgress < 0) {
+				nodeProgress = 0;
+			}
+			withTheNodeProgress.setValue(nodeProgress);
+			withTheNodeProgress.setString(Integer.toString(nodeProgress) + "%");
 
 			progress.setValue(query.getProgression());
 			if(!query.isFinished() || query.isSuccessful()) {
