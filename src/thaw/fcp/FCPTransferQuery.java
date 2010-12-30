@@ -30,7 +30,7 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 	private long totalBlocks = -1;
 	private long transferedBlocks = -1;
 	private boolean reliable = false;
-	
+
 	/* reminder to do the maths */
 	public final static int NMB_REMINDERS = 300; /* one per second, so 5 minutes here */
 	private long[] transferedBlocksPast = new long[NMB_REMINDERS];
@@ -79,6 +79,21 @@ public abstract class FCPTransferQuery extends Observable implements FCPQuery {
 			transferedBlocks = transfered;
 			this.reliable = reliable || this.insertion;
 		}
+	}
+
+	/**
+	 * Marks a network transfer as being reliable and fills in some dummy block data if needed.
+	 * This is mainly used with Get requests that may have occurred while Thaw was not running
+	 * where Thaw would not have received SimpleProgress messages to indicate how the network
+	 * transfer was going.  In that case, if a DataFound message is recieved, it is safe to assume
+	 * that the block count values became reliable.
+	 */
+	protected void makeReliable()
+	{
+		requiredBlocks = (requiredBlocks >= 0 ? requiredBlocks : 1);
+		totalBlocks = (totalBlocks >= 0 ? totalBlocks : 1);
+		transferedBlocks = (transferedBlocks >= 0 ? transferedBlocks : 1);
+		reliable = true;
 	}
 
 	protected void setStatus(TransferStatus status) {

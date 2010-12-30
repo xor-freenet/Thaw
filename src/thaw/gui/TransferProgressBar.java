@@ -2,6 +2,7 @@ package thaw.gui;
 
 import javax.swing.JProgressBar;
 
+import thaw.core.Logger;
 import thaw.fcp.FCPTransferQuery;
 import thaw.fcp.FCPClientPut;
 import thaw.fcp.FCPClientGet;
@@ -45,7 +46,9 @@ public class TransferProgressBar extends JProgressBar {
 
 	public void refresh() {
 
-		int progress = query.getProgression();
+		final int networkProgress = query.getProgression();
+		final int nodeProgress = query.getTransferWithTheNodeProgression();
+		int overallProgress;
 
 		setStringPainted(true);
 		setBorderPainted(withBorder);
@@ -53,19 +56,38 @@ public class TransferProgressBar extends JProgressBar {
 		/* TODO(Jflesch): This way of detecting if we are transfering data with the node is bad
 		 * and unreliable
 		 */
-		if ((query instanceof FCPClientPut && ( progress == 0))
-		    || ((query instanceof FCPClientGet) && (progress == 100)))
-			progress = query.getTransferWithTheNodeProgression();
+		if(query instanceof FCPClientPut) {
+			/* Network transfer takes priority for Put requests */
+			if(networkProgress > 0) {
+				overallProgress = networkProgress;
+			} else {
+				overallProgress = nodeProgress;
+			}
+		} else if(query instanceof FCPClientGet) {
+			/* Node transfer takes priority for Get requests */
+			if(nodeProgress > 0) {
+				overallProgress = nodeProgress;
+			} else {
+				overallProgress = networkProgress;
+			}
+		} else {
+			Logger.warning(this, "Unrecognized subclass of FCPTransferQuery");
+			return;
+		}
 
-		setValue(progress);
+		if(overallProgress < 0) {
+			overallProgress = 0;
+		}
+
+		setValue(overallProgress);
 
 		if(!query.isFinished()) {
 			String txt= "";
 			if (statusInProgressBar) {
 				txt = (query.getStatus() +
-					      " [ "+Integer.toString(progress)+"% ]");
+					      " [ "+Integer.toString(overallProgress)+"% ]");
 			} else {
-				txt = (Integer.toString(progress)+"%");
+				txt = (Integer.toString(overallProgress)+"%");
 			}
 			if (!query.isProgressionReliable()) {
 				txt += " [*]";

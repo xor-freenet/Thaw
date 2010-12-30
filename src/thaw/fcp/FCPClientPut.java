@@ -30,7 +30,7 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 	private String publicKey; /* publicKey contains the filename etc */
 	private int priority = DEFAULT_PRIORITY;
 
-	private int toTheNodeProgress = 0;
+	private int toTheNodeProgress = 0;   /* -1 if transfer to the node hasn't started, else [0-100] */
 	private String status;
 
 	private int attempt = 0;
@@ -236,6 +236,8 @@ public class FCPClientPut extends FCPTransferQuery implements Observer {
 			} else {
 				fileSize = 0;
 			}
+
+			toTheNodeProgress = -1;
 
 			status = "Waiting";
 			setStatus(TransferStatus.NOT_RUNNING);

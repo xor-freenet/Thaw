@@ -35,7 +35,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	private int attempt;
 	private String status;
 
-	private int fromTheNodeProgress;
+	private int fromTheNodeProgress;   /* -1 if the transfer hasn't started, else [0-100] */
 
 	private long fileSize;
 	private boolean gotExpectedFileSize = false;
@@ -180,7 +180,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
         super(builder.identifier, false);
 		this.queueManager = builder.queueManager;
 		this.queryManager = queueManager.getQueryManager();
-		fromTheNodeProgress = 0;
+		fromTheNodeProgress = -1;
 
 		this.maxRetries = builder.maxRetries;
 		this.key = builder.key;
@@ -400,6 +400,9 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 
 	protected void dataFound(FCPMessage message) {
 		Logger.debug(this, "DataFound!");
+
+		/* Mark the network block count as being reliable if it hasn't been marked already */
+		makeReliable();
 
 		if(!isFinished()) {
 			if(!alreadySaved) {
@@ -918,7 +921,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 	}
 
 
-	private boolean fetchDirectly(final FCPConnection connection, long size, final boolean reallyWrite) {
+	private boolean fetchDirectly(final FCPConnection connection, final long expectedFileSize, final boolean reallyWrite) {
 		File newFile;
 		OutputStream outputStream;
 
@@ -931,7 +934,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			setStatus(TransferStatus.FAILED);
 			
 			/* Clear the data from the socket to prevent socket problems */
-			dummyDataGet(connection, size);
+			dummyDataGet(connection, expectedFileSize);
 			return false;
 		}
 
@@ -943,8 +946,8 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 			return false;
 		}
 
-		/* size == bytes remaining on socket */
-		final long origSize = size;
+		/* bytesRemaining == bytes remaining on socket */
+		long bytesRemaining = expectedFileSize;
 		long startTime = System.currentTimeMillis();
 
 		writingSuccessful = true;
@@ -952,22 +955,22 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 		final int packet = FCPClientGet.PACKET_SIZE;
 		byte[] read = new byte[packet];
 
-		while(size > 0) {
+		while(bytesRemaining > 0) {
 
 			int amount;
 
-			if ( size < packet )
-				read = new byte[(int)size]; /* otherwise we would read too much */
+			if ( bytesRemaining < packet )
+				read = new byte[(int) bytesRemaining]; /* otherwise we would read too much */
 
 			amount = connection.read(read);
-			size = size - amount;
 
 			if (amount >= 0) {
+				bytesRemaining -= amount;
 				try {
 					outputStream.write(read, 0, amount);
 					if( System.currentTimeMillis() >= (startTime+3000)) {
 						status = "Writing to disk";
-						fromTheNodeProgress = (int) (((origSize-size) * 100) / origSize);
+						fromTheNodeProgress = (int) (((expectedFileSize - bytesRemaining) * 100) / expectedFileSize);
 
 						if (fromTheNodeProgress <= 0) /* display issue */
 							fromTheNodeProgress = 1;
@@ -992,7 +995,7 @@ public class FCPClientGet extends FCPTransferQuery implements Observer {
 						Logger.error(this, "Things seem to go wrong !");
 					}
 					newFile.delete();
-					dummyDataGet(connection, size);
+					dummyDataGet(connection, bytesRemaining);
 					return false;
 				}
 			} else {
